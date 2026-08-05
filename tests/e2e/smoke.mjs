@@ -197,6 +197,12 @@ if (SHOTS) {
   await page.click('#panel-close');
   await page.keyboard.press('6');            /* Saturn hero */
   await page.waitForTimeout(2600);
+  /* drag upward above the ring plane for the iconic tilted-ring view */
+  await page.mouse.move(640, 300);
+  await page.mouse.down();
+  await page.mouse.move(610, 445, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(900);
   await page.screenshot({ path: join(shotsDir, 'hero-saturn.png') });
 
   await page.keyboard.press('3');            /* Earth */
