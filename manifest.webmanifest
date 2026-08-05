@@ -1,0 +1,12 @@
+{
+  "name": "Cosmoscope — NASA Solar System Explorer",
+  "short_name": "Cosmoscope",
+  "description": "A ray-traced, real-ephemeris journey through the Solar System, powered by NASA's open APIs.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#05070f",
+  "theme_color": "#05070f",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

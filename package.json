@@ -1,0 +1,17 @@
+{
+  "name": "cosmoscope",
+  "version": "1.0.0",
+  "description": "Cosmoscope — a ray-traced, real-ephemeris Solar System explorer powered by NASA's open APIs.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.mjs",
+    "build": "node scripts/build-artifact.mjs",
+    "e2e": "node tests/e2e/smoke.mjs",
+    "serve": "npx http-server -p 8080 -c-1 ."
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}

@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cosmoscope — NASA Solar System Explorer</title>
+<meta name="description" content="A ray-traced, real-ephemeris journey through the Solar System, powered by NASA's open APIs. Orbit planets, watch eclipses, browse Mars rover photos, track asteroids, and export 8K stills and video — all in your browser.">
+<meta name="theme-color" content="#05070f">
+<meta property="og:title" content="Cosmoscope — NASA Solar System Explorer">
+<meta property="og:description" content="Ray-traced solar system with live NASA data: APOD, asteroids, Mars rovers, EPIC Earth imagery, space weather. 8K exports, video capture, 9 languages.">
+<meta property="og:type" content="website">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<canvas id="scene" aria-label="Interactive 3D solar system" role="application" tabindex="0"></canvas>
+<div id="labels" aria-hidden="true"></div>
+
+<header id="topbar">
+  <div class="brand" id="brand" title="Cosmoscope">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="6.5" fill="#ffc46b"/><ellipse cx="16" cy="16" rx="14" ry="5.2" fill="none" stroke="#7fd4ff" stroke-width="1.6" transform="rotate(-24 16 16)"/><circle cx="27.2" cy="10.6" r="2" fill="#7fd4ff"/></svg>
+    <span class="brand-name">Cosmoscope</span>
+    <span class="brand-sub" data-i18n="app.tagline">powered by NASA open APIs</span>
+  </div>
+
+  <div class="time-controls" role="group" aria-label="Simulation time controls">
+    <button id="btn-play" class="icon-btn" data-i18n-title="time.pause" title="Pause"><span id="play-icon">⏸</span></button>
+    <button id="btn-now" class="chip-btn" data-i18n="time.now" data-i18n-title="time.nowTitle" title="Jump to the present moment">Now</button>
+    <div class="sim-date" id="sim-date" aria-live="off">—</div>
+    <input id="speed" class="speed-slider" type="range" min="0" max="10" step="1" value="5" aria-label="Time speed">
+    <div class="speed-label" id="speed-label">1 day/s</div>
+  </div>
+
+  <div class="top-right">
+    <div id="fps" class="fps" title="Frames per second">— fps</div>
+    <select id="lang" class="lang-select" aria-label="Language"></select>
+    <button id="btn-audio" class="icon-btn" data-i18n-title="audio.enable" title="Enable sound">🔇</button>
+    <button id="btn-full" class="icon-btn" data-i18n-title="ui.fullscreen" title="Fullscreen">⛶</button>
+    <button id="btn-help" class="icon-btn" data-i18n-title="ui.help" title="Help &amp; shortcuts">?</button>
+  </div>
+</header>
+
+<nav id="rail" aria-label="Panels">
+  <button class="rail-btn active" data-tab="explore"  data-i18n-title="tab.explore"  title="Explore"><span>🪐</span></button>
+  <button class="rail-btn" data-tab="apod"     data-i18n-title="tab.apod"     title="Picture of the Day"><span>🖼️</span></button>
+  <button class="rail-btn" data-tab="asteroids" data-i18n-title="tab.asteroids" title="Near-Earth Asteroids"><span>☄️</span></button>
+  <button class="rail-btn" data-tab="mars"     data-i18n-title="tab.mars"     title="Mars Rovers"><span>🤖</span></button>
+  <button class="rail-btn" data-tab="earth"    data-i18n-title="tab.earth"    title="Earth from Space"><span>🌍</span></button>
+  <button class="rail-btn" data-tab="weather"  data-i18n-title="tab.weather"  title="Space Weather"><span>☀️</span></button>
+  <button class="rail-btn" data-tab="library"  data-i18n-title="tab.library"  title="NASA Media Library"><span>🔭</span></button>
+  <div class="rail-spacer"></div>
+  <button class="rail-btn" data-tab="capture"  data-i18n-title="tab.capture"  title="Capture &amp; Export"><span>🎬</span></button>
+  <button class="rail-btn" data-tab="settings" data-i18n-title="tab.settings" title="Settings"><span>⚙️</span></button>
+</nav>
+
+<aside id="panel" aria-label="Information panel">
+  <button id="panel-close" class="icon-btn panel-close" data-i18n-title="ui.close" title="Close">✕</button>
+
+  <section data-tab="explore">
+    <h2 data-i18n="tab.explore">Explore</h2>
+    <div id="body-list" class="body-list" role="listbox" aria-label="Celestial bodies"></div>
+    <div id="body-card" class="body-card" hidden>
+      <h3 id="bc-name">—</h3>
+      <p id="bc-blurb" class="blurb"></p>
+      <dl class="facts">
+        <div><dt data-i18n="fact.type">Type</dt><dd id="bc-type">—</dd></div>
+        <div><dt data-i18n="fact.radius">Radius</dt><dd id="bc-radius">—</dd></div>
+        <div><dt data-i18n="fact.distance">Distance from Sun</dt><dd id="bc-dist">—</dd></div>
+        <div><dt data-i18n="fact.year">Orbital period</dt><dd id="bc-year">—</dd></div>
+        <div><dt data-i18n="fact.day">Rotation period</dt><dd id="bc-day">—</dd></div>
+        <div><dt data-i18n="fact.now">Current distance</dt><dd id="bc-now">—</dd></div>
+      </dl>
+      <div class="row gap">
+        <button id="bc-goto" class="btn primary" data-i18n="explore.goto">Fly there</button>
+        <button id="bc-listen" class="btn" data-i18n="explore.listen" data-i18n-title="explore.listenTitle" title="Hear this world's data as sound">♪ <span data-i18n="explore.sonify">Sonify</span></button>
+      </div>
+    </div>
+    <div class="tour-box">
+      <button id="btn-tour" class="btn wide" data-i18n="tour.start">▶ Start Grand Tour</button>
+      <p class="hint" data-i18n="tour.hint">A guided cinematic flight across the Solar System.</p>
+    </div>
+  </section>
+
+  <section data-tab="apod" hidden>
+    <h2 data-i18n="tab.apod">Picture of the Day</h2>
+    <div class="row gap wrap">
+      <input type="date" id="apod-date" class="input" aria-label="APOD date">
+      <button id="apod-load" class="btn" data-i18n="ui.load">Load</button>
+      <button id="apod-random" class="btn" data-i18n="apod.random">🎲 Random</button>
+    </div>
+    <div id="apod-content" class="api-content" aria-live="polite"></div>
+  </section>
+
+  <section data-tab="asteroids" hidden>
+    <h2 data-i18n="tab.asteroids">Near-Earth Asteroids</h2>
+    <p class="hint" data-i18n="neo.hint">Asteroids passing near Earth this week, from NASA NeoWs.</p>
+    <label class="check"><input type="checkbox" id="neo-visualize"> <span data-i18n="neo.visualize">Visualize flybys around Earth (schematic)</span></label>
+    <div id="neo-content" class="api-content" aria-live="polite"></div>
+  </section>
+
+  <section data-tab="mars" hidden>
+    <h2 data-i18n="tab.mars">Mars Rovers</h2>
+    <div class="row gap">
+      <select id="rover-select" class="input">
+        <option value="perseverance">Perseverance</option>
+        <option value="curiosity">Curiosity</option>
+      </select>
+      <button id="mars-load" class="btn" data-i18n="mars.latest">Latest photos</button>
+    </div>
+    <div id="mars-content" class="api-content gallery" aria-live="polite"></div>
+  </section>
+
+  <section data-tab="earth" hidden>
+    <h2 data-i18n="tab.earth">Earth from Space</h2>
+    <p class="hint" data-i18n="epic.hint">Full-disc Earth photographs from the DSCOVR satellite, 1.5 million km away (NASA EPIC).</p>
+    <button id="epic-load" class="btn" data-i18n="epic.load">Load latest images</button>
+    <div id="epic-content" class="api-content" aria-live="polite"></div>
+  </section>
+
+  <section data-tab="weather" hidden>
+    <h2 data-i18n="tab.weather">Space Weather</h2>
+    <p class="hint" data-i18n="donki.hint">Recent solar flares and coronal mass ejections from NASA DONKI. Strong activity energizes the Sun in the scene.</p>
+    <button id="donki-load" class="btn" data-i18n="donki.load">Check solar activity</button>
+    <div id="donki-content" class="api-content" aria-live="polite"></div>
+  </section>
+
+  <section data-tab="library" hidden>
+    <h2 data-i18n="tab.library">NASA Media Library</h2>
+    <form id="lib-form" class="row gap">
+      <input id="lib-q" class="input grow" type="search" data-i18n-ph="library.placeholder" placeholder="Search 140,000+ NASA images…" aria-label="Search NASA image library">
+      <button class="btn primary" type="submit" data-i18n="ui.search">Search</button>
+    </form>
+    <div id="lib-content" class="api-content gallery" aria-live="polite"></div>
+  </section>
+
+  <section data-tab="capture" hidden>
+    <h2 data-i18n="tab.capture">Capture &amp; Export</h2>
+
+    <h3 data-i18n="cap.stills">Still images</h3>
+    <div class="field"><label data-i18n="cap.resolution">Resolution</label>
+      <select id="shot-res" class="input">
+        <option value="screen" data-i18n="cap.screen">Screen resolution</option>
+        <option value="1920">Full HD — 1920×1080</option>
+        <option value="2560">QHD — 2560×1440</option>
+        <option value="3840" selected>4K UHD — 3840×2160</option>
+        <option value="7680">8K UHD — 7680×4320</option>
+      </select>
+    </div>
+    <div class="field"><label data-i18n="cap.format">Format</label>
+      <select id="shot-fmt" class="input">
+        <option value="image/png">PNG (lossless)</option>
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+    </div>
+    <div class="field" id="shot-quality-field"><label data-i18n="cap.quality">Quality</label>
+      <input id="shot-quality" type="range" min="0.5" max="1" step="0.01" value="0.92">
+    </div>
+    <button id="btn-shot" class="btn primary wide" data-i18n="cap.take">📸 Capture still</button>
+    <p class="hint" data-i18n="cap.tiled">High resolutions are ray-traced in tiles for maximum quality — 8K may take a few seconds.</p>
+
+    <h3 data-i18n="cap.video">Video recording</h3>
+    <div class="field"><label data-i18n="cap.vformat">Container</label>
+      <select id="rec-fmt" class="input"><option value="auto" data-i18n="cap.auto">Auto (best supported)</option></select>
+    </div>
+    <div class="field"><label data-i18n="cap.vquality">Video quality</label>
+      <select id="rec-quality" class="input">
+        <option value="8">Standard (8 Mb/s)</option>
+        <option value="16" selected>High (16 Mb/s)</option>
+        <option value="35">Ultra (35 Mb/s)</option>
+      </select>
+    </div>
+    <div class="field"><label data-i18n="cap.fps">Frame rate</label>
+      <select id="rec-fps" class="input"><option value="30">30 fps</option><option value="60" selected>60 fps</option></select>
+    </div>
+    <button id="btn-rec" class="btn danger wide" data-i18n="cap.record">⏺ Start recording</button>
+    <div id="rec-note" class="hint"></div>
+    <div id="downloads" class="downloads"></div>
+  </section>
+
+  <section data-tab="settings" hidden>
+    <h2 data-i18n="tab.settings">Settings</h2>
+
+    <h3 data-i18n="set.graphics">Graphics</h3>
+    <div class="field"><label data-i18n="set.preset">Quality preset</label>
+      <div class="seg" id="quality-seg" role="radiogroup" aria-label="Quality preset">
+        <button data-q="low" data-i18n="set.low">Low</button>
+        <button data-q="medium" data-i18n="set.medium">Medium</button>
+        <button data-q="high" class="active" data-i18n="set.high">High</button>
+        <button data-q="ultra" data-i18n="set.ultra">Ultra</button>
+      </div>
+    </div>
+    <div class="field"><label data-i18n="set.renderScale">Render scale</label>
+      <input id="render-scale" type="range" min="0.5" max="2" step="0.25" value="1">
+      <span id="render-scale-val">1.00×</span>
+    </div>
+    <label class="check"><input type="checkbox" id="opt-bloom" checked> <span data-i18n="set.bloom">Bloom &amp; glow</span></label>
+    <label class="check"><input type="checkbox" id="opt-softshadow" checked> <span data-i18n="set.softShadows">Soft shadows &amp; eclipses</span></label>
+    <label class="check"><input type="checkbox" id="opt-belt" checked> <span data-i18n="set.belt">Asteroid belt dust</span></label>
+    <label class="check"><input type="checkbox" id="opt-grain" checked> <span data-i18n="set.grain">Film grain</span></label>
+
+    <h3 data-i18n="set.scene">Scene</h3>
+    <label class="check"><input type="checkbox" id="opt-labels" checked> <span data-i18n="set.labels">Body labels</span></label>
+    <label class="check"><input type="checkbox" id="opt-orbits" checked> <span data-i18n="set.orbits">Orbit paths</span></label>
+    <div class="field"><label data-i18n="set.scale">Scale model</label>
+      <div class="seg" id="scale-seg" role="radiogroup" aria-label="Scale model">
+        <button data-s="showcase" class="active" data-i18n="set.showcase">Showcase</button>
+        <button data-s="true" data-i18n="set.trueScale">True scale</button>
+      </div>
+      <p class="hint" data-i18n="set.scaleHint">Showcase compresses distances so worlds are visible together. True scale uses real proportions — space is mostly empty!</p>
+    </div>
+
+    <h3 data-i18n="set.audio">Audio</h3>
+    <div class="field"><label data-i18n="set.masterVol">Master volume</label>
+      <input id="vol-master" type="range" min="0" max="1" step="0.01" value="0.7"></div>
+    <div class="field"><label data-i18n="set.musicVol">Ambient music</label>
+      <input id="vol-music" type="range" min="0" max="1" step="0.01" value="0.8"></div>
+    <div class="field"><label data-i18n="set.fxVol">Interface sounds</label>
+      <input id="vol-fx" type="range" min="0" max="1" step="0.01" value="0.6"></div>
+
+    <h3 data-i18n="set.api">NASA API</h3>
+    <p class="hint" data-i18n="set.apiHint">The free DEMO_KEY is rate-limited (~30 requests/hour). Get your own free key at api.nasa.gov for a smoother experience — it stays in your browser only.</p>
+    <div class="row gap">
+      <input id="api-key" class="input grow" type="text" placeholder="DEMO_KEY" aria-label="NASA API key" autocomplete="off" spellcheck="false">
+      <button id="api-save" class="btn" data-i18n="ui.save">Save</button>
+    </div>
+    <div id="api-status" class="hint"></div>
+  </section>
+</aside>
+
+<footer id="hud">
+  <div class="hud-left">
+    <span class="sel-chip" id="sel-chip">☉ <span id="sel-name">Sun</span></span>
+    <span class="cam-dist" id="cam-dist"></span>
+  </div>
+  <div class="hud-mid seg" id="cam-seg" role="radiogroup" aria-label="Camera mode">
+    <button data-cam="orbit" class="active" data-i18n="cam.orbit" data-i18n-title="cam.orbitTitle" title="Orbit the selected body">🛰 Orbit</button>
+    <button data-cam="free" data-i18n="cam.free" data-i18n-title="cam.freeTitle" title="Free flight — WASD + mouse">🚀 Free</button>
+    <button data-cam="tour" data-i18n="cam.tour" data-i18n-title="cam.tourTitle" title="Cinematic guided tour">🎥 Tour</button>
+  </div>
+  <div class="hud-right hint" id="hint-line" data-i18n="hint.drag">Drag to orbit · Scroll to zoom · Click a world to select it</div>
+</footer>
+
+<div id="rec-indicator" hidden><span class="rec-dot"></span> <span id="rec-time">00:00</span></div>
+<div id="toasts" aria-live="polite"></div>
+
+<div id="lightbox" class="modal" hidden role="dialog" aria-modal="true" aria-label="Image viewer">
+  <button class="icon-btn modal-close" id="lightbox-close" data-i18n-title="ui.close" title="Close">✕</button>
+  <figure><img id="lightbox-img" alt=""><figcaption id="lightbox-cap"></figcaption></figure>
+</div>
+
+<div id="welcome" class="modal center" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+  <div class="welcome-card">
+    <svg class="logo big" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="6.5" fill="#ffc46b"/><ellipse cx="16" cy="16" rx="14" ry="5.2" fill="none" stroke="#7fd4ff" stroke-width="1.6" transform="rotate(-24 16 16)"/><circle cx="27.2" cy="10.6" r="2" fill="#7fd4ff"/></svg>
+    <h1 id="welcome-title">Cosmoscope</h1>
+    <p class="welcome-sub" data-i18n="welcome.sub">A ray-traced journey through the Solar System, powered by NASA's open APIs. Planets are where they really are, right now.</p>
+    <div class="welcome-langs" id="welcome-langs"></div>
+    <div class="row gap center-row">
+      <button id="welcome-start" class="btn primary big" data-i18n="welcome.startSound">🔊 Begin with sound</button>
+      <button id="welcome-quiet" class="btn big" data-i18n="welcome.startQuiet">Begin quietly</button>
+    </div>
+    <p class="hint" data-i18n="welcome.hint">Tip: drag to look around, scroll to zoom, click any world to visit it.</p>
+  </div>
+</div>
+
+<div id="help" class="modal center" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="welcome-card help-card">
+    <button class="icon-btn modal-close" id="help-close" data-i18n-title="ui.close" title="Close">✕</button>
+    <h2 id="help-title" data-i18n="help.title">Controls &amp; shortcuts</h2>
+    <div id="help-body" class="help-grid"></div>
+  </div>
+</div>
+
+<noscript><div class="noscript">Cosmoscope needs JavaScript and WebGL2 to render the Solar System. Please enable JavaScript.</div></noscript>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
