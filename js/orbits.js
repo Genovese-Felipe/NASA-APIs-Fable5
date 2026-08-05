@@ -244,11 +244,8 @@ export function orbitPath(key, dateMs, mode, n = 180) {
   const dist = showcase ? SCENE.showcaseDist : SCENE.trueDist;
 
   if (key === 'moon') {
-    /* draw around current Earth position */
-    const T0 = jdToCenturies(dateToJD(dateMs));
-    const eEcl = heliocentric('earth', T0);
-    const dAu = Math.hypot(eEcl[0], eEcl[1], eEcl[2]);
-    const e = toScene(scaleVec(eEcl, dist(dAu) / dAu));
+    /* EARTH-RELATIVE points — the renderer translates them by Earth's
+       live position, so the ring never detaches during playback */
     const eR = showcase ? SCENE.showcaseRadius(6378.137) : 0;
     const periodMs = MOON.periodDays * DAY_MS;
     for (let i = 0; i <= n; i++) {
@@ -259,10 +256,9 @@ export function orbitPath(key, dateMs, mode, n = 180) {
         const gAu = Math.hypot(g[0], g[1], g[2]);
         const sep = eR * 3.4;
         const gs = toScene(g);
-        p = [e[0] + gs[0] / gAu * sep, e[1] + gs[1] / gAu * sep, e[2] + gs[2] / gAu * sep];
+        p = [gs[0] / gAu * sep, gs[1] / gAu * sep, gs[2] / gAu * sep];
       } else {
-        const gs = toScene(scaleVec(g, SCENE.AU_UNITS));
-        p = [e[0] + gs[0], e[1] + gs[1], e[2] + gs[2]];
+        p = toScene(scaleVec(g, SCENE.AU_UNITS));
       }
       pts[i * 3] = p[0]; pts[i * 3 + 1] = p[1]; pts[i * 3 + 2] = p[2];
     }

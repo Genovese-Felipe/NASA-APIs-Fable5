@@ -101,6 +101,7 @@ export class Recorder {
   get recording() { return !!this.rec && this.rec.state === 'recording'; }
 
   start({ preference = 'auto', fps = 60, mbps = 16, audioEngine = null }) {
+    if (this.rec) throw new Error('busy');   /* a stop is still finalizing */
     const ok = supportedMimes();
     if (!ok.length) {
       const err = new Error('unsupported');
@@ -130,6 +131,7 @@ export class Recorder {
       } catch { /* video-only recording is fine */ }
     }
     this.chunks = [];
+    this.stream = stream;
     this.rec = new MediaRecorder(stream, {
       mimeType: mime,
       videoBitsPerSecond: mbps * 1e6,
@@ -139,6 +141,19 @@ export class Recorder {
     this.startedAt = Date.now();
     this.mime = mime;
     return mime;
+  }
+
+  _release() {
+    if (this.stream) {
+      for (const track of this.stream.getTracks()) track.stop();
+      this.stream = null;
+    }
+    if (this._audioTap) {
+      try { this._audioTap.engine.master.disconnect(this._audioTap.dest); } catch { /* already gone */ }
+      this._audioTap = null;
+    }
+    this.rec = null;
+    this.chunks = [];
   }
 
   elapsed() {
@@ -153,15 +168,10 @@ export class Recorder {
         const type = this.mime.split(';')[0];
         const blob = new Blob(this.chunks, { type });
         const name = `cosmoscope-${stamp()}.${extOf(this.mime)}`;
-        if (this._audioTap) {
-          try { this._audioTap.engine.master.disconnect(this._audioTap.dest); } catch { /* already gone */ }
-          this._audioTap = null;
-        }
-        this.rec = null;
-        this.chunks = [];
+        this._release();
         resolve({ blob, name });
       };
-      rec.onerror = (e) => { this.rec = null; reject(e.error || new Error('recorder error')); };
+      rec.onerror = (e) => { this._release(); reject(e.error || new Error('recorder error')); };
       rec.stop();
     });
   }

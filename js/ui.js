@@ -54,7 +54,10 @@ export function initUI(app) {
   /* ═══ i18n application ═══ */
   function applyI18n() {
     document.documentElement.lang = getLang();
-    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      /* never clobber elements that contain nested translated parts */
+      if (!el.querySelector('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+    });
     document.querySelectorAll('[data-i18n-title]').forEach((el) => {
       el.title = t(el.dataset.i18nTitle);
       el.setAttribute('aria-label', t(el.dataset.i18nTitle));
@@ -68,7 +71,20 @@ export function initUI(app) {
     updateSpeedLabel();
     updateHint();
     updateAudioButton();
+    updateLibSeg();
+    /* restore state-dependent labels the generic pass just overwrote */
+    updateTourButton();
+    $('btn-rec').textContent = recorder.recording ? t('cap.stop') : t('cap.record');
     $('lang').value = getLang();
+  }
+
+  /* segmented controls: keep visual + ARIA state in sync */
+  function segActivate(container, activeBtn) {
+    container.querySelectorAll('button').forEach((x) => {
+      const on = x === activeBtn;
+      x.classList.toggle('active', on);
+      x.setAttribute('aria-pressed', String(on));
+    });
   }
 
   /* language selector */
@@ -140,9 +156,9 @@ export function initUI(app) {
   function renderHelp() {
     const rows = [
       ['k.drag', 'help.drag'], ['k.scroll', 'help.zoom'], ['k.click', 'help.click'],
-      ['1–9,0', 'help.numbers'], ['Space', 'help.space'], [', / .', 'help.speed'],
-      ['O F T', 'help.modes'], ['WASD', 'help.wasd'], ['L / P', 'help.toggles'],
-      ['S / R', 'help.capture'], ['Esc', 'help.escape'],
+      ['1–8', 'help.numbers'], ['9 / 0', 'help.moonSun'], ['Space', 'help.space'],
+      [', / .', 'help.speed'], ['O F T', 'help.modes'], ['WASD', 'help.wasd'],
+      ['L / P', 'help.toggles'], ['S / R', 'help.capture'], ['Esc', 'help.escape'],
     ];
     $('help-body').innerHTML = rows.map(([k, d]) => {
       const key = k.startsWith('k.') ? t(k) : k;
@@ -220,6 +236,10 @@ export function initUI(app) {
 
   $('bc-goto').addEventListener('click', () => { app.actions.flyTo(state.selected); audio.ui('select'); });
   $('bc-listen').addEventListener('click', () => {
+    if (!audio.started || audio.muted) {
+      toast(t('audio.enable'), 'warn');
+      return;
+    }
     const b = BODIES[state.selected];
     audio.sonify({
       periodYears: orbitalPeriodYears(b.key) || 0.07,
@@ -270,11 +290,13 @@ export function initUI(app) {
   onOpenTab.apod = () => { if (!$('apod-content').innerHTML) loadApod(); };
 
   /* ═══ NeoWs ═══ */
+  let neoLoadedOk = false;
   async function loadNeo() {
     const box = $('neo-content');
     box.innerHTML = spinner();
     try {
       const { data, offline } = await nasa.neoFeed();
+      neoLoadedOk = true;
       const all = Object.values(data.near_earth_objects || {}).flat();
       all.sort((a, b) =>
         parseFloat(a.close_approach_data[0]?.miss_distance.kilometers || 1e12) -
@@ -306,7 +328,7 @@ export function initUI(app) {
     state.neoVisualize = e.target.checked;
     app.actions.refreshNeoPoints();
   });
-  onOpenTab.asteroids = () => { if (!$('neo-content').innerHTML) loadNeo(); };
+  onOpenTab.asteroids = () => { if (!neoLoadedOk) loadNeo(); };  /* retry after failures */
 
   /* ═══ gallery helper ═══ */
   function galleryFromLibrary(box, result, emptyMsg) {
@@ -424,12 +446,12 @@ export function initUI(app) {
   }
   libSeg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     libMedia = b.dataset.m;
-    libSeg.querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+    segActivate(libSeg, b);
     doSearch();
   }));
 
   async function doSearch() {
-    const q = $('lib-q').value.trim() || (libMedia === 'audio' ? 'sonification' : 'nebula');
+    const q = $('lib-q').value.trim() || (libMedia === 'audio' ? 'space sounds' : 'nebula');
     const box = $('lib-content');
     box.innerHTML = spinner();
     try {
@@ -529,12 +551,23 @@ export function initUI(app) {
   function addDownload(blob, name) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = name; a.click();
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     const item = document.createElement('div');
     item.className = 'dl-item';
     const size = blob.size > 1048576 ? (blob.size / 1048576).toFixed(1) + ' MB' : Math.round(blob.size / 1024) + ' KB';
     item.innerHTML = `<span>💾</span><a href="${url}" download="${escapeHtml(name)}">${escapeHtml(name)}</a><span class="hint">${size}</span>`;
-    $('downloads').prepend(item);
+    item.dataset.url = url;
+    const list = $('downloads');
+    list.prepend(item);
+    /* bound the list; release object URLs of evicted entries */
+    while (list.children.length > 8) {
+      const evicted = list.lastElementChild;
+      URL.revokeObjectURL(evicted.dataset.url);
+      evicted.remove();
+    }
     return url;
   }
 
@@ -562,6 +595,7 @@ export function initUI(app) {
         audio.ui('error');
       }
     } else {
+      btn.disabled = true;         /* block double-stop during finalize */
       try {
         const { blob, name } = await recorder.stop();
         addDownload(blob, name);
@@ -569,11 +603,13 @@ export function initUI(app) {
         audio.ui('recStop');
       } catch {
         toast(t('toast.apiError'), 'err');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = t('cap.record');
+        btn.classList.remove('recording');
+        $('rec-indicator').hidden = true;
+        clearInterval(recTimer);
       }
-      btn.textContent = t('cap.record');
-      btn.classList.remove('recording');
-      $('rec-indicator').hidden = true;
-      clearInterval(recTimer);
     }
   });
   onOpenTab.capture = updateRecNote;
@@ -595,7 +631,7 @@ export function initUI(app) {
     $('render-scale-val').textContent = o.renderScale.toFixed(2) + '×';
   }
   $('quality-seg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    $('quality-seg').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+    segActivate($('quality-seg'), b);
     app.engine.setOptions(PRESETS[b.dataset.q]);
     app.engine.resize();
     syncGraphicsUI();
@@ -613,7 +649,7 @@ export function initUI(app) {
   $('opt-labels').addEventListener('change', (e) => { state.showLabels = e.target.checked; });
   $('opt-orbits').addEventListener('change', (e) => { state.showOrbits = e.target.checked; });
   $('scale-seg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    $('scale-seg').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+    segActivate($('scale-seg'), b);
     app.actions.setScaleMode(b.dataset.s);
     audio.ui('click');
   }));
@@ -670,7 +706,11 @@ export function initUI(app) {
     toast,
     openTab,
     syncCamSeg() {
-      $('cam-seg').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.cam === state.mode));
+      $('cam-seg').querySelectorAll('button').forEach((b) => {
+        const on = b.dataset.cam === state.mode;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
       updateHint();
       updateTourButton();
     },
@@ -689,5 +729,7 @@ export function initUI(app) {
   applyI18n();
   syncGraphicsUI();
   updateRecNote();
+  /* initial visibility: the quality slider applies to JPEG/WebP only */
+  $('shot-quality-field').style.display = $('shot-fmt').value === 'image/png' ? 'none' : '';
   return ui;
 }

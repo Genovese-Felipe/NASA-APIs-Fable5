@@ -6,7 +6,7 @@
 
 ### A ray-traced, real-ephemeris journey through the Solar System — powered by NASA's open APIs
 
-**[▶ Launch the app](https://genovese-felipe.github.io/nasa-apis-fable5/)** · [User guide](docs/USER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [NASA APIs](docs/NASA_APIS.md) · [Testing](docs/TESTING.md)
+**[▶ Launch the app](https://genovese-felipe.github.io/NASA-APIs-Fable5/)** · [User guide](docs/USER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [NASA APIs](docs/NASA_APIS.md) · [Testing](docs/TESTING.md)
 
 *Planets are where they really are, right now.*
 
@@ -30,7 +30,7 @@ Planet positions are not decorative: they come from the **JPL/Standish Keplerian
 | 🔦 **Ray-traced rendering** | Per-pixel primary + shadow rays, soft penumbras, real solar eclipses, ring shadows, atmospheric limb scattering, procedural surfaces for all 10 bodies |
 | 🕰 **Real ephemeris** | JPL Standish elements + Kepler solver; the sky matches reality for any date between 1800 and 2050 |
 | 🛰 **Orbit / Free / Tour cameras** | Inertial orbiting, WASD free-flight, and a cinematic Grand Tour with eased flights — never a teleport |
-| 🖼 **8 NASA data sources** | APOD, NeoWs asteroids, EPIC Earth imagery, DONKI space weather, Mars rover imagery, Image & Video Library, NASA sonifications — see [docs/NASA_APIS.md](docs/NASA_APIS.md) |
+| 🖼 **8 NASA data sources** | APOD, NeoWs asteroids, EPIC Earth imagery, DONKI space weather, Mars rover imagery, Image & Video Library, NASA sonifications, and the embedded JPL/SSD ephemeris — see [docs/NASA_APIS.md](docs/NASA_APIS.md) |
 | ☀️ **Live space weather** | Recent M/X-class flares from DONKI visibly energize the rendered Sun |
 | 🎨 **Quality tuning** | Low → Ultra presets, render-scale slider, toggles for bloom, soft shadows, belt dust, film grain |
 | 📸 **4K & 8K stills** | Tiled offline ray-tracing exports PNG/JPEG/WebP at up to 7680×4320 — beyond your screen resolution |
@@ -43,7 +43,7 @@ Planet positions are not decorative: they come from the **JPL/Standish Keplerian
 
 ## 🚀 Quick start
 
-**Online:** open the [GitHub Pages deployment](https://genovese-felipe.github.io/nasa-apis-fable5/).
+**Online:** open the [GitHub Pages deployment](https://genovese-felipe.github.io/NASA-APIs-Fable5/).
 
 **Locally:** any static server works — there is no build step:
 
@@ -62,7 +62,7 @@ Repo **Settings → Pages → Build and deployment → Source: “GitHub Actions
 
 ### NASA API key
 
-The app ships using NASA's shared `DEMO_KEY` (≈30 requests/hour per IP). For a smoother experience grab a free key at [api.nasa.gov](https://api.nasa.gov) and paste it in **Settings → NASA API** — it is stored in your browser's localStorage only and never leaves your machine. Four of the app's data sources (EPIC, DONKI, Image Library, sonifications) don't need a key at all.
+The app ships using NASA's shared `DEMO_KEY` (≈30 requests/hour per IP). For a smoother experience grab a free key at [api.nasa.gov](https://api.nasa.gov) and paste it in **Settings → NASA API** — it is stored in your browser's localStorage only and never leaves your machine. Six of the app's eight data sources (EPIC, DONKI, Image Library, Mars rover imagery, sonifications, and the embedded ephemeris) need no key at all.
 
 ## 🎮 Controls
 

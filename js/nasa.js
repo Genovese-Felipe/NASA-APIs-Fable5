@@ -43,14 +43,33 @@ function cacheGet(key, ttlMs) {
     const raw = localStorage.getItem(CACHE_PREFIX + key);
     if (!raw) return null;
     const { t, v } = JSON.parse(raw);
-    if (Date.now() - t > ttlMs) return null;
+    if (Date.now() - t > ttlMs) {
+      localStorage.removeItem(CACHE_PREFIX + key);   /* prune on expiry */
+      return null;
+    }
     return v;
   } catch { return null; }
 }
 function cachePut(key, v) {
+  const payload = JSON.stringify({ t: Date.now(), v });
   try {
-    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ t: Date.now(), v }));
-  } catch { /* storage full/unavailable — caching is best-effort */ }
+    localStorage.setItem(CACHE_PREFIX + key, payload);
+  } catch {
+    /* quota hit: evict the oldest cached entries and retry once */
+    try {
+      const entries = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(CACHE_PREFIX)) {
+          const t = (JSON.parse(localStorage.getItem(k)) || {}).t || 0;
+          entries.push({ k, t });
+        }
+      }
+      entries.sort((a, b) => a.t - b.t);
+      for (const e of entries.slice(0, Math.ceil(entries.length / 2))) localStorage.removeItem(e.k);
+      localStorage.setItem(CACHE_PREFIX + key, payload);
+    } catch { /* still failing — caching stays best-effort */ }
+  }
 }
 
 async function cached(key, ttlMs, fetcher) {
@@ -137,12 +156,17 @@ export class NasaClient {
     try { localStorage.setItem('cosmoscope.apikey', this.key); } catch { /* unavailable */ }
   }
 
-  /* ── APOD ── */
+  /* ── APOD ──
+     Without a date param the API returns the current entry; pinning
+     "today" in UTC 404s for the first hours of each UTC day because
+     APOD publishes on US Eastern midnight. */
   async apod(date) {
-    const d = date || todayUTC();
+    const key = date ? `apod.${date}.${this.key}` : `apod.latest.${this.key}`;
+    const ttl = date ? 24 * 3600e3 : 1800e3;
+    const qs = date ? `&date=${date}` : '';
     try {
-      return await cached('apod.' + d + '.' + this.key, 24 * 3600e3, () =>
-        fetchJSON(`https://api.nasa.gov/planetary/apod?api_key=${this.key}&date=${d}&thumbs=true`));
+      return await cached(key, ttl, () =>
+        fetchJSON(`https://api.nasa.gov/planetary/apod?api_key=${this.key}${qs}&thumbs=true`));
     } catch (e) {
       if (e.kind === 'ratelimit') throw e;
       return { data: SAMPLES.apod, offline: true };

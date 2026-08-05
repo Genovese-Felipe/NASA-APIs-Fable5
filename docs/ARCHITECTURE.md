@@ -1,6 +1,6 @@
 # Cosmoscope architecture
 
-Cosmoscope is deliberately **dependency-free**: modern browsers already contain a GPU compiler (WebGL2/GLSL), a synthesizer (Web Audio), a video encoder (MediaRecorder), and an i18n runtime (`Intl`). The application is ~6,000 lines of vanilla ES modules orchestrating those built-ins.
+Cosmoscope is deliberately **dependency-free**: modern browsers already contain a GPU compiler (WebGL2/GLSL), a synthesizer (Web Audio), a video encoder (MediaRecorder), and an i18n runtime (`Intl`). The application is ~4,000 lines of vanilla ES modules (≈5,000 with tests and tooling) orchestrating those built-ins.
 
 ## Module graph
 

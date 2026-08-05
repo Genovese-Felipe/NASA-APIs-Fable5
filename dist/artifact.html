@@ -300,9 +300,15 @@ input[type="date"] { color-scheme: dark; }
   #panel { left: 62px; width: min(340px, calc(100vw - 72px)); }
 }
 @media (max-width: 640px) {
-  #topbar { gap: 8px; height: 48px; }
+  /* two-row top bar: brand + icons first, time controls wrap below */
+  #topbar { gap: 6px 8px; height: auto; min-height: 48px; flex-wrap: wrap; padding: 6px 8px; }
   .brand-name { display: none; }
+  .brand { order: 1; }
+  .top-right { order: 2; margin-left: auto; }
+  .time-controls { order: 3; flex-basis: 100%; justify-content: flex-start; }
+  .sim-date { overflow: hidden; text-overflow: ellipsis; }
   .speed-slider { width: 80px; }
+  #toasts { bottom: 116px; }        /* stack above the bottom rail */
   #rail {
     left: 0; right: 0; top: auto; bottom: 52px; width: auto; height: 52px;
     flex-direction: row; border-radius: 0; border-left: none; border-right: none;
@@ -319,7 +325,13 @@ input[type="date"] { color-scheme: dark; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.001s !important; transition-duration: 0.001s !important; }
+  /* stop loops entirely — shortening duration alone turns infinite
+     animations (spinner, blink, pulse) into rapid flicker */
+  * {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
 }
 
 </style>
@@ -383,7 +395,7 @@ input[type="date"] { color-scheme: dark; }
       </dl>
       <div class="row gap">
         <button id="bc-goto" class="btn primary" data-i18n="explore.goto">Fly there</button>
-        <button id="bc-listen" class="btn" data-i18n="explore.listen" data-i18n-title="explore.listenTitle" title="Hear this world's data as sound">♪ <span data-i18n="explore.sonify">Sonify</span></button>
+        <button id="bc-listen" class="btn" data-i18n-title="explore.listenTitle" title="Hear this world's data as sound">♪ <span data-i18n="explore.sonify">Sonify</span></button>
       </div>
     </div>
     <div class="tour-box">
@@ -448,7 +460,7 @@ input[type="date"] { color-scheme: dark; }
     <h2 data-i18n="tab.capture">Capture &amp; Export</h2>
 
     <h3 data-i18n="cap.stills">Still images</h3>
-    <div class="field"><label data-i18n="cap.resolution">Resolution</label>
+    <div class="field"><label for="shot-res" data-i18n="cap.resolution">Resolution</label>
       <select id="shot-res" class="input">
         <option value="screen" data-i18n="cap.screen">Screen resolution</option>
         <option value="1920">Full HD — 1920×1080</option>
@@ -457,31 +469,31 @@ input[type="date"] { color-scheme: dark; }
         <option value="7680">8K UHD — 7680×4320</option>
       </select>
     </div>
-    <div class="field"><label data-i18n="cap.format">Format</label>
+    <div class="field"><label for="shot-fmt" data-i18n="cap.format">Format</label>
       <select id="shot-fmt" class="input">
         <option value="image/png">PNG (lossless)</option>
         <option value="image/jpeg">JPEG</option>
         <option value="image/webp">WebP</option>
       </select>
     </div>
-    <div class="field" id="shot-quality-field"><label data-i18n="cap.quality">Quality</label>
+    <div class="field" id="shot-quality-field"><label for="shot-quality" data-i18n="cap.quality">Quality</label>
       <input id="shot-quality" type="range" min="0.5" max="1" step="0.01" value="0.92">
     </div>
     <button id="btn-shot" class="btn primary wide" data-i18n="cap.take">📸 Capture still</button>
     <p class="hint" data-i18n="cap.tiled">High resolutions are ray-traced in tiles for maximum quality — 8K may take a few seconds.</p>
 
     <h3 data-i18n="cap.video">Video recording</h3>
-    <div class="field"><label data-i18n="cap.vformat">Container</label>
+    <div class="field"><label for="rec-fmt" data-i18n="cap.vformat">Container</label>
       <select id="rec-fmt" class="input"><option value="auto" data-i18n="cap.auto">Auto (best supported)</option></select>
     </div>
-    <div class="field"><label data-i18n="cap.vquality">Video quality</label>
+    <div class="field"><label for="rec-quality" data-i18n="cap.vquality">Video quality</label>
       <select id="rec-quality" class="input">
         <option value="8">Standard (8 Mb/s)</option>
         <option value="16" selected>High (16 Mb/s)</option>
         <option value="35">Ultra (35 Mb/s)</option>
       </select>
     </div>
-    <div class="field"><label data-i18n="cap.fps">Frame rate</label>
+    <div class="field"><label for="rec-fps" data-i18n="cap.fps">Frame rate</label>
       <select id="rec-fps" class="input"><option value="30">30 fps</option><option value="60" selected>60 fps</option></select>
     </div>
     <button id="btn-rec" class="btn danger wide" data-i18n="cap.record">⏺ Start recording</button>
@@ -494,14 +506,14 @@ input[type="date"] { color-scheme: dark; }
 
     <h3 data-i18n="set.graphics">Graphics</h3>
     <div class="field"><label data-i18n="set.preset">Quality preset</label>
-      <div class="seg" id="quality-seg" role="radiogroup" aria-label="Quality preset">
+      <div class="seg" id="quality-seg" role="group" data-i18n-title="set.preset" aria-label="Quality preset">
         <button data-q="low" data-i18n="set.low">Low</button>
         <button data-q="medium" data-i18n="set.medium">Medium</button>
         <button data-q="high" class="active" data-i18n="set.high">High</button>
         <button data-q="ultra" data-i18n="set.ultra">Ultra</button>
       </div>
     </div>
-    <div class="field"><label data-i18n="set.renderScale">Render scale</label>
+    <div class="field"><label for="render-scale" data-i18n="set.renderScale">Render scale</label>
       <input id="render-scale" type="range" min="0.5" max="2" step="0.25" value="1">
       <span id="render-scale-val">1.00×</span>
     </div>
@@ -514,7 +526,7 @@ input[type="date"] { color-scheme: dark; }
     <label class="check"><input type="checkbox" id="opt-labels" checked> <span data-i18n="set.labels">Body labels</span></label>
     <label class="check"><input type="checkbox" id="opt-orbits" checked> <span data-i18n="set.orbits">Orbit paths</span></label>
     <div class="field"><label data-i18n="set.scale">Scale model</label>
-      <div class="seg" id="scale-seg" role="radiogroup" aria-label="Scale model">
+      <div class="seg" id="scale-seg" role="group" data-i18n-title="set.scale" aria-label="Scale model">
         <button data-s="showcase" class="active" data-i18n="set.showcase">Showcase</button>
         <button data-s="true" data-i18n="set.trueScale">True scale</button>
       </div>
@@ -522,11 +534,11 @@ input[type="date"] { color-scheme: dark; }
     </div>
 
     <h3 data-i18n="set.audio">Audio</h3>
-    <div class="field"><label data-i18n="set.masterVol">Master volume</label>
+    <div class="field"><label for="vol-master" data-i18n="set.masterVol">Master volume</label>
       <input id="vol-master" type="range" min="0" max="1" step="0.01" value="0.7"></div>
-    <div class="field"><label data-i18n="set.musicVol">Ambient music</label>
+    <div class="field"><label for="vol-music" data-i18n="set.musicVol">Ambient music</label>
       <input id="vol-music" type="range" min="0" max="1" step="0.01" value="0.8"></div>
-    <div class="field"><label data-i18n="set.fxVol">Interface sounds</label>
+    <div class="field"><label for="vol-fx" data-i18n="set.fxVol">Interface sounds</label>
       <input id="vol-fx" type="range" min="0" max="1" step="0.01" value="0.6"></div>
 
     <h3 data-i18n="set.api">NASA API</h3>
@@ -544,7 +556,7 @@ input[type="date"] { color-scheme: dark; }
     <span class="sel-chip" id="sel-chip">☉ <span id="sel-name">Sun</span></span>
     <span class="cam-dist" id="cam-dist"></span>
   </div>
-  <div class="hud-mid seg" id="cam-seg" role="radiogroup" aria-label="Camera mode">
+  <div class="hud-mid seg" id="cam-seg" role="group" aria-label="Camera mode">
     <button data-cam="orbit" class="active" data-i18n="cam.orbit" data-i18n-title="cam.orbitTitle" title="Orbit the selected body">🛰 Orbit</button>
     <button data-cam="free" data-i18n="cam.free" data-i18n-title="cam.freeTitle" title="Free flight — WASD + mouse">🚀 Free</button>
     <button data-cam="tour" data-i18n="cam.tour" data-i18n-title="cam.tourTitle" title="Cinematic guided tour">🎥 Tour</button>
@@ -675,7 +687,7 @@ en: {
   'hint.free': 'WASD to fly · Drag to look · Shift for boost',
   'help.title': 'Controls & shortcuts',
   'help.drag': 'Orbit the camera', 'help.zoom': 'Zoom in / out', 'help.click': 'Select a world',
-  'help.numbers': 'Select Sun … Neptune', 'help.space': 'Pause / resume time',
+  'help.numbers': 'Select Mercury … Neptune', 'help.moonSun': 'Select the Moon / the Sun', 'help.space': 'Pause / resume time',
   'help.speed': 'Slower / faster time', 'help.modes': 'Orbit / Free / Tour camera',
   'help.wasd': 'Fly (free mode)', 'help.toggles': 'Labels / orbit paths',
   'help.capture': 'Screenshot / record video', 'help.escape': 'Close panels',
@@ -755,7 +767,7 @@ zh: {
   'cap.webmNote': '此浏览器录制 WebM 格式（VLC 及所有现代播放器均可播放）。支持时会自动使用 MP4。',
   'set.graphics': '图形', 'set.preset': '画质预设',
   'set.low': '低', 'set.medium': '中', 'set.high': '高', 'set.ultra': '极致',
-  'set.renderScale': '渲染比例', 'set.bloom': '辉光与泛光', 'set.softShadows': '软阴影与日食',
+  'set.renderScale': '渲染比例', 'set.bloom': '辉光与泛光', 'set.softShadows': '软阴影与日月食',
   'set.belt': '小行星带尘埃', 'set.grain': '胶片颗粒',
   'set.scene': '场景', 'set.labels': '天体标签', 'set.orbits': '轨道线',
   'set.scale': '比例模型', 'set.showcase': '展示比例', 'set.trueScale': '真实比例',
@@ -770,7 +782,7 @@ zh: {
   'hint.free': 'WASD 飞行 · 拖动视角 · Shift 加速',
   'help.title': '操作与快捷键',
   'help.drag': '旋转视角', 'help.zoom': '缩放', 'help.click': '选择星球',
-  'help.numbers': '选择太阳…海王星', 'help.space': '暂停/继续时间',
+  'help.numbers': '选择水星…海王星', 'help.moonSun': '选择月球 / 太阳', 'help.space': '暂停/继续时间',
   'help.speed': '时间变慢/变快', 'help.modes': '环绕/自由/游览相机',
   'help.wasd': '飞行（自由模式）', 'help.toggles': '标签/轨道线',
   'help.capture': '截图/录制视频', 'help.escape': '关闭面板',
@@ -811,7 +823,7 @@ pt: {
   'ui.fullscreen': 'Tela cheia', 'ui.help': 'Ajuda e atalhos', 'ui.close': 'Fechar',
   'ui.load': 'Carregar', 'ui.search': 'Buscar', 'ui.save': 'Salvar', 'ui.open': 'Abrir', 'ui.retry': 'Tentar de novo',
   'tab.explore': 'Explorar', 'tab.apod': 'Foto do Dia', 'tab.asteroids': 'Asteroides Próximos',
-  'tab.mars': 'Rovers de Marte', 'tab.earth': 'A Terra do Espaço', 'tab.weather': 'Clima Espacial',
+  'tab.mars': 'Rovers de Marte', 'tab.earth': 'A Terra vista do Espaço', 'tab.weather': 'Clima Espacial',
   'tab.library': 'Biblioteca NASA', 'tab.capture': 'Captura e Exportação', 'tab.settings': 'Configurações',
   'fact.type': 'Tipo', 'fact.radius': 'Raio', 'fact.distance': 'Distância do Sol',
   'fact.year': 'Período orbital', 'fact.day': 'Período de rotação', 'fact.now': 'Distância da Terra',
@@ -865,7 +877,7 @@ pt: {
   'hint.free': 'WASD para voar · Arraste para olhar · Shift para acelerar',
   'help.title': 'Controles e atalhos',
   'help.drag': 'Orbitar a câmera', 'help.zoom': 'Aproximar / afastar', 'help.click': 'Selecionar um mundo',
-  'help.numbers': 'Selecionar Sol … Netuno', 'help.space': 'Pausar / retomar o tempo',
+  'help.numbers': 'Selecionar Mercúrio … Netuno', 'help.moonSun': 'Selecionar Lua / Sol', 'help.space': 'Pausar / retomar o tempo',
   'help.speed': 'Tempo mais lento / rápido', 'help.modes': 'Câmera Órbita / Livre / Tour',
   'help.wasd': 'Voar (modo livre)', 'help.toggles': 'Rótulos / órbitas',
   'help.capture': 'Capturar / gravar vídeo', 'help.escape': 'Fechar painéis',
@@ -960,7 +972,7 @@ es: {
   'hint.free': 'WASD para volar · Arrastra para mirar · Shift para acelerar',
   'help.title': 'Controles y atajos',
   'help.drag': 'Orbitar la cámara', 'help.zoom': 'Acercar / alejar', 'help.click': 'Seleccionar un mundo',
-  'help.numbers': 'Seleccionar Sol … Neptuno', 'help.space': 'Pausar / reanudar el tiempo',
+  'help.numbers': 'Seleccionar Mercurio … Neptuno', 'help.moonSun': 'Seleccionar Luna / Sol', 'help.space': 'Pausar / reanudar el tiempo',
   'help.speed': 'Tiempo más lento / rápido', 'help.modes': 'Cámara Órbita / Libre / Tour',
   'help.wasd': 'Volar (modo libre)', 'help.toggles': 'Etiquetas / órbitas',
   'help.capture': 'Captura / grabar vídeo', 'help.escape': 'Cerrar paneles',
@@ -1040,7 +1052,7 @@ ko: {
   'cap.webmNote': '이 브라우저는 WebM으로 녹화합니다(VLC 등 모든 최신 플레이어에서 재생 가능). MP4가 가능하면 자동으로 사용됩니다.',
   'set.graphics': '그래픽', 'set.preset': '품질 프리셋',
   'set.low': '낮음', 'set.medium': '중간', 'set.high': '높음', 'set.ultra': '울트라',
-  'set.renderScale': '렌더 스케일', 'set.bloom': '블룸과 광휘', 'set.softShadows': '부드러운 그림자와 일식',
+  'set.renderScale': '렌더 스케일', 'set.bloom': '블룸과 광휘', 'set.softShadows': '부드러운 그림자와 일식·월식',
   'set.belt': '소행성대 먼지', 'set.grain': '필름 그레인',
   'set.scene': '장면', 'set.labels': '천체 이름표', 'set.orbits': '궤도선',
   'set.scale': '축척 모형', 'set.showcase': '전시용', 'set.trueScale': '실제 축척',
@@ -1055,7 +1067,7 @@ ko: {
   'hint.free': 'WASD 비행 · 드래그로 시점 · Shift 가속',
   'help.title': '조작법 및 단축키',
   'help.drag': '카메라 회전', 'help.zoom': '확대 / 축소', 'help.click': '천체 선택',
-  'help.numbers': '태양 … 해왕성 선택', 'help.space': '시간 일시정지 / 재개',
+  'help.numbers': '수성 … 해왕성 선택', 'help.moonSun': '달 / 태양 선택', 'help.space': '시간 일시정지 / 재개',
   'help.speed': '시간 느리게 / 빠르게', 'help.modes': '궤도 / 자유 / 투어 카메라',
   'help.wasd': '비행 (자유 모드)', 'help.toggles': '이름표 / 궤도선',
   'help.capture': '스크린샷 / 동영상 녹화', 'help.escape': '패널 닫기',
@@ -1067,7 +1079,7 @@ ko: {
   'body.sun': '태양', 'body.mercury': '수성', 'body.venus': '금성', 'body.earth': '지구', 'body.moon': '달',
   'body.mars': '화성', 'body.jupiter': '목성', 'body.saturn': '토성', 'body.uranus': '천왕성', 'body.neptune': '해왕성',
   'blurb.sun': '우리의 항성 — 태양계 질량의 99.8%를 차지하는 46억 년 된 핵융합로.',
-  'blurb.mercury': '가장 작은 행성. 불타고 파인 표면으로 88일마다 태양을 질주합니다.',
+  'blurb.mercury': '가장 작은 행성. 불타고 크레이터로 뒤덮인 채 88일마다 태양 주위를 질주합니다.',
   'blurb.venus': '지구의 유독한 쌍둥이: 짓누르는 기압, 황산 구름, 그리고 1년보다 긴 하루.',
   'blurb.earth': '생명이 확인된 유일한 세계 — 얇은 공기의 베일에 싸인 푸른 구슬.',
   'blurb.moon': '지구의 변함없는 동반자. 조수를 일으키고 지구의 자전을 안정시킵니다.',
@@ -1101,7 +1113,7 @@ fr: {
   'fact.type': 'Type', 'fact.radius': 'Rayon', 'fact.distance': 'Distance au Soleil',
   'fact.year': 'Période orbitale', 'fact.day': 'Période de rotation', 'fact.now': 'Distance à la Terre',
   'type.star': 'Étoile', 'type.planet': 'Planète', 'type.moon': 'Lune',
-  'explore.goto': 'S’y rendre', 'explore.listen': 'Sonifier', 'explore.listenTitle': 'Écoutez les données de ce monde en musique', 'explore.sonify': 'Sonifier',
+  'explore.goto': 'S’y rendre', 'explore.listen': 'Sonifier', 'explore.listenTitle': 'Écoutez les données de ce monde sous forme sonore', 'explore.sonify': 'Sonifier',
   'tour.start': '▶ Lancer le Grand Tour', 'tour.stop': '■ Terminer le tour',
   'tour.hint': 'Un vol cinématique guidé à travers le Système solaire.',
   'apod.random': '🎲 Au hasard', 'apod.videoDay': 'L’image du jour est une vidéo.', 'apod.openSite': 'Voir sur apod.nasa.gov',
@@ -1131,7 +1143,7 @@ fr: {
   'cap.recStarted': 'Enregistrement démarré ({fmt})', 'cap.recStopped': 'Enregistrement sauvegardé',
   'cap.unsupported': 'Ce navigateur ne prend pas en charge l’enregistrement vidéo.',
   'cap.tooBig': 'Cette résolution dépasse les capacités de cet appareil.',
-  'cap.mp4ok': 'Le MP4 est pris en charge ici — les enregistrements sont sauvés en .mp4.',
+  'cap.mp4ok': 'Le MP4 est pris en charge ici — les enregistrements sont sauvegardés en .mp4.',
   'cap.webmNote': 'Ce navigateur enregistre en WebM (lisible par VLC et tous les lecteurs modernes). Le MP4 est utilisé automatiquement quand il est disponible.',
   'set.graphics': 'Graphismes', 'set.preset': 'Préréglage de qualité',
   'set.low': 'Basse', 'set.medium': 'Moyenne', 'set.high': 'Haute', 'set.ultra': 'Ultra',
@@ -1150,7 +1162,7 @@ fr: {
   'hint.free': 'WASD pour voler · Glisser pour regarder · Maj pour accélérer',
   'help.title': 'Commandes et raccourcis',
   'help.drag': 'Faire orbiter la caméra', 'help.zoom': 'Zoomer / dézoomer', 'help.click': 'Sélectionner un monde',
-  'help.numbers': 'Sélectionner Soleil … Neptune', 'help.space': 'Suspendre / reprendre le temps',
+  'help.numbers': 'Sélectionner Mercure … Neptune', 'help.moonSun': 'Sélectionner Lune / Soleil', 'help.space': 'Suspendre / reprendre le temps',
   'help.speed': 'Temps plus lent / plus rapide', 'help.modes': 'Caméra Orbite / Libre / Tour',
   'help.wasd': 'Voler (mode libre)', 'help.toggles': 'Étiquettes / orbites',
   'help.capture': 'Capture d’écran / vidéo', 'help.escape': 'Fermer les panneaux',
@@ -1245,7 +1257,7 @@ de: {
   'hint.free': 'WASD zum Fliegen · Ziehen zum Umsehen · Umschalt für Schub',
   'help.title': 'Steuerung & Tastenkürzel',
   'help.drag': 'Kamera umkreisen lassen', 'help.zoom': 'Hinein- / herauszoomen', 'help.click': 'Welt auswählen',
-  'help.numbers': 'Sonne … Neptun auswählen', 'help.space': 'Zeit anhalten / fortsetzen',
+  'help.numbers': 'Merkur … Neptun auswählen', 'help.moonSun': 'Mond / Sonne auswählen', 'help.space': 'Zeit anhalten / fortsetzen',
   'help.speed': 'Zeit langsamer / schneller', 'help.modes': 'Orbit- / Frei- / Tour-Kamera',
   'help.wasd': 'Fliegen (freier Modus)', 'help.toggles': 'Beschriftungen / Bahnen',
   'help.capture': 'Screenshot / Video aufnehmen', 'help.escape': 'Panels schließen',
@@ -1291,7 +1303,7 @@ ja: {
   'fact.type': '種類', 'fact.radius': '半径', 'fact.distance': '太陽からの距離',
   'fact.year': '公転周期', 'fact.day': '自転周期', 'fact.now': '地球からの距離',
   'type.star': '恒星', 'type.planet': '惑星', 'type.moon': '衛星',
-  'explore.goto': '飛んでいく', 'explore.listen': '音で聴く', 'explore.listenTitle': 'この天体のデータを音にして聴く', 'explore.sonify': '音楽化',
+  'explore.goto': '飛んでいく', 'explore.listen': '音で聴く', 'explore.listenTitle': 'この天体のデータを音にして聴く', 'explore.sonify': '音で聴く',
   'tour.start': '▶ グランドツアー開始', 'tour.stop': '■ ツアー終了',
   'tour.hint': '太陽系を巡るシネマティックなガイド飛行。',
   'apod.random': '🎲 ランダム', 'apod.videoDay': '今日の天体写真は動画です。', 'apod.openSite': 'apod.nasa.gov で見る',
@@ -1340,7 +1352,7 @@ ja: {
   'hint.free': 'WASD で飛行 · ドラッグで視点 · Shift で加速',
   'help.title': '操作方法とショートカット',
   'help.drag': 'カメラを周回', 'help.zoom': 'ズームイン / アウト', 'help.click': '天体を選択',
-  'help.numbers': '太陽 … 海王星を選択', 'help.space': '時間を一時停止 / 再開',
+  'help.numbers': '水星 … 海王星を選択', 'help.moonSun': '月 / 太陽を選択', 'help.space': '時間を一時停止 / 再開',
   'help.speed': '時間を遅く / 速く', 'help.modes': '軌道 / 自由 / ツアーカメラ',
   'help.wasd': '飛行（自由モード）', 'help.toggles': 'ラベル / 軌道線',
   'help.capture': 'スクリーンショット / 動画録画', 'help.escape': 'パネルを閉じる',
@@ -1396,7 +1408,7 @@ ru: {
   'neo.count': '{n} объектов на этой неделе', 'neo.hazardous': 'потенциально опасен', 'neo.safe': 'безопасен',
   'neo.diameter': 'Диаметр', 'neo.speed': 'Скорость', 'neo.miss': 'Минимальное расстояние', 'neo.lunar': '{n}× расстояния до Луны', 'neo.when': 'Максимальное сближение',
   'mars.latest': 'Свежие снимки',
-  'mars.note': 'NASA закрыла отдельный API фотографий марсоходов, поэтому Cosmoscope получает снимки напрямую из Медиатеки NASA.',
+  'mars.note': 'NASA закрыло отдельный API фотографий марсоходов, поэтому Cosmoscope загружает снимки марсоходов в реальном времени из Медиатеки NASA.',
   'epic.hint': 'Снимки полного диска Земли со спутника DSCOVR с расстояния 1,5 млн км (NASA EPIC).',
   'epic.load': 'Загрузить свежие снимки', 'epic.taken': 'Снято {date} UTC',
   'donki.hint': 'Недавние солнечные вспышки и корональные выбросы массы из NASA DONKI. Сильная активность делает Солнце в сцене ярче.',
@@ -1423,7 +1435,7 @@ ru: {
   'set.renderScale': 'Масштаб рендера', 'set.bloom': 'Свечение (bloom)', 'set.softShadows': 'Мягкие тени и затмения',
   'set.belt': 'Пыль пояса астероидов', 'set.grain': 'Зернистость плёнки',
   'set.scene': 'Сцена', 'set.labels': 'Подписи тел', 'set.orbits': 'Орбиты',
-  'set.scale': 'Модель масштаба', 'set.showcase': 'Витрина', 'set.trueScale': 'Реальный масштаб',
+  'set.scale': 'Масштабная модель', 'set.showcase': 'Витрина', 'set.trueScale': 'Реальный масштаб',
   'set.scaleHint': 'Режим «Витрина» сжимает расстояния, чтобы все миры были видны вместе. Реальный масштаб использует истинные пропорции — космос почти пуст!',
   'set.audio': 'Звук', 'set.masterVol': 'Общая громкость', 'set.musicVol': 'Эмбиент-музыка', 'set.fxVol': 'Звуки интерфейса',
   'set.api': 'API NASA',
@@ -1435,7 +1447,7 @@ ru: {
   'hint.free': 'WASD — полёт · Тяните, чтобы смотреть · Shift — ускорение',
   'help.title': 'Управление и горячие клавиши',
   'help.drag': 'Облёт камерой', 'help.zoom': 'Приблизить / отдалить', 'help.click': 'Выбрать мир',
-  'help.numbers': 'Выбрать Солнце … Нептун', 'help.space': 'Пауза / пуск времени',
+  'help.numbers': 'Выбрать Меркурий … Нептун', 'help.moonSun': 'Выбрать Луну / Солнце', 'help.space': 'Пауза / пуск времени',
   'help.speed': 'Время медленнее / быстрее', 'help.modes': 'Камера: орбита / свободная / тур',
   'help.wasd': 'Полёт (свободный режим)', 'help.toggles': 'Подписи / орбиты',
   'help.capture': 'Снимок / запись видео', 'help.escape': 'Закрыть панели',
@@ -1456,7 +1468,7 @@ ru: {
   'blurb.saturn': 'Жемчужина Солнечной системы в короне ледяных колец толщиной всего в десятки метров.',
   'blurb.uranus': 'Ледяной гигант, опрокинутый набок и катящийся вокруг Солнца раз в 84 года.',
   'blurb.neptune': 'Самый ветреный мир: сверхзвуковые бури несутся по этому тёмно-синему гиганту со скоростью 2000 км/ч.',
-  'unit.km': 'км', 'unit.au': 'а.е.', 'unit.hours': 'ч', 'unit.days': 'дней', 'unit.years': 'лет',
+  'unit.km': 'км', 'unit.au': 'а.е.', 'unit.hours': 'ч', 'unit.days': 'сут.', 'unit.years': 'года',
   'unit.kmh': 'км/ч', 'unit.m': 'м', 'unit.kms': 'км/с',
 },
 };
@@ -1471,7 +1483,11 @@ function setLang(code) {
 }
 
 function detectLang() {
-  const saved = typeof localStorage !== 'undefined' && localStorage.getItem('cosmoscope.lang');
+  /* storage access itself can throw (sandboxed iframe, cookies off) */
+  let saved = null;
+  try {
+    if (typeof localStorage !== 'undefined') saved = localStorage.getItem('cosmoscope.lang');
+  } catch { /* blocked — fall through to navigator detection */ }
   if (saved && STRINGS[saved]) return saved;
   const navList = (typeof navigator !== 'undefined' && (navigator.languages || [navigator.language])) || [];
   for (const tag of navList) {
@@ -1740,11 +1756,8 @@ function orbitPath(key, dateMs, mode, n = 180) {
   const dist = showcase ? SCENE.showcaseDist : SCENE.trueDist;
 
   if (key === 'moon') {
-    /* draw around current Earth position */
-    const T0 = jdToCenturies(dateToJD(dateMs));
-    const eEcl = heliocentric('earth', T0);
-    const dAu = Math.hypot(eEcl[0], eEcl[1], eEcl[2]);
-    const e = toScene(scaleVec(eEcl, dist(dAu) / dAu));
+    /* EARTH-RELATIVE points — the renderer translates them by Earth's
+       live position, so the ring never detaches during playback */
     const eR = showcase ? SCENE.showcaseRadius(6378.137) : 0;
     const periodMs = MOON.periodDays * DAY_MS;
     for (let i = 0; i <= n; i++) {
@@ -1755,10 +1768,9 @@ function orbitPath(key, dateMs, mode, n = 180) {
         const gAu = Math.hypot(g[0], g[1], g[2]);
         const sep = eR * 3.4;
         const gs = toScene(g);
-        p = [e[0] + gs[0] / gAu * sep, e[1] + gs[1] / gAu * sep, e[2] + gs[2] / gAu * sep];
+        p = [gs[0] / gAu * sep, gs[1] / gAu * sep, gs[2] / gAu * sep];
       } else {
-        const gs = toScene(scaleVec(g, SCENE.AU_UNITS));
-        p = [e[0] + gs[0], e[1] + gs[1], e[2] + gs[2]];
+        p = toScene(scaleVec(g, SCENE.AU_UNITS));
       }
       pts[i * 3] = p[0]; pts[i * 3 + 1] = p[1]; pts[i * 3 + 2] = p[2];
     }
@@ -2306,16 +2318,19 @@ float hash12(vec2 p) {
   return fract((p3.x + p3.y) * p3.z);
 }
 void main() {
+  /* fuv = position in the FULL virtual frame — identical to vUV for
+     live rendering, remapped per tile during hi-res still export so
+     vignette/grain/bloom compose as one image, not one per tile */
+  vec2 fuv = uBloomUV.xy + vUV * uBloomUV.zw;
   vec3 hdr = texture(uScene, vUV).rgb;
-  vec2 buv = uBloomUV.xy + vUV * uBloomUV.zw;
-  hdr += texture(uBloom, buv).rgb * uBloomAmt;
+  hdr += texture(uBloom, fuv).rgb * uBloomAmt;
   vec3 c = aces(hdr * 0.85);
   c = pow(c, vec3(1.0 / 2.2));
   /* vignette */
-  vec2 q = vUV - 0.5;
+  vec2 q = fuv - 0.5;
   c *= 1.0 - dot(q, q) * 0.55;
   /* grain */
-  c += (hash12(vUV * 1731.0 + fract(uTime) * 917.0) - 0.5) * uGrainAmt;
+  c += (hash12(fuv * 1731.0 + fract(uTime) * 917.0) - 0.5) * uGrainAmt;
   fragColor = vec4(c, 1.0);
 }`;
 
@@ -2347,8 +2362,9 @@ void main() {
 const LINE_VS = `#version 300 es
 layout(location=0) in vec3 aPos;
 uniform mat4 uVP;
+uniform vec3 uOffset;   /* live anchor for body-relative paths (Moon) */
 void main() {
-  gl_Position = uVP * vec4(aPos, 1.0);
+  gl_Position = uVP * vec4(aPos + uOffset, 1.0);
   gl_PointSize = 3.0;
 }`;
 const LINE_FS = `#version 300 es
@@ -2362,6 +2378,7 @@ void main() {
     float d = length(gl_PointCoord - 0.5);
     a *= smoothstep(0.5, 0.15, d);
   }
+  /* alpha applied once here; blend uses (ONE, ONE) additive */
   fragColor = vec4(uColor.rgb * a, a);
 }`;
 
@@ -2480,7 +2497,7 @@ class Engine {
   setOptions(patch) {
     Object.assign(this.opt, patch);
     this._buildSceneProg();
-    this._allocTargets(this.fbo.w, this.fbo.h, true);
+    if (this.fbo.w > 0 && this.fbo.h > 0) this._allocTargets(this.fbo.w, this.fbo.h, true);
   }
 
   _makeTex(w, h, internal, filter) {
@@ -2543,14 +2560,15 @@ class Engine {
   }
 
   setPaths(paths) {
-    /* paths: [{points: Float32Array, color:[r,g,b], alpha}] */
+    /* paths: [{points, color:[r,g,b], alpha, anchor?: bodyIndex}] —
+       anchored paths are stored body-relative and translated live */
     const gl = this.gl;
     for (const p of this.paths) gl.deleteBuffer(p.buf);
     this.paths = paths.map((p) => {
       const buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, p.points, gl.STATIC_DRAW);
-      return { buf, n: p.points.length / 3, color: p.color, alpha: p.alpha };
+      return { buf, n: p.points.length / 3, color: p.color, alpha: p.alpha, anchor: p.anchor };
     });
   }
 
@@ -2595,7 +2613,7 @@ class Engine {
     gl.useProgram(this.lineProg);
     gl.uniformMatrix4fv(this.u(this.lineProg, 'uVP'), false, frame.vp);
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.blendFunc(gl.ONE, gl.ONE);      /* shader premultiplies alpha */
     gl.enable(gl.DEPTH_TEST);
     gl.depthMask(false);
     if (frame.showOrbits) {
@@ -2603,6 +2621,8 @@ class Engine {
         gl.bindBuffer(gl.ARRAY_BUFFER, p.buf);
         gl.enableVertexAttribArray(0);
         gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        const off = (p.anchor != null && frame.bodies[p.anchor]) ? frame.bodies[p.anchor].pos : [0, 0, 0];
+        gl.uniform3f(this.u(this.lineProg, 'uOffset'), off[0], off[1], off[2]);
         gl.uniform4f(this.u(this.lineProg, 'uColor'), p.color[0], p.color[1], p.color[2], p.alpha);
         gl.uniform1f(this.u(this.lineProg, 'uIsPoint'), 0);
         gl.drawArrays(gl.LINE_STRIP, 0, p.n);
@@ -2612,6 +2632,7 @@ class Engine {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pointBuf);
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+      gl.uniform3f(this.u(this.lineProg, 'uOffset'), 0, 0, 0);
       gl.uniform4f(this.u(this.lineProg, 'uColor'), 1.0, 0.75, 0.4, 0.9);
       gl.uniform1f(this.u(this.lineProg, 'uIsPoint'), 1);
       gl.drawArrays(gl.POINTS, 0, this.pointCount);
@@ -2727,51 +2748,61 @@ class Engine {
     const out = document.createElement('canvas');
     out.width = w; out.height = h;
     const ctx = out.getContext('2d');
+    /* device canvas limits (e.g. iOS area cap) surface here, not deep
+       in the loop — report as a friendly "too big" */
+    if (!ctx || out.width !== w || out.height !== h) {
+      const err = new Error('canvas limit');
+      err.kind = 'toobig';
+      throw err;
+    }
     const outFbo = gl.createFramebuffer();
     const outTex = this._makeTex(tile, tile, gl.RGBA8, gl.NEAREST);
     gl.bindFramebuffer(gl.FRAMEBUFFER, outFbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
 
-    const cols = Math.ceil(w / tile), rows = Math.ceil(h / tile);
-    let done = 0;
-    for (let ty = 0; ty < rows; ty++) {
-      for (let tx = 0; tx < cols; tx++) {
-        const x0 = tx * tile, y0 = ty * tile;
-        const tw = Math.min(tile, w - x0), th = Math.min(tile, h - y0);
-        this._allocTargets(tw, th, true);
-        /* scene pass for this tile (gl y-up ⇒ flip row index) */
-        const glY0 = h - y0 - th;
-        this._renderScenePass(frame, this.fbo.scene, tw, th, w, h, x0, glY0);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo.scene);
-        gl.viewport(0, 0, tw, th);
-        /* overlays skipped in stills: pure rendered scene */
+    try {
+      const cols = Math.ceil(w / tile), rows = Math.ceil(h / tile);
+      let done = 0;
+      for (let ty = 0; ty < rows; ty++) {
+        for (let tx = 0; tx < cols; tx++) {
+          const x0 = tx * tile, y0 = ty * tile;
+          const tw = Math.min(tile, w - x0), th = Math.min(tile, h - y0);
+          this._allocTargets(tw, th, true);
+          /* scene pass for this tile (gl y-up ⇒ flip row index) */
+          const glY0 = h - y0 - th;
+          this._renderScenePass(frame, this.fbo.scene, tw, th, w, h, x0, glY0);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo.scene);
+          gl.viewport(0, 0, tw, th);
+          /* overlays skipped in stills: pure rendered scene */
 
-        /* composite with preview bloom mapped to this tile */
-        const oldTex = this.fbo.bloomATex;
-        this.fbo.bloomATex = keepBloomTex;
-        this._composite(outFbo, tw, th, frame, [x0 / w, glY0 / h, tw / w, th / h]);
-        this.fbo.bloomATex = oldTex;
+          /* composite with preview bloom mapped to this tile */
+          const oldTex = this.fbo.bloomATex;
+          this.fbo.bloomATex = keepBloomTex;
+          this._composite(outFbo, tw, th, frame, [x0 / w, glY0 / h, tw / w, th / h]);
+          this.fbo.bloomATex = oldTex;
 
-        const px = new Uint8Array(tw * th * 4);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, outFbo);
-        gl.readPixels(0, 0, tw, th, gl.RGBA, gl.UNSIGNED_BYTE, px);
-        const img = ctx.createImageData(tw, th);
-        /* flip vertically: gl rows are bottom-up */
-        for (let r = 0; r < th; r++) {
-          img.data.set(px.subarray((th - 1 - r) * tw * 4, (th - r) * tw * 4), r * tw * 4);
+          const px = new Uint8Array(tw * th * 4);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, outFbo);
+          gl.readPixels(0, 0, tw, th, gl.RGBA, gl.UNSIGNED_BYTE, px);
+          const img = ctx.createImageData(tw, th);
+          /* flip vertically: gl rows are bottom-up */
+          for (let r = 0; r < th; r++) {
+            img.data.set(px.subarray((th - 1 - r) * tw * 4, (th - r) * tw * 4), r * tw * 4);
+          }
+          ctx.putImageData(img, x0, y0);
+          done++;
+          if (onProgress) onProgress(done / (cols * rows));
+          await new Promise((res) => setTimeout(res, 0));  /* keep UI alive */
         }
-        ctx.putImageData(img, x0, y0);
-        done++;
-        if (onProgress) onProgress(done / (cols * rows));
-        await new Promise((res) => setTimeout(res, 0));  /* keep UI alive */
       }
+    } finally {
+      /* restore live-render state on success AND failure */
+      gl.deleteFramebuffer(outFbo);
+      gl.deleteTexture(outTex);
+      gl.deleteTexture(keepBloomTex);
+      gl.deleteFramebuffer(keepBloomFbo);
+      this._allocTargets(prev.w, prev.h, true);
     }
-
-    gl.deleteFramebuffer(outFbo);
-    gl.deleteTexture(outTex);
-    gl.deleteTexture(keepBloomTex);
-    gl.deleteFramebuffer(keepBloomFbo);
-    this._allocTargets(prev.w, prev.h, true);
     return out;
   }
 
@@ -3100,14 +3131,33 @@ function cacheGet(key, ttlMs) {
     const raw = localStorage.getItem(CACHE_PREFIX + key);
     if (!raw) return null;
     const { t, v } = JSON.parse(raw);
-    if (Date.now() - t > ttlMs) return null;
+    if (Date.now() - t > ttlMs) {
+      localStorage.removeItem(CACHE_PREFIX + key);   /* prune on expiry */
+      return null;
+    }
     return v;
   } catch { return null; }
 }
 function cachePut(key, v) {
+  const payload = JSON.stringify({ t: Date.now(), v });
   try {
-    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ t: Date.now(), v }));
-  } catch { /* storage full/unavailable — caching is best-effort */ }
+    localStorage.setItem(CACHE_PREFIX + key, payload);
+  } catch {
+    /* quota hit: evict the oldest cached entries and retry once */
+    try {
+      const entries = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(CACHE_PREFIX)) {
+          const t = (JSON.parse(localStorage.getItem(k)) || {}).t || 0;
+          entries.push({ k, t });
+        }
+      }
+      entries.sort((a, b) => a.t - b.t);
+      for (const e of entries.slice(0, Math.ceil(entries.length / 2))) localStorage.removeItem(e.k);
+      localStorage.setItem(CACHE_PREFIX + key, payload);
+    } catch { /* still failing — caching stays best-effort */ }
+  }
 }
 
 async function cached(key, ttlMs, fetcher) {
@@ -3194,12 +3244,17 @@ class NasaClient {
     try { localStorage.setItem('cosmoscope.apikey', this.key); } catch { /* unavailable */ }
   }
 
-  /* ── APOD ── */
+  /* ── APOD ──
+     Without a date param the API returns the current entry; pinning
+     "today" in UTC 404s for the first hours of each UTC day because
+     APOD publishes on US Eastern midnight. */
   async apod(date) {
-    const d = date || todayUTC();
+    const key = date ? `apod.${date}.${this.key}` : `apod.latest.${this.key}`;
+    const ttl = date ? 24 * 3600e3 : 1800e3;
+    const qs = date ? `&date=${date}` : '';
     try {
-      return await cached('apod.' + d + '.' + this.key, 24 * 3600e3, () =>
-        fetchJSON(`https://api.nasa.gov/planetary/apod?api_key=${this.key}&date=${d}&thumbs=true`));
+      return await cached(key, ttl, () =>
+        fetchJSON(`https://api.nasa.gov/planetary/apod?api_key=${this.key}${qs}&thumbs=true`));
     } catch (e) {
       if (e.kind === 'ratelimit') throw e;
       return { data: SAMPLES.apod, offline: true };
@@ -3417,6 +3472,7 @@ class Recorder {
   get recording() { return !!this.rec && this.rec.state === 'recording'; }
 
   start({ preference = 'auto', fps = 60, mbps = 16, audioEngine = null }) {
+    if (this.rec) throw new Error('busy');   /* a stop is still finalizing */
     const ok = supportedMimes();
     if (!ok.length) {
       const err = new Error('unsupported');
@@ -3446,6 +3502,7 @@ class Recorder {
       } catch { /* video-only recording is fine */ }
     }
     this.chunks = [];
+    this.stream = stream;
     this.rec = new MediaRecorder(stream, {
       mimeType: mime,
       videoBitsPerSecond: mbps * 1e6,
@@ -3455,6 +3512,19 @@ class Recorder {
     this.startedAt = Date.now();
     this.mime = mime;
     return mime;
+  }
+
+  _release() {
+    if (this.stream) {
+      for (const track of this.stream.getTracks()) track.stop();
+      this.stream = null;
+    }
+    if (this._audioTap) {
+      try { this._audioTap.engine.master.disconnect(this._audioTap.dest); } catch { /* already gone */ }
+      this._audioTap = null;
+    }
+    this.rec = null;
+    this.chunks = [];
   }
 
   elapsed() {
@@ -3469,15 +3539,10 @@ class Recorder {
         const type = this.mime.split(';')[0];
         const blob = new Blob(this.chunks, { type });
         const name = `cosmoscope-${stamp()}.${extOf(this.mime)}`;
-        if (this._audioTap) {
-          try { this._audioTap.engine.master.disconnect(this._audioTap.dest); } catch { /* already gone */ }
-          this._audioTap = null;
-        }
-        this.rec = null;
-        this.chunks = [];
+        this._release();
         resolve({ blob, name });
       };
-      rec.onerror = (e) => { this.rec = null; reject(e.error || new Error('recorder error')); };
+      rec.onerror = (e) => { this._release(); reject(e.error || new Error('recorder error')); };
       rec.stop();
     });
   }
@@ -3538,7 +3603,10 @@ function initUI(app) {
   /* ═══ i18n application ═══ */
   function applyI18n() {
     document.documentElement.lang = getLang();
-    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      /* never clobber elements that contain nested translated parts */
+      if (!el.querySelector('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+    });
     document.querySelectorAll('[data-i18n-title]').forEach((el) => {
       el.title = t(el.dataset.i18nTitle);
       el.setAttribute('aria-label', t(el.dataset.i18nTitle));
@@ -3552,7 +3620,20 @@ function initUI(app) {
     updateSpeedLabel();
     updateHint();
     updateAudioButton();
+    updateLibSeg();
+    /* restore state-dependent labels the generic pass just overwrote */
+    updateTourButton();
+    $('btn-rec').textContent = recorder.recording ? t('cap.stop') : t('cap.record');
     $('lang').value = getLang();
+  }
+
+  /* segmented controls: keep visual + ARIA state in sync */
+  function segActivate(container, activeBtn) {
+    container.querySelectorAll('button').forEach((x) => {
+      const on = x === activeBtn;
+      x.classList.toggle('active', on);
+      x.setAttribute('aria-pressed', String(on));
+    });
   }
 
   /* language selector */
@@ -3624,9 +3705,9 @@ function initUI(app) {
   function renderHelp() {
     const rows = [
       ['k.drag', 'help.drag'], ['k.scroll', 'help.zoom'], ['k.click', 'help.click'],
-      ['1–9,0', 'help.numbers'], ['Space', 'help.space'], [', / .', 'help.speed'],
-      ['O F T', 'help.modes'], ['WASD', 'help.wasd'], ['L / P', 'help.toggles'],
-      ['S / R', 'help.capture'], ['Esc', 'help.escape'],
+      ['1–8', 'help.numbers'], ['9 / 0', 'help.moonSun'], ['Space', 'help.space'],
+      [', / .', 'help.speed'], ['O F T', 'help.modes'], ['WASD', 'help.wasd'],
+      ['L / P', 'help.toggles'], ['S / R', 'help.capture'], ['Esc', 'help.escape'],
     ];
     $('help-body').innerHTML = rows.map(([k, d]) => {
       const key = k.startsWith('k.') ? t(k) : k;
@@ -3704,6 +3785,10 @@ function initUI(app) {
 
   $('bc-goto').addEventListener('click', () => { app.actions.flyTo(state.selected); audio.ui('select'); });
   $('bc-listen').addEventListener('click', () => {
+    if (!audio.started || audio.muted) {
+      toast(t('audio.enable'), 'warn');
+      return;
+    }
     const b = BODIES[state.selected];
     audio.sonify({
       periodYears: orbitalPeriodYears(b.key) || 0.07,
@@ -3754,11 +3839,13 @@ function initUI(app) {
   onOpenTab.apod = () => { if (!$('apod-content').innerHTML) loadApod(); };
 
   /* ═══ NeoWs ═══ */
+  let neoLoadedOk = false;
   async function loadNeo() {
     const box = $('neo-content');
     box.innerHTML = spinner();
     try {
       const { data, offline } = await nasa.neoFeed();
+      neoLoadedOk = true;
       const all = Object.values(data.near_earth_objects || {}).flat();
       all.sort((a, b) =>
         parseFloat(a.close_approach_data[0]?.miss_distance.kilometers || 1e12) -
@@ -3790,7 +3877,7 @@ function initUI(app) {
     state.neoVisualize = e.target.checked;
     app.actions.refreshNeoPoints();
   });
-  onOpenTab.asteroids = () => { if (!$('neo-content').innerHTML) loadNeo(); };
+  onOpenTab.asteroids = () => { if (!neoLoadedOk) loadNeo(); };  /* retry after failures */
 
   /* ═══ gallery helper ═══ */
   function galleryFromLibrary(box, result, emptyMsg) {
@@ -3908,12 +3995,12 @@ function initUI(app) {
   }
   libSeg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     libMedia = b.dataset.m;
-    libSeg.querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+    segActivate(libSeg, b);
     doSearch();
   }));
 
   async function doSearch() {
-    const q = $('lib-q').value.trim() || (libMedia === 'audio' ? 'sonification' : 'nebula');
+    const q = $('lib-q').value.trim() || (libMedia === 'audio' ? 'space sounds' : 'nebula');
     const box = $('lib-content');
     box.innerHTML = spinner();
     try {
@@ -4013,12 +4100,23 @@ function initUI(app) {
   function addDownload(blob, name) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = name; a.click();
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     const item = document.createElement('div');
     item.className = 'dl-item';
     const size = blob.size > 1048576 ? (blob.size / 1048576).toFixed(1) + ' MB' : Math.round(blob.size / 1024) + ' KB';
     item.innerHTML = `<span>💾</span><a href="${url}" download="${escapeHtml(name)}">${escapeHtml(name)}</a><span class="hint">${size}</span>`;
-    $('downloads').prepend(item);
+    item.dataset.url = url;
+    const list = $('downloads');
+    list.prepend(item);
+    /* bound the list; release object URLs of evicted entries */
+    while (list.children.length > 8) {
+      const evicted = list.lastElementChild;
+      URL.revokeObjectURL(evicted.dataset.url);
+      evicted.remove();
+    }
     return url;
   }
 
@@ -4046,6 +4144,7 @@ function initUI(app) {
         audio.ui('error');
       }
     } else {
+      btn.disabled = true;         /* block double-stop during finalize */
       try {
         const { blob, name } = await recorder.stop();
         addDownload(blob, name);
@@ -4053,11 +4152,13 @@ function initUI(app) {
         audio.ui('recStop');
       } catch {
         toast(t('toast.apiError'), 'err');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = t('cap.record');
+        btn.classList.remove('recording');
+        $('rec-indicator').hidden = true;
+        clearInterval(recTimer);
       }
-      btn.textContent = t('cap.record');
-      btn.classList.remove('recording');
-      $('rec-indicator').hidden = true;
-      clearInterval(recTimer);
     }
   });
   onOpenTab.capture = updateRecNote;
@@ -4079,7 +4180,7 @@ function initUI(app) {
     $('render-scale-val').textContent = o.renderScale.toFixed(2) + '×';
   }
   $('quality-seg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    $('quality-seg').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+    segActivate($('quality-seg'), b);
     app.engine.setOptions(PRESETS[b.dataset.q]);
     app.engine.resize();
     syncGraphicsUI();
@@ -4097,7 +4198,7 @@ function initUI(app) {
   $('opt-labels').addEventListener('change', (e) => { state.showLabels = e.target.checked; });
   $('opt-orbits').addEventListener('change', (e) => { state.showOrbits = e.target.checked; });
   $('scale-seg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    $('scale-seg').querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+    segActivate($('scale-seg'), b);
     app.actions.setScaleMode(b.dataset.s);
     audio.ui('click');
   }));
@@ -4154,7 +4255,11 @@ function initUI(app) {
     toast,
     openTab,
     syncCamSeg() {
-      $('cam-seg').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.cam === state.mode));
+      $('cam-seg').querySelectorAll('button').forEach((b) => {
+        const on = b.dataset.cam === state.mode;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
+      });
       updateHint();
       updateTourButton();
     },
@@ -4173,6 +4278,8 @@ function initUI(app) {
   applyI18n();
   syncGraphicsUI();
   updateRecNote();
+  /* initial visibility: the quality slider applies to JPEG/WebP only */
+  $('shot-quality-field').style.display = $('shot-fmt').value === 'image/png' ? 'none' : '';
   return ui;
 }
 
@@ -4349,7 +4456,11 @@ function boot() {
     for (const b of BODIES) {
       if (b.key === 'sun') continue;
       const pts = orbitPath(b.key, state.simMs, state.scaleMode, b.key === 'moon' ? 96 : 180);
-      paths.push({ points: pts, color: PATH_COLORS[b.key], alpha: b.key === 'moon' ? 0.18 : 0.26 });
+      paths.push({
+        points: pts, color: PATH_COLORS[b.key], alpha: b.key === 'moon' ? 0.18 : 0.26,
+        /* the Moon's path is Earth-relative; the engine translates it live */
+        anchor: b.key === 'moon' ? BODY_INDEX.earth : undefined,
+      });
     }
     engine.setPaths(paths);
   }
@@ -4459,8 +4570,14 @@ function boot() {
         const cb = document.getElementById('opt-orbits');
         cb.checked = !cb.checked; state.showOrbits = cb.checked; break;
       }
-      case 's': document.getElementById('btn-shot').click(); break;
-      case 'r': document.getElementById('btn-rec').click(); break;
+      case 's':
+        /* S is also "fly backward" in free mode — never fire a
+           multi-second ray-traced export from a flight key */
+        if (state.mode !== 'free' && !e.repeat) document.getElementById('btn-shot').click();
+        break;
+      case 'r':
+        if (!e.repeat) document.getElementById('btn-rec').click();
+        break;
       case 'h': case '?': {
         const help = document.getElementById('help');
         help.hidden = !help.hidden; break;
@@ -4602,7 +4719,7 @@ function boot() {
       };
     });
 
-    /* NEO flyby points around Earth */
+    /* NEO flyby points around Earth (skip the upload when inactive) */
     if (state.neoVisualize && state.neoRel.length) {
       const e = state.scene[BODY_INDEX.earth];
       const arr = new Float32Array(state.neoRel.length * 3);
@@ -4613,7 +4730,7 @@ function boot() {
         arr[i * 3 + 2] = e.pos[2] + nrel.dir[2] * d;
       });
       engine.setPoints(arr);
-    } else {
+    } else if (engine.pointCount > 0) {
       engine.setPoints(new Float32Array(0));
     }
 

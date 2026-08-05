@@ -67,7 +67,7 @@ Press **⏺ Start recording**, fly around, press **⏹ Stop** — the file downl
 
 - Every action is reachable by keyboard (see `H` for the shortcut list); panels are semantic DOM with ARIA labels, not canvas paint.
 - The app honors `prefers-reduced-motion`: camera flights become cuts and film grain is disabled.
-- Text sits on scrims to preserve contrast over the star field; touch targets are ≥ 40 px.
+- Text sits on scrims to preserve contrast over the star field, and controls keep comfortable touch sizing on phone layouts.
 
 ## Troubleshooting
 

@@ -30,7 +30,7 @@ These findings came from empirical testing (curl with CORS `Origin` headers, liv
 `DEMO_KEY` is shared per IP (documented ≈30 req/h; observed as low as 10 req/h). Cosmoscope:
 
 - caches every response in `localStorage` with per-source TTLs (APOD 24 h, NeoWs/EPIC/Library 30 min, DONKI 15 min);
-- prefers the keyless hosts (4 of the 8 sources never touch the quota);
+- prefers the keyless hosts (6 of the 8 sources never touch the quota — only APOD and NeoWs use api.nasa.gov keys);
 - detects HTTP 429 and shows a localized hint pointing at **Settings → NASA API**, where users can paste their own free key from [api.nasa.gov](https://api.nasa.gov) (stored in the browser only);
 - falls back to embedded sample data with a visible 📡 badge whenever the network fails, so every panel always has something meaningful to show.
 

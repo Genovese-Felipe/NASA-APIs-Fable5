@@ -175,7 +175,11 @@ function boot() {
     for (const b of BODIES) {
       if (b.key === 'sun') continue;
       const pts = orbitPath(b.key, state.simMs, state.scaleMode, b.key === 'moon' ? 96 : 180);
-      paths.push({ points: pts, color: PATH_COLORS[b.key], alpha: b.key === 'moon' ? 0.18 : 0.26 });
+      paths.push({
+        points: pts, color: PATH_COLORS[b.key], alpha: b.key === 'moon' ? 0.18 : 0.26,
+        /* the Moon's path is Earth-relative; the engine translates it live */
+        anchor: b.key === 'moon' ? BODY_INDEX.earth : undefined,
+      });
     }
     engine.setPaths(paths);
   }
@@ -285,8 +289,14 @@ function boot() {
         const cb = document.getElementById('opt-orbits');
         cb.checked = !cb.checked; state.showOrbits = cb.checked; break;
       }
-      case 's': document.getElementById('btn-shot').click(); break;
-      case 'r': document.getElementById('btn-rec').click(); break;
+      case 's':
+        /* S is also "fly backward" in free mode — never fire a
+           multi-second ray-traced export from a flight key */
+        if (state.mode !== 'free' && !e.repeat) document.getElementById('btn-shot').click();
+        break;
+      case 'r':
+        if (!e.repeat) document.getElementById('btn-rec').click();
+        break;
       case 'h': case '?': {
         const help = document.getElementById('help');
         help.hidden = !help.hidden; break;
@@ -428,7 +438,7 @@ function boot() {
       };
     });
 
-    /* NEO flyby points around Earth */
+    /* NEO flyby points around Earth (skip the upload when inactive) */
     if (state.neoVisualize && state.neoRel.length) {
       const e = state.scene[BODY_INDEX.earth];
       const arr = new Float32Array(state.neoRel.length * 3);
@@ -439,7 +449,7 @@ function boot() {
         arr[i * 3 + 2] = e.pos[2] + nrel.dir[2] * d;
       });
       engine.setPoints(arr);
-    } else {
+    } else if (engine.pointCount > 0) {
       engine.setPoints(new Float32Array(0));
     }
 

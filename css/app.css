@@ -298,9 +298,15 @@ input[type="date"] { color-scheme: dark; }
   #panel { left: 62px; width: min(340px, calc(100vw - 72px)); }
 }
 @media (max-width: 640px) {
-  #topbar { gap: 8px; height: 48px; }
+  /* two-row top bar: brand + icons first, time controls wrap below */
+  #topbar { gap: 6px 8px; height: auto; min-height: 48px; flex-wrap: wrap; padding: 6px 8px; }
   .brand-name { display: none; }
+  .brand { order: 1; }
+  .top-right { order: 2; margin-left: auto; }
+  .time-controls { order: 3; flex-basis: 100%; justify-content: flex-start; }
+  .sim-date { overflow: hidden; text-overflow: ellipsis; }
   .speed-slider { width: 80px; }
+  #toasts { bottom: 116px; }        /* stack above the bottom rail */
   #rail {
     left: 0; right: 0; top: auto; bottom: 52px; width: auto; height: 52px;
     flex-direction: row; border-radius: 0; border-left: none; border-right: none;
@@ -317,5 +323,11 @@ input[type="date"] { color-scheme: dark; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.001s !important; transition-duration: 0.001s !important; }
+  /* stop loops entirely — shortening duration alone turns infinite
+     animations (spinner, blink, pulse) into rapid flicker */
+  * {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
 }

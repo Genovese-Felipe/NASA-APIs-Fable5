@@ -512,16 +512,19 @@ float hash12(vec2 p) {
   return fract((p3.x + p3.y) * p3.z);
 }
 void main() {
+  /* fuv = position in the FULL virtual frame — identical to vUV for
+     live rendering, remapped per tile during hi-res still export so
+     vignette/grain/bloom compose as one image, not one per tile */
+  vec2 fuv = uBloomUV.xy + vUV * uBloomUV.zw;
   vec3 hdr = texture(uScene, vUV).rgb;
-  vec2 buv = uBloomUV.xy + vUV * uBloomUV.zw;
-  hdr += texture(uBloom, buv).rgb * uBloomAmt;
+  hdr += texture(uBloom, fuv).rgb * uBloomAmt;
   vec3 c = aces(hdr * 0.85);
   c = pow(c, vec3(1.0 / 2.2));
   /* vignette */
-  vec2 q = vUV - 0.5;
+  vec2 q = fuv - 0.5;
   c *= 1.0 - dot(q, q) * 0.55;
   /* grain */
-  c += (hash12(vUV * 1731.0 + fract(uTime) * 917.0) - 0.5) * uGrainAmt;
+  c += (hash12(fuv * 1731.0 + fract(uTime) * 917.0) - 0.5) * uGrainAmt;
   fragColor = vec4(c, 1.0);
 }`;
 
@@ -553,8 +556,9 @@ void main() {
 const LINE_VS = `#version 300 es
 layout(location=0) in vec3 aPos;
 uniform mat4 uVP;
+uniform vec3 uOffset;   /* live anchor for body-relative paths (Moon) */
 void main() {
-  gl_Position = uVP * vec4(aPos, 1.0);
+  gl_Position = uVP * vec4(aPos + uOffset, 1.0);
   gl_PointSize = 3.0;
 }`;
 const LINE_FS = `#version 300 es
@@ -568,6 +572,7 @@ void main() {
     float d = length(gl_PointCoord - 0.5);
     a *= smoothstep(0.5, 0.15, d);
   }
+  /* alpha applied once here; blend uses (ONE, ONE) additive */
   fragColor = vec4(uColor.rgb * a, a);
 }`;
 
@@ -686,7 +691,7 @@ export class Engine {
   setOptions(patch) {
     Object.assign(this.opt, patch);
     this._buildSceneProg();
-    this._allocTargets(this.fbo.w, this.fbo.h, true);
+    if (this.fbo.w > 0 && this.fbo.h > 0) this._allocTargets(this.fbo.w, this.fbo.h, true);
   }
 
   _makeTex(w, h, internal, filter) {
@@ -749,14 +754,15 @@ export class Engine {
   }
 
   setPaths(paths) {
-    /* paths: [{points: Float32Array, color:[r,g,b], alpha}] */
+    /* paths: [{points, color:[r,g,b], alpha, anchor?: bodyIndex}] —
+       anchored paths are stored body-relative and translated live */
     const gl = this.gl;
     for (const p of this.paths) gl.deleteBuffer(p.buf);
     this.paths = paths.map((p) => {
       const buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, p.points, gl.STATIC_DRAW);
-      return { buf, n: p.points.length / 3, color: p.color, alpha: p.alpha };
+      return { buf, n: p.points.length / 3, color: p.color, alpha: p.alpha, anchor: p.anchor };
     });
   }
 
@@ -801,7 +807,7 @@ export class Engine {
     gl.useProgram(this.lineProg);
     gl.uniformMatrix4fv(this.u(this.lineProg, 'uVP'), false, frame.vp);
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.blendFunc(gl.ONE, gl.ONE);      /* shader premultiplies alpha */
     gl.enable(gl.DEPTH_TEST);
     gl.depthMask(false);
     if (frame.showOrbits) {
@@ -809,6 +815,8 @@ export class Engine {
         gl.bindBuffer(gl.ARRAY_BUFFER, p.buf);
         gl.enableVertexAttribArray(0);
         gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        const off = (p.anchor != null && frame.bodies[p.anchor]) ? frame.bodies[p.anchor].pos : [0, 0, 0];
+        gl.uniform3f(this.u(this.lineProg, 'uOffset'), off[0], off[1], off[2]);
         gl.uniform4f(this.u(this.lineProg, 'uColor'), p.color[0], p.color[1], p.color[2], p.alpha);
         gl.uniform1f(this.u(this.lineProg, 'uIsPoint'), 0);
         gl.drawArrays(gl.LINE_STRIP, 0, p.n);
@@ -818,6 +826,7 @@ export class Engine {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pointBuf);
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+      gl.uniform3f(this.u(this.lineProg, 'uOffset'), 0, 0, 0);
       gl.uniform4f(this.u(this.lineProg, 'uColor'), 1.0, 0.75, 0.4, 0.9);
       gl.uniform1f(this.u(this.lineProg, 'uIsPoint'), 1);
       gl.drawArrays(gl.POINTS, 0, this.pointCount);
@@ -933,51 +942,61 @@ export class Engine {
     const out = document.createElement('canvas');
     out.width = w; out.height = h;
     const ctx = out.getContext('2d');
+    /* device canvas limits (e.g. iOS area cap) surface here, not deep
+       in the loop — report as a friendly "too big" */
+    if (!ctx || out.width !== w || out.height !== h) {
+      const err = new Error('canvas limit');
+      err.kind = 'toobig';
+      throw err;
+    }
     const outFbo = gl.createFramebuffer();
     const outTex = this._makeTex(tile, tile, gl.RGBA8, gl.NEAREST);
     gl.bindFramebuffer(gl.FRAMEBUFFER, outFbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
 
-    const cols = Math.ceil(w / tile), rows = Math.ceil(h / tile);
-    let done = 0;
-    for (let ty = 0; ty < rows; ty++) {
-      for (let tx = 0; tx < cols; tx++) {
-        const x0 = tx * tile, y0 = ty * tile;
-        const tw = Math.min(tile, w - x0), th = Math.min(tile, h - y0);
-        this._allocTargets(tw, th, true);
-        /* scene pass for this tile (gl y-up ⇒ flip row index) */
-        const glY0 = h - y0 - th;
-        this._renderScenePass(frame, this.fbo.scene, tw, th, w, h, x0, glY0);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo.scene);
-        gl.viewport(0, 0, tw, th);
-        /* overlays skipped in stills: pure rendered scene */
+    try {
+      const cols = Math.ceil(w / tile), rows = Math.ceil(h / tile);
+      let done = 0;
+      for (let ty = 0; ty < rows; ty++) {
+        for (let tx = 0; tx < cols; tx++) {
+          const x0 = tx * tile, y0 = ty * tile;
+          const tw = Math.min(tile, w - x0), th = Math.min(tile, h - y0);
+          this._allocTargets(tw, th, true);
+          /* scene pass for this tile (gl y-up ⇒ flip row index) */
+          const glY0 = h - y0 - th;
+          this._renderScenePass(frame, this.fbo.scene, tw, th, w, h, x0, glY0);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo.scene);
+          gl.viewport(0, 0, tw, th);
+          /* overlays skipped in stills: pure rendered scene */
 
-        /* composite with preview bloom mapped to this tile */
-        const oldTex = this.fbo.bloomATex;
-        this.fbo.bloomATex = keepBloomTex;
-        this._composite(outFbo, tw, th, frame, [x0 / w, glY0 / h, tw / w, th / h]);
-        this.fbo.bloomATex = oldTex;
+          /* composite with preview bloom mapped to this tile */
+          const oldTex = this.fbo.bloomATex;
+          this.fbo.bloomATex = keepBloomTex;
+          this._composite(outFbo, tw, th, frame, [x0 / w, glY0 / h, tw / w, th / h]);
+          this.fbo.bloomATex = oldTex;
 
-        const px = new Uint8Array(tw * th * 4);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, outFbo);
-        gl.readPixels(0, 0, tw, th, gl.RGBA, gl.UNSIGNED_BYTE, px);
-        const img = ctx.createImageData(tw, th);
-        /* flip vertically: gl rows are bottom-up */
-        for (let r = 0; r < th; r++) {
-          img.data.set(px.subarray((th - 1 - r) * tw * 4, (th - r) * tw * 4), r * tw * 4);
+          const px = new Uint8Array(tw * th * 4);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, outFbo);
+          gl.readPixels(0, 0, tw, th, gl.RGBA, gl.UNSIGNED_BYTE, px);
+          const img = ctx.createImageData(tw, th);
+          /* flip vertically: gl rows are bottom-up */
+          for (let r = 0; r < th; r++) {
+            img.data.set(px.subarray((th - 1 - r) * tw * 4, (th - r) * tw * 4), r * tw * 4);
+          }
+          ctx.putImageData(img, x0, y0);
+          done++;
+          if (onProgress) onProgress(done / (cols * rows));
+          await new Promise((res) => setTimeout(res, 0));  /* keep UI alive */
         }
-        ctx.putImageData(img, x0, y0);
-        done++;
-        if (onProgress) onProgress(done / (cols * rows));
-        await new Promise((res) => setTimeout(res, 0));  /* keep UI alive */
       }
+    } finally {
+      /* restore live-render state on success AND failure */
+      gl.deleteFramebuffer(outFbo);
+      gl.deleteTexture(outTex);
+      gl.deleteTexture(keepBloomTex);
+      gl.deleteFramebuffer(keepBloomFbo);
+      this._allocTargets(prev.w, prev.h, true);
     }
-
-    gl.deleteFramebuffer(outFbo);
-    gl.deleteTexture(outTex);
-    gl.deleteTexture(keepBloomTex);
-    gl.deleteFramebuffer(keepBloomFbo);
-    this._allocTargets(prev.w, prev.h, true);
     return out;
   }
 

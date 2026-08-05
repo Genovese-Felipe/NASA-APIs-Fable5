@@ -74,7 +74,7 @@
       </dl>
       <div class="row gap">
         <button id="bc-goto" class="btn primary" data-i18n="explore.goto">Fly there</button>
-        <button id="bc-listen" class="btn" data-i18n="explore.listen" data-i18n-title="explore.listenTitle" title="Hear this world's data as sound">♪ <span data-i18n="explore.sonify">Sonify</span></button>
+        <button id="bc-listen" class="btn" data-i18n-title="explore.listenTitle" title="Hear this world's data as sound">♪ <span data-i18n="explore.sonify">Sonify</span></button>
       </div>
     </div>
     <div class="tour-box">
@@ -139,7 +139,7 @@
     <h2 data-i18n="tab.capture">Capture &amp; Export</h2>
 
     <h3 data-i18n="cap.stills">Still images</h3>
-    <div class="field"><label data-i18n="cap.resolution">Resolution</label>
+    <div class="field"><label for="shot-res" data-i18n="cap.resolution">Resolution</label>
       <select id="shot-res" class="input">
         <option value="screen" data-i18n="cap.screen">Screen resolution</option>
         <option value="1920">Full HD — 1920×1080</option>
@@ -148,31 +148,31 @@
         <option value="7680">8K UHD — 7680×4320</option>
       </select>
     </div>
-    <div class="field"><label data-i18n="cap.format">Format</label>
+    <div class="field"><label for="shot-fmt" data-i18n="cap.format">Format</label>
       <select id="shot-fmt" class="input">
         <option value="image/png">PNG (lossless)</option>
         <option value="image/jpeg">JPEG</option>
         <option value="image/webp">WebP</option>
       </select>
     </div>
-    <div class="field" id="shot-quality-field"><label data-i18n="cap.quality">Quality</label>
+    <div class="field" id="shot-quality-field"><label for="shot-quality" data-i18n="cap.quality">Quality</label>
       <input id="shot-quality" type="range" min="0.5" max="1" step="0.01" value="0.92">
     </div>
     <button id="btn-shot" class="btn primary wide" data-i18n="cap.take">📸 Capture still</button>
     <p class="hint" data-i18n="cap.tiled">High resolutions are ray-traced in tiles for maximum quality — 8K may take a few seconds.</p>
 
     <h3 data-i18n="cap.video">Video recording</h3>
-    <div class="field"><label data-i18n="cap.vformat">Container</label>
+    <div class="field"><label for="rec-fmt" data-i18n="cap.vformat">Container</label>
       <select id="rec-fmt" class="input"><option value="auto" data-i18n="cap.auto">Auto (best supported)</option></select>
     </div>
-    <div class="field"><label data-i18n="cap.vquality">Video quality</label>
+    <div class="field"><label for="rec-quality" data-i18n="cap.vquality">Video quality</label>
       <select id="rec-quality" class="input">
         <option value="8">Standard (8 Mb/s)</option>
         <option value="16" selected>High (16 Mb/s)</option>
         <option value="35">Ultra (35 Mb/s)</option>
       </select>
     </div>
-    <div class="field"><label data-i18n="cap.fps">Frame rate</label>
+    <div class="field"><label for="rec-fps" data-i18n="cap.fps">Frame rate</label>
       <select id="rec-fps" class="input"><option value="30">30 fps</option><option value="60" selected>60 fps</option></select>
     </div>
     <button id="btn-rec" class="btn danger wide" data-i18n="cap.record">⏺ Start recording</button>
@@ -185,14 +185,14 @@
 
     <h3 data-i18n="set.graphics">Graphics</h3>
     <div class="field"><label data-i18n="set.preset">Quality preset</label>
-      <div class="seg" id="quality-seg" role="radiogroup" aria-label="Quality preset">
+      <div class="seg" id="quality-seg" role="group" data-i18n-title="set.preset" aria-label="Quality preset">
         <button data-q="low" data-i18n="set.low">Low</button>
         <button data-q="medium" data-i18n="set.medium">Medium</button>
         <button data-q="high" class="active" data-i18n="set.high">High</button>
         <button data-q="ultra" data-i18n="set.ultra">Ultra</button>
       </div>
     </div>
-    <div class="field"><label data-i18n="set.renderScale">Render scale</label>
+    <div class="field"><label for="render-scale" data-i18n="set.renderScale">Render scale</label>
       <input id="render-scale" type="range" min="0.5" max="2" step="0.25" value="1">
       <span id="render-scale-val">1.00×</span>
     </div>
@@ -205,7 +205,7 @@
     <label class="check"><input type="checkbox" id="opt-labels" checked> <span data-i18n="set.labels">Body labels</span></label>
     <label class="check"><input type="checkbox" id="opt-orbits" checked> <span data-i18n="set.orbits">Orbit paths</span></label>
     <div class="field"><label data-i18n="set.scale">Scale model</label>
-      <div class="seg" id="scale-seg" role="radiogroup" aria-label="Scale model">
+      <div class="seg" id="scale-seg" role="group" data-i18n-title="set.scale" aria-label="Scale model">
         <button data-s="showcase" class="active" data-i18n="set.showcase">Showcase</button>
         <button data-s="true" data-i18n="set.trueScale">True scale</button>
       </div>
@@ -213,11 +213,11 @@
     </div>
 
     <h3 data-i18n="set.audio">Audio</h3>
-    <div class="field"><label data-i18n="set.masterVol">Master volume</label>
+    <div class="field"><label for="vol-master" data-i18n="set.masterVol">Master volume</label>
       <input id="vol-master" type="range" min="0" max="1" step="0.01" value="0.7"></div>
-    <div class="field"><label data-i18n="set.musicVol">Ambient music</label>
+    <div class="field"><label for="vol-music" data-i18n="set.musicVol">Ambient music</label>
       <input id="vol-music" type="range" min="0" max="1" step="0.01" value="0.8"></div>
-    <div class="field"><label data-i18n="set.fxVol">Interface sounds</label>
+    <div class="field"><label for="vol-fx" data-i18n="set.fxVol">Interface sounds</label>
       <input id="vol-fx" type="range" min="0" max="1" step="0.01" value="0.6"></div>
 
     <h3 data-i18n="set.api">NASA API</h3>
@@ -235,7 +235,7 @@
     <span class="sel-chip" id="sel-chip">☉ <span id="sel-name">Sun</span></span>
     <span class="cam-dist" id="cam-dist"></span>
   </div>
-  <div class="hud-mid seg" id="cam-seg" role="radiogroup" aria-label="Camera mode">
+  <div class="hud-mid seg" id="cam-seg" role="group" aria-label="Camera mode">
     <button data-cam="orbit" class="active" data-i18n="cam.orbit" data-i18n-title="cam.orbitTitle" title="Orbit the selected body">🛰 Orbit</button>
     <button data-cam="free" data-i18n="cam.free" data-i18n-title="cam.freeTitle" title="Free flight — WASD + mouse">🚀 Free</button>
     <button data-cam="tour" data-i18n="cam.tour" data-i18n-title="cam.tourTitle" title="Cinematic guided tour">🎥 Tour</button>
