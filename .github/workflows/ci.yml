@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests (ephemeris + i18n integrity)
+        run: node --test tests/unit/*.test.mjs
+      - name: Build single-file bundles
+        run: node scripts/build-artifact.mjs
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: E2E smoke test (render, i18n, panels, capture, recording)
+        run: node tests/e2e/smoke.mjs
+      - name: Upload built bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosmoscope-dist
+          path: dist/

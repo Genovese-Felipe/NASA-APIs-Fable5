@@ -1,0 +1,42 @@
+# Deploys Cosmoscope to GitHub Pages.
+#
+# One-time setup (repo admin): Settings → Pages → Build and deployment →
+# Source: "GitHub Actions". After that, every push to main deploys
+# automatically; the Run-workflow button (workflow_dispatch) deploys on
+# demand. (actions/configure-pages cannot self-enable Pages with the
+# default GITHUB_TOKEN, so that first click is manual by design.)
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build single-file bundles
+        run: node scripts/build-artifact.mjs
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "."
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
