@@ -109,7 +109,7 @@ export function initEclipseLab(app, { toast }) {
   /* ── jump into the 3D scene ── */
   function watch(e) {
     const lead = e.kind === 'solar' ? 40 * 60000 : Math.max(30 * 60000, (e.durParS || e.durPenS) * 500);
-    app.actions.jumpTo({ ms: e.utMs - lead, bodyKey: e.kind === 'solar' ? 'earth' : 'moon', speedIdx: 1, scale: 'true' });
+    app.actions.jumpTo({ ms: e.utMs - lead, bodyKey: e.kind === 'solar' ? 'earth' : 'moon', speedIdx: 1, scale: 'true', closeUp: e.kind === 'solar' ? 3.2 : 4.5 });
     toast(t(e.kind === 'solar' ? 'ecl.jumped' : 'ecl.jumpedLunar', { date: fmtUT(e.utMs) }), '', 6500);
     app.audio.ui('select');
   }

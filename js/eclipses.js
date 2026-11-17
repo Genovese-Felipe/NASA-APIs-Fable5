@@ -13,9 +13,11 @@ import { moonEclipticOfDate, moonJ2000Km, precessEcliptic, meanObliquity, gmstDe
 const RAD = Math.PI / 180;
 const AU = 149597870.7;
 const R_SUN = 696000;            /* km — NASA canon value */
-const R_MOON = 1737.4;           /* km — mean radius, used for shadow geometry */
-const K_MOON = 0.2725076;        /* IAU lunar radius in Earth radii (contacts) */
 const EARTH_A = 6378.137;        /* WGS-84 equatorial radius, km */
+const K_MOON = 0.2725076;        /* IAU lunar radius in Earth radii: penumbral contacts */
+const K_UMBRA = 0.272281;        /* NASA's smaller k for umbral/antumbral contacts (mean limb valleys) */
+const R_MOON = K_MOON * EARTH_A;     /* 1738.1 km */
+const R_MOON_U = K_UMBRA * EARTH_A;  /* 1736.6 km */
 const EARTH_F = 1 / 298.257223563;
 const EARTH_B = EARTH_A * (1 - EARTH_F);
 const EARTH_E2 = EARTH_F * (2 - EARTH_F);
@@ -102,7 +104,7 @@ function solarGeom(jdTT) {
   const north = unit(sub([0, 0, 1], mul(a, a[2])));
   const gamma = Math.sign(dot(Pc, north) || 1) * len(Pc) / EARTH_A;
   const L1 = (s) => R_MOON + s * (R_SUN + R_MOON) / D;  /* penumbra radius */
-  const L2 = (s) => R_MOON - s * (R_SUN - R_MOON) / D;  /* umbra (+) / antumbra (−) */
+  const L2 = (s) => R_MOON_U - s * (R_SUN - R_MOON_U) / D;  /* umbra (+) / antumbra (−) */
   return { S, M, a, D, s0, Pc, gamma, L1, L2 };
 }
 
@@ -190,18 +192,24 @@ export function localSolar(jdTT, ecefObs, cache, ignoreHorizon = false) {
   const alt = Math.asin(dot(unit(toS), up));
   if (!ignoreHorizon && alt < -0.0145) return { mag: 0, alt, total: false, annular: false };
   const ds = len(toS), dm = len(toM);
-  const rs = Math.asin(R_SUN / ds), rm = Math.asin(R_MOON / dm);
+  const rs = Math.asin(R_SUN / ds), rm = Math.asin(R_MOON / dm), ru = Math.asin(R_MOON_U / dm);
   const sep = Math.acos(Math.max(-1, Math.min(1, dot(toS, toM) / (ds * dm))));
   const mag = Math.max(0, (rs + rm - sep) / (2 * rs));
-  return { mag, alt, total: rm > rs && sep < rm - rs, annular: rm < rs && sep < rs - rm };
+  return { mag, alt, total: ru > rs && sep < ru - rs, annular: ru < rs && sep < rs - ru };
 }
 
 function analyseSolar(jdNear) {
-  const jdG = minimize((jd) => Math.abs(solarGeom(jd).gamma), jdNear - 0.6, jdNear + 0.6);
+  /* true syzygy can sit up to ≈0.59 d from the mean phase: search ±0.9 d */
+  const jdG = minimize((jd) => Math.abs(solarGeom(jd).gamma), jdNear - 0.9, jdNear + 0.9);
   const g = solarGeom(jdG);
   const gAbs = Math.abs(g.gamma);
   const l1 = g.L1(g.s0) / EARTH_A, l2 = g.L2(g.s0) / EARTH_A;
-  if (gAbs > 1 + l1) return null;
+  /* Earth's outline in the fundamental plane is an ellipse squashed along
+     the projected pole: stretch the axis offset's north component by 1/ρ */
+  const north = unit(sub([0, 0, 1], mul(g.a, g.a[2])));
+  const yN = dot(g.Pc, north) / EARTH_A, xE = Math.sqrt(Math.max(0, gAbs * gAbs - yN * yN));
+  const rho = Math.sqrt(1 - EARTH_E2 * (1 - g.a[2] * g.a[2]));
+  if (Math.hypot(xE, yN / rho) > 1 + l1) return null;
   const res = { kind: 'solar', jdTT: jdG, gamma: g.gamma };
   const c = centralPoint(jdG);
   if (c) {
@@ -209,14 +217,23 @@ function analyseSolar(jdNear) {
     const ls = localSolar(jdG, c.ecef);
     const P = c.hit;
     const dm = len(sub(g.M, P)), ds = len(sub(g.S, P));
-    res.magnitude = (R_MOON / dm) / (R_SUN / ds);
+    res.magnitude = (R_MOON_U / dm) / (R_SUN / ds);
     res.ge = ge;
     res.sunAltDeg = ls.alt / RAD;
     res.durationS = centralDuration(jdG, c.ecef);
     const near = solarPath(jdG, 1, 1 / 60);
     const mid = near.find((p) => Math.abs(p.jd - jdG) < 1e-9);
     res.widthKm = mid ? mid.widthKm : 0;
+    /* hybrid stretches can be seconds long at the very ends of the path:
+       sample the track and also its exact first and last instants */
+    const onEarth = (jd) => (centralPoint(jd) ? 1 : -1);
+    const tBeg = bisect(onEarth, jdG - 0.2, jdG), tEnd = bisect(onEarth, jdG, jdG + 0.2);
+    const edge = 1 / 86400;
     const totalAt = solarPath(jdG, 4, 4).map((p) => p.total);
+    for (const jd of [tBeg + edge, tEnd - edge]) {
+      const ce = centralPoint(jd);
+      if (ce) totalAt.push(ce.l2 > 0);
+    }
     const allT = totalAt.every(Boolean), allA = totalAt.every((t) => !t);
     res.type = allT ? 'total' : allA ? 'annular' : 'hybrid';
   } else {
@@ -241,8 +258,9 @@ function lunarGeom(jdTT) {
   const sep = Math.acos(Math.max(-1, Math.min(1, dot(anti, unit(M)))));
   const pim = Math.asin(EARTH_A / dm), pis = Math.asin(EARTH_A / ds);
   const ss = Math.asin(R_SUN / ds), sm = Math.asin(K_MOON * EARTH_A / dm);
-  /* Danjon: Earth's radius enlarged by the atmosphere, 1/85 of the parallax */
-  const enl = 1 + 1 / 85;
+  /* Danjon: Earth's radius enlarged by the atmosphere, 1/85 of the
+     parallax, on a mean radius that accounts for Earth's flattening */
+  const enl = (1 + 1 / 85) * (1 - EARTH_F / 2);
   const rhoU = enl * pim - ss + pis, rhoP = enl * pim + ss + pis;
   const north = unit(sub([0, 0, 1], mul(anti, anti[2])));
   const sign = Math.sign(dot(unit(M), north) || 1);
@@ -250,7 +268,7 @@ function lunarGeom(jdTT) {
 }
 
 function analyseLunar(jdNear) {
-  const jdG = minimize((jd) => lunarGeom(jd).sep, jdNear - 0.6, jdNear + 0.6);
+  const jdG = minimize((jd) => lunarGeom(jd).sep, jdNear - 0.9, jdNear + 0.9);
   const g = lunarGeom(jdG);
   const pen = (g.rhoP + g.sm - g.sep) / (2 * g.sm);
   const umb = (g.rhoU + g.sm - g.sep) / (2 * g.sm);
@@ -304,7 +322,7 @@ export function solarDiskView(jdTT, ecefObs) {
   const e1 = unit(cross([0, 0, 1], s)), e2 = cross(s, e1);
   const k = 1 / dot(mu, s);
   return {
-    rs: Math.asin(R_SUN / len(toS)), rm: Math.asin(R_MOON / len(toM)),
+    rs: Math.asin(R_SUN / len(toS)), rm: Math.asin(R_MOON_U / len(toM)),
     dx: dot(mu, e1) * k, dy: dot(mu, e2) * k, alt: Math.asin(dot(s, unit(P))),
   };
 }

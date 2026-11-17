@@ -26,3 +26,15 @@ test('ΔT follows the observed record', () => {
   const d26 = deltaT(2026.5);
   assert.ok(d26 > 68 && d26 < 72, `2026: ${d26}`);
 });
+
+test('ΔT matches the historical record and has no jumps between segments', () => {
+  /* Espenak–Meeus reference values */
+  for (const [y, v] of [[1900, -2.79], [1950, 29.07], [1970, 40.2], [1975, 45.45], [1700, 8.83], [1800, 13.72]]) {
+    assert.ok(Math.abs(deltaT(y) - v) < 0.3, `${y}: ${deltaT(y)} vs ${v}`);
+  }
+  /* (the published 500–1600 and 1600–1700 segments themselves differ by 0.25 s at 1600) */
+  for (const y of [1700, 1800, 1860, 1900, 1920, 1941, 1961, 1986, 1990, 2025, 2050, 2150]) {
+    const jump = Math.abs(deltaT(y + 1e-6) - deltaT(y - 1e-6));
+    assert.ok(jump < 0.2, `ΔT step of ${jump.toFixed(2)} s at ${y}`);
+  }
+});

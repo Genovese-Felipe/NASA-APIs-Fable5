@@ -2129,38 +2129,51 @@ function gmstDeg(jdUT) {
     + 0.000387933 * T * T - T * T * T / 38710000);
 }
 
-/* ΔT = TT − UT in seconds. Observed values 1990–2025 (IERS), then the
-   Espenak–Meeus polynomials outside that span. */
+/* ΔT = TT − UT in seconds. Observed values 1990–2025 (IERS); elsewhere
+   the Espenak–Meeus piecewise polynomials (NASA, "Polynomial Expressions
+   for Delta T"). 2025–2050 eases from the observed ≈69 s plateau into the
+   2050–2150 expression so the curve is continuous in value and slope.  */
 const DT_TABLE = [
   [1990, 56.86], [1995, 60.78], [2000, 63.83], [2005, 64.69], [2010, 66.07],
   [2015, 67.64], [2020, 69.36], [2025, 69.20],
 ];
+const dtFar = (year) => { const u = (year - 1820) / 100; return -20 + 32 * u * u; };
+const dt2050 = (year) => dtFar(year) - 0.5628 * (2150 - year);
 function deltaT(year) {
+  let t, u;
   if (year >= 1990 && year <= 2025) {
     for (let i = 0; i < DT_TABLE.length - 1; i++) {
       const [y0, v0] = DT_TABLE[i], [y1, v1] = DT_TABLE[i + 1];
       if (year <= y1) return v0 + (v1 - v0) * (year - y0) / (y1 - y0);
     }
   }
-  if (year > 2025 && year <= 2050) {
-    /* recent ΔT has been flat (≈69 s); grow gently toward the long-term trend */
-    return 69.2 + 0.15 * (year - 2025) + 0.004 * (year - 2025) ** 2;
+  if (year > 2025 && year < 2050) {
+    const s = (year - 2025) / 25;
+    return 69.2 + (dt2050(2050) - 69.2) * s * s;
   }
-  if (year > 2050 && year <= 2150) {
-    const u = (year - 1820) / 100;
-    return -20 + 32 * u * u - 0.5628 * (2150 - year);
+  if (year >= 2050 && year <= 2150) return dt2050(year);
+  if (year > 2150 || year < -500) return dtFar(year);
+  if (year >= 1986) { t = year - 2000; return 63.86 + 0.3345 * t - 0.060374 * t ** 2 + 0.0017275 * t ** 3 + 0.000651814 * t ** 4 + 0.00002373599 * t ** 5; }
+  if (year >= 1961) { t = year - 1975; return 45.45 + 1.067 * t - t ** 2 / 260 - t ** 3 / 718; }
+  if (year >= 1941) { t = year - 1950; return 29.07 + 0.407 * t - t ** 2 / 233 + t ** 3 / 2547; }
+  if (year >= 1920) { t = year - 1920; return 21.20 + 0.84493 * t - 0.0761 * t ** 2 + 0.0020936 * t ** 3; }
+  if (year >= 1900) { t = year - 1900; return -2.79 + 1.494119 * t - 0.0598939 * t ** 2 + 0.0061966 * t ** 3 - 0.000197 * t ** 4; }
+  if (year >= 1860) { t = year - 1860; return 7.62 + 0.5737 * t - 0.251754 * t ** 2 + 0.01680668 * t ** 3 - 0.0004473624 * t ** 4 + t ** 5 / 233174; }
+  if (year >= 1800) {
+    t = year - 1800;
+    return 13.72 - 0.332447 * t + 0.0068612 * t ** 2 + 0.0041116 * t ** 3 - 0.00037436 * t ** 4
+      + 0.0000121272 * t ** 5 - 0.0000001699 * t ** 6 + 0.000000000875 * t ** 7;
   }
-  if (year >= 1900 && year < 1990) {
-    const t = year - 1900;
-    return -2.79 + 1.494119 * t - 0.0598939 * t * t + 0.0061966 * t ** 3 - 0.000197 * t ** 4;
+  if (year >= 1700) { t = year - 1700; return 8.83 + 0.1603 * t - 0.0059285 * t ** 2 + 0.00013336 * t ** 3 - t ** 4 / 1174000; }
+  if (year >= 1600) { t = year - 1600; return 120 - 0.9808 * t - 0.01532 * t ** 2 + t ** 3 / 7129; }
+  if (year >= 500) {
+    u = (year - 1000) / 100;
+    return 1574.2 - 556.01 * u + 71.23472 * u ** 2 + 0.319781 * u ** 3 - 0.8503463 * u ** 4
+      - 0.005050998 * u ** 5 + 0.0083572073 * u ** 6;
   }
-  if (year >= 1800 && year < 1900) {
-    const t = year - 1800;
-    return 13.72 - 0.332447 * t + 0.0068612 * t * t + 0.0041116 * t ** 3
-      - 0.00037436 * t ** 4 + 0.0000121272 * t ** 5 - 0.0000001699 * t ** 6 + 0.000000000875 * t ** 7;
-  }
-  const u = (year - 1820) / 100;
-  return -20 + 32 * u * u;
+  u = year / 100;
+  return 10583.6 - 1014.41 * u + 33.78311 * u ** 2 - 5.952053 * u ** 3 - 0.1798452 * u ** 4
+    + 0.022174192 * u ** 5 + 0.0090316521 * u ** 6;
 }
 
 function jdFromMs(ms) { return 2440587.5 + ms / 86400000; }
@@ -4980,9 +4993,11 @@ function initUI(app) {
 const RAD = Math.PI / 180;
 const AU = 149597870.7;
 const R_SUN = 696000;            /* km — NASA canon value */
-const R_MOON = 1737.4;           /* km — mean radius, used for shadow geometry */
-const K_MOON = 0.2725076;        /* IAU lunar radius in Earth radii (contacts) */
 const EARTH_A = 6378.137;        /* WGS-84 equatorial radius, km */
+const K_MOON = 0.2725076;        /* IAU lunar radius in Earth radii: penumbral contacts */
+const K_UMBRA = 0.272281;        /* NASA's smaller k for umbral/antumbral contacts (mean limb valleys) */
+const R_MOON = K_MOON * EARTH_A;     /* 1738.1 km */
+const R_MOON_U = K_UMBRA * EARTH_A;  /* 1736.6 km */
 const EARTH_F = 1 / 298.257223563;
 const EARTH_B = EARTH_A * (1 - EARTH_F);
 const EARTH_E2 = EARTH_F * (2 - EARTH_F);
@@ -5069,7 +5084,7 @@ function solarGeom(jdTT) {
   const north = unit(sub([0, 0, 1], mul(a, a[2])));
   const gamma = Math.sign(dot(Pc, north) || 1) * len(Pc) / EARTH_A;
   const L1 = (s) => R_MOON + s * (R_SUN + R_MOON) / D;  /* penumbra radius */
-  const L2 = (s) => R_MOON - s * (R_SUN - R_MOON) / D;  /* umbra (+) / antumbra (−) */
+  const L2 = (s) => R_MOON_U - s * (R_SUN - R_MOON_U) / D;  /* umbra (+) / antumbra (−) */
   return { S, M, a, D, s0, Pc, gamma, L1, L2 };
 }
 
@@ -5157,18 +5172,24 @@ function localSolar(jdTT, ecefObs, cache, ignoreHorizon = false) {
   const alt = Math.asin(dot(unit(toS), up));
   if (!ignoreHorizon && alt < -0.0145) return { mag: 0, alt, total: false, annular: false };
   const ds = len(toS), dm = len(toM);
-  const rs = Math.asin(R_SUN / ds), rm = Math.asin(R_MOON / dm);
+  const rs = Math.asin(R_SUN / ds), rm = Math.asin(R_MOON / dm), ru = Math.asin(R_MOON_U / dm);
   const sep = Math.acos(Math.max(-1, Math.min(1, dot(toS, toM) / (ds * dm))));
   const mag = Math.max(0, (rs + rm - sep) / (2 * rs));
-  return { mag, alt, total: rm > rs && sep < rm - rs, annular: rm < rs && sep < rs - rm };
+  return { mag, alt, total: ru > rs && sep < ru - rs, annular: ru < rs && sep < rs - ru };
 }
 
 function analyseSolar(jdNear) {
-  const jdG = minimize((jd) => Math.abs(solarGeom(jd).gamma), jdNear - 0.6, jdNear + 0.6);
+  /* true syzygy can sit up to ≈0.59 d from the mean phase: search ±0.9 d */
+  const jdG = minimize((jd) => Math.abs(solarGeom(jd).gamma), jdNear - 0.9, jdNear + 0.9);
   const g = solarGeom(jdG);
   const gAbs = Math.abs(g.gamma);
   const l1 = g.L1(g.s0) / EARTH_A, l2 = g.L2(g.s0) / EARTH_A;
-  if (gAbs > 1 + l1) return null;
+  /* Earth's outline in the fundamental plane is an ellipse squashed along
+     the projected pole: stretch the axis offset's north component by 1/ρ */
+  const north = unit(sub([0, 0, 1], mul(g.a, g.a[2])));
+  const yN = dot(g.Pc, north) / EARTH_A, xE = Math.sqrt(Math.max(0, gAbs * gAbs - yN * yN));
+  const rho = Math.sqrt(1 - EARTH_E2 * (1 - g.a[2] * g.a[2]));
+  if (Math.hypot(xE, yN / rho) > 1 + l1) return null;
   const res = { kind: 'solar', jdTT: jdG, gamma: g.gamma };
   const c = centralPoint(jdG);
   if (c) {
@@ -5176,14 +5197,23 @@ function analyseSolar(jdNear) {
     const ls = localSolar(jdG, c.ecef);
     const P = c.hit;
     const dm = len(sub(g.M, P)), ds = len(sub(g.S, P));
-    res.magnitude = (R_MOON / dm) / (R_SUN / ds);
+    res.magnitude = (R_MOON_U / dm) / (R_SUN / ds);
     res.ge = ge;
     res.sunAltDeg = ls.alt / RAD;
     res.durationS = centralDuration(jdG, c.ecef);
     const near = solarPath(jdG, 1, 1 / 60);
     const mid = near.find((p) => Math.abs(p.jd - jdG) < 1e-9);
     res.widthKm = mid ? mid.widthKm : 0;
+    /* hybrid stretches can be seconds long at the very ends of the path:
+       sample the track and also its exact first and last instants */
+    const onEarth = (jd) => (centralPoint(jd) ? 1 : -1);
+    const tBeg = bisect(onEarth, jdG - 0.2, jdG), tEnd = bisect(onEarth, jdG, jdG + 0.2);
+    const edge = 1 / 86400;
     const totalAt = solarPath(jdG, 4, 4).map((p) => p.total);
+    for (const jd of [tBeg + edge, tEnd - edge]) {
+      const ce = centralPoint(jd);
+      if (ce) totalAt.push(ce.l2 > 0);
+    }
     const allT = totalAt.every(Boolean), allA = totalAt.every((t) => !t);
     res.type = allT ? 'total' : allA ? 'annular' : 'hybrid';
   } else {
@@ -5208,8 +5238,9 @@ function lunarGeom(jdTT) {
   const sep = Math.acos(Math.max(-1, Math.min(1, dot(anti, unit(M)))));
   const pim = Math.asin(EARTH_A / dm), pis = Math.asin(EARTH_A / ds);
   const ss = Math.asin(R_SUN / ds), sm = Math.asin(K_MOON * EARTH_A / dm);
-  /* Danjon: Earth's radius enlarged by the atmosphere, 1/85 of the parallax */
-  const enl = 1 + 1 / 85;
+  /* Danjon: Earth's radius enlarged by the atmosphere, 1/85 of the
+     parallax, on a mean radius that accounts for Earth's flattening */
+  const enl = (1 + 1 / 85) * (1 - EARTH_F / 2);
   const rhoU = enl * pim - ss + pis, rhoP = enl * pim + ss + pis;
   const north = unit(sub([0, 0, 1], mul(anti, anti[2])));
   const sign = Math.sign(dot(unit(M), north) || 1);
@@ -5217,7 +5248,7 @@ function lunarGeom(jdTT) {
 }
 
 function analyseLunar(jdNear) {
-  const jdG = minimize((jd) => lunarGeom(jd).sep, jdNear - 0.6, jdNear + 0.6);
+  const jdG = minimize((jd) => lunarGeom(jd).sep, jdNear - 0.9, jdNear + 0.9);
   const g = lunarGeom(jdG);
   const pen = (g.rhoP + g.sm - g.sep) / (2 * g.sm);
   const umb = (g.rhoU + g.sm - g.sep) / (2 * g.sm);
@@ -5271,7 +5302,7 @@ function solarDiskView(jdTT, ecefObs) {
   const e1 = unit(cross([0, 0, 1], s)), e2 = cross(s, e1);
   const k = 1 / dot(mu, s);
   return {
-    rs: Math.asin(R_SUN / len(toS)), rm: Math.asin(R_MOON / len(toM)),
+    rs: Math.asin(R_SUN / len(toS)), rm: Math.asin(R_MOON_U / len(toM)),
     dx: dot(mu, e1) * k, dy: dot(mu, e2) * k, alt: Math.asin(dot(s, unit(P))),
   };
 }
@@ -5424,7 +5455,7 @@ function initEclipseLab(app, { toast }) {
   /* ── jump into the 3D scene ── */
   function watch(e) {
     const lead = e.kind === 'solar' ? 40 * 60000 : Math.max(30 * 60000, (e.durParS || e.durPenS) * 500);
-    app.actions.jumpTo({ ms: e.utMs - lead, bodyKey: e.kind === 'solar' ? 'earth' : 'moon', speedIdx: 1, scale: 'true' });
+    app.actions.jumpTo({ ms: e.utMs - lead, bodyKey: e.kind === 'solar' ? 'earth' : 'moon', speedIdx: 1, scale: 'true', closeUp: e.kind === 'solar' ? 3.2 : 4.5 });
     toast(t(e.kind === 'solar' ? 'ecl.jumped' : 'ecl.jumpedLunar', { date: fmtUT(e.utMs) }), '', 6500);
     app.audio.ui('select');
   }
@@ -5882,7 +5913,7 @@ function boot() {
       },
       setActivity(x) { state.activityTarget = x; },
       /* move time, scale and camera to a moment (used by the eclipse list) */
-      jumpTo({ ms, bodyKey, speedIdx = 1, scale = 'true' }) {
+      jumpTo({ ms, bodyKey, speedIdx = 1, scale = 'true', closeUp = 0 }) {
         state.simMs = ms;
         state.paused = false;
         ui.updatePlayButton();
@@ -5899,6 +5930,16 @@ function boot() {
         refreshPaths(true);
         if (state.mode !== 'orbit') { state.mode = 'orbit'; ui.syncCamSeg(); }
         app.actions.select(BODY_INDEX[bodyKey], true);
+        if (closeUp > 0) {
+          /* hover on the Sun's side a few radii out: a solar eclipse shows
+             the Moon's shadow on Earth's day side, a lunar one the Moon's
+             Earth-facing hemisphere inside Earth's shadow */
+          const st = state.scene[state.selected];
+          const sunDir = v3.norm(v3.scale(st.pos, -1));
+          cam.dist = st.radius * closeUp;
+          cam.theta = Math.atan2(sunDir[2], sunDir[0]) + 0.18;
+          cam.phi = Math.max(0.05, Math.min(Math.PI - 0.05, Math.acos(sunDir[1]) - 0.12));
+        }
       },
       refreshNeoPoints() {
         state.neoRel = [];

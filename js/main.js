@@ -150,7 +150,7 @@ function boot() {
       },
       setActivity(x) { state.activityTarget = x; },
       /* move time, scale and camera to a moment (used by the eclipse list) */
-      jumpTo({ ms, bodyKey, speedIdx = 1, scale = 'true' }) {
+      jumpTo({ ms, bodyKey, speedIdx = 1, scale = 'true', closeUp = 0 }) {
         state.simMs = ms;
         state.paused = false;
         ui.updatePlayButton();
@@ -167,6 +167,16 @@ function boot() {
         refreshPaths(true);
         if (state.mode !== 'orbit') { state.mode = 'orbit'; ui.syncCamSeg(); }
         app.actions.select(BODY_INDEX[bodyKey], true);
+        if (closeUp > 0) {
+          /* hover on the Sun's side a few radii out: a solar eclipse shows
+             the Moon's shadow on Earth's day side, a lunar one the Moon's
+             Earth-facing hemisphere inside Earth's shadow */
+          const st = state.scene[state.selected];
+          const sunDir = v3.norm(v3.scale(st.pos, -1));
+          cam.dist = st.radius * closeUp;
+          cam.theta = Math.atan2(sunDir[2], sunDir[0]) + 0.18;
+          cam.phi = Math.max(0.05, Math.min(Math.PI - 0.05, Math.acos(sunDir[1]) - 0.12));
+        }
       },
       refreshNeoPoints() {
         state.neoRel = [];
