@@ -107,7 +107,15 @@ Two scale models share the machinery: **showcase** compresses distances (`6·au^
 
 Validation (`tests/unit/eclipses.test.mjs`) runs against all 24 eclipses of 2026–2030 in NASA's catalog. Every eclipse is found with the correct type. Greatest eclipse lands within 1 minute, gamma within 0.001, magnitude within 0.002, central duration within 1 s, and the ground point within 0.5°. Classic eclipses outside that window (1973, the 2013 and 2023 hybrids, 2017, 2024) are checked as well.
 
-`eclipselab.js` draws an equirectangular canvas map. `worldmap.js` provides the Natural Earth 110m land rings and border arcs, delta-encoded and decoded at load (43 KB). On top it shades night from the subsolar point, adds a red obscuration field that animates with time, and draws the north and south limits plus the central line. **Watch in 3D** calls `app.actions.jumpTo()`, which moves the simulation to the eclipse instant at true scale. The ray tracer then shows the result directly: the umbra on Earth, or the blood-red Moon. The shader's Earth-shadow factor tints lunar surfaces deep red.
+`eclipselab.js` draws an equirectangular canvas map. `worldmap.js` provides the Natural Earth 110m land rings and border arcs, delta-encoded and decoded at load (43 KB). On top it shades night from the subsolar point, adds a red obscuration field that animates with time, and draws the north and south limits plus the central line. **Watch in 3D** calls `app.actions.jumpTo()`, which moves the simulation to the eclipse instant at true scale. The camera hovers a few radii out on the Sun's side of the target, so the ray tracer shows the result directly: the umbra on Earth, or the blood-red Moon. The shader's Earth-shadow factor tints lunar surfaces deep red, but only inside the umbra; a penumbral eclipse only dims the Moon.
+
+The showcase scale inflates every world and compresses distances, which would otherwise eclipse every full and new moon. For the Earth–Moon pair only, the shader therefore rebuilds true proportions in units of the Earth–Moon distance:
+
+- the bodies' radii;
+- the Sun's direction (389 times farther away);
+- the Sun's 0.27° disc.
+
+In both scales, eclipses appear only when the real alignment occurs.
 
 ## The NASA client
 
@@ -130,4 +138,4 @@ Everything is synthesized at runtime: detuned sine drone, triangle pad through a
 `scripts/build-artifact.mjs` concatenates the modules (dependency-ordered, imports stripped, exports unwrapped, duplicate-name guard) into:
 
 - `dist/cosmoscope-standalone.html` — a complete document that runs from `file://`.
-- `dist/artifact.html` — a `<title>/<style>/markup/<script>` fragment for publishing as a Claude Artifact (its host wraps the fragment in a document shell; its CSP blocks external hosts, which the app treats as the offline path).
+- `dist/artifact.html` — a `<title>/<style>/markup/<script>` fragment for publishing as a Claude Artifact. The host wraps the fragment in a document shell, and its CSP blocks external hosts, which the app treats as the offline path. Pages there cannot download directly, so `capture.js` `saveFile()` detects the host (`window.claude.use`) and saves stills, recordings and eclipse maps through its `downloads` capability; the viewer confirms each file. Everywhere else it falls back to an ordinary anchor download.
