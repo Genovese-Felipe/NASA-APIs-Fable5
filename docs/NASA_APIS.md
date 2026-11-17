@@ -19,11 +19,16 @@ These findings came from empirical testing (curl with CORS `Origin` headers, liv
 
 - **EPIC:** the documented `api.nasa.gov/EPIC/api/natural/images` proxy 302-redirects to a malformed URL that lands on a 404 page. Cosmoscope calls `epic.gsfc.nasa.gov/api/natural` directly — keyless, `Access-Control-Allow-Origin: *`. Archive image URLs are built as `archive/natural/{YYYY}/{MM}/{DD}/jpg/{image}.jpg`, where the date comes from splitting the JSON `date` field (which uses a **space**, not ISO `T`).
 - **DONKI:** the api.nasa.gov proxy returned HTTP 503 on every attempt across several date ranges. The CCMC origin (`kauai.ccmc.gsfc.nasa.gov`) works keyless with CORS `*`; Cosmoscope tries it first and falls back to the proxy. Timestamps arrive as `2026-07-01T06:19Z` (no seconds) — the client inserts `:00` before parsing.
+  - *Update, November 2026:* both hosts now fail upstream. `kauai` is unreachable, which browsers report as a CORS error, and the proxy returns 404/400. The Space Weather tab shows the embedded sample with its 📡 badge. It will pick up live data again as soon as either host recovers, with no code change needed.
 - **Mars Rover Photos API is dead:** every endpoint (both rovers, `latest_photos`, `photos?sol=N`, and the origin `mars-photos.herokuapp.com` itself) returns a Heroku “No such app” 404 — the backend was decommissioned. The Mars tab therefore streams mission imagery from the Image & Video Library, with an in-app note explaining the substitution.
 - **NeoWs:** ranges over 7 days are rejected (HTTP 400); all velocity/distance values are **strings** and are `parseFloat`ed before use; `near_earth_objects` is an object keyed by date, not an array.
 - **APOD:** on video days `hdurl` is absent and `url` is an embed link — the client guards for this and links out with a thumbnail (`thumbs=true`). Requesting a future date returns 400.
 - **Image Library:** thumbnails come from `links.find(rel === 'preview')`; audio items require a second fetch of the item's `collection.json`, whose asset URLs are listed as `http://` and are rewritten to `https://` to avoid mixed-content blocking.
 - **Exoplanet Archive (deliberately excluded):** its TAP service returns **no CORS headers at all**, so a static GitHub Pages site cannot query it from the browser. Rather than ship a proxy dependency, Cosmoscope leaves it out and documents why here.
+
+## NASA Eclipse catalog — the ground truth
+
+The **🌘 Eclipses** feature makes no network calls. Every eclipse is computed in the browser from lunar theory (see [ARCHITECTURE.md](ARCHITECTURE.md#eclipse-engine)). The reference it is held to is NASA's: `tests/fixtures/nasa-eclipses-2026-2030.json` transcribes the 24 solar and lunar eclipses of 2026–2030 from the [NASA Eclipse Web Site](https://eclipse.gsfc.nasa.gov/) (F. Espenak, GSFC). This covers greatest-eclipse times (TD), types, gamma, magnitudes, durations, path widths and ground points. The unit suite fails if any prediction drifts outside tolerance.
 
 ## Rate limiting & caching
 

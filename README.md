@@ -15,6 +15,8 @@
 
 <img src="docs/screenshots/hero-saturn.png" width="820" alt="Saturn, ray-traced in real time with procedural rings and soft shadows">
 
+<img src="docs/screenshots/eclipse-lab.png" width="820" alt="Eclipse Lab: the 6 February 2027 annular eclipse path across South America and Africa, computed in the browser">
+
 </div>
 
 ---
@@ -28,7 +30,9 @@ Planet positions are not decorative: they come from the **JPL/Standish Keplerian
 | | |
 |---|---|
 | 🔦 **Ray-traced rendering** | Per-pixel primary + shadow rays, soft penumbras, real solar eclipses, ring shadows, atmospheric limb scattering, procedural surfaces for all 10 bodies |
-| 🕰 **Real ephemeris** | JPL Standish elements + Kepler solver; the sky matches reality for any date between 1800 and 2050 |
+| 🕰 **Real ephemeris** | JPL Standish elements + Kepler solver for the planets, the **ELP‑2000/82 lunar theory** (Meeus ch. 47, 60+ periodic terms) for the Moon, ΔT and precession — the sky matches reality for any date between 1800 and 2050 |
+| 🌘 **Eclipse Lab** | Every solar and lunar eclipse from 4 years ago to 12 years ahead, **computed live in your browser** and verified against all 24 eclipses in NASA's 2026–2030 catalog. Each one has a world map with the path of the central shadow, a live obscuration field, a day/night terminator, playback, and a **Watch in 3D** button that jumps the ray tracer to that moment. A blood moon is rendered when the Moon enters Earth's shadow |
+| 🧭 **True orientations** | IAU WGCCRE pole directions tilt every world correctly: Earth's seasons, Uranus on its side, Saturn's rings opening and closing over 29 years |
 | 🛰 **Orbit / Free / Tour cameras** | Inertial orbiting, WASD free-flight, and a cinematic Grand Tour with eased flights — never a teleport |
 | 🖼 **8 NASA data sources** | APOD, NeoWs asteroids, EPIC Earth imagery, DONKI space weather, Mars rover imagery, Image & Video Library, NASA sonifications, and the embedded JPL/SSD ephemeris — see [docs/NASA_APIS.md](docs/NASA_APIS.md) |
 | ☀️ **Live space weather** | Recent M/X-class flares from DONKI visibly energize the rendered Sun |
@@ -54,7 +58,7 @@ python3 -m http.server 8080        # or: npx http-server
 # → http://localhost:8080
 ```
 
-**Single file:** `node scripts/build-artifact.mjs` produces `dist/cosmoscope-standalone.html` — one 240 KB file you can double-click, e-mail, or drop on any host.
+**Single file:** `node scripts/build-artifact.mjs` produces `dist/cosmoscope-standalone.html` — one ~360 KB file you can double-click, e-mail, or drop on any host.
 
 ### Enabling GitHub Pages (one-time)
 
@@ -82,13 +86,14 @@ The app ships using NASA's shared `DEMO_KEY` (≈30 requests/hour per IP). For a
 
 ## 🔭 What to try first
 
-1. Press **T** — the Grand Tour flies you past every world with localized fact cards.
-2. Open **☄️ Asteroids** and tick *Visualize flybys* — this week's real near-Earth objects appear around Earth.
-3. Open **☀️ Space Weather** — if the Sun has flared recently, watch it seethe.
-4. Select the **Moon**, set speed to *1 day/s*, and wait for a solar eclipse — the penumbra is computed by actual shadow rays.
-5. Switch **Settings → Scale model → True scale** to feel how empty space really is.
-6. In **🎬 Capture**, export an **8K still** — the frame is ray-traced tile by tile at full quality, no upscaling.
-7. Try the **♪ Sonify** button on Neptune, then on Mercury — each world sings its orbital data.
+1. Open **🌘 Eclipses**, press **🗺 Map** on the next solar eclipse, then **▶ Play** — the Moon's shadow crosses a real world map, computed from lunar theory in your browser. Press **Watch in 3D** to see the same moment ray-traced.
+2. Press **T** — the Grand Tour flies you past every world with localized fact cards.
+3. Open **☄️ Asteroids** and tick *Visualize flybys* — this week's real near-Earth objects appear around Earth.
+4. Open **☀️ Space Weather** — if the Sun has flared recently, watch it seethe.
+5. Select the **Moon**, set speed to *1 day/s*, and wait for a solar eclipse — the penumbra is computed by actual shadow rays.
+6. Switch **Settings → Scale model → True scale** to feel how empty space really is.
+7. In **🎬 Capture**, export an **8K still** — the frame is ray-traced tile by tile at full quality, no upscaling.
+8. Try the **♪ Sonify** button on Neptune, then on Mercury — each world sings its orbital data.
 
 ## 🏗 Repository layout
 
@@ -97,7 +102,11 @@ index.html                  app shell (semantic DOM, ARIA)
 css/app.css                 glassy dark UI, responsive, reduced-motion aware
 js/
   engine.js                 WebGL2 ray tracer + post pipeline + tiled 8K export
-  orbits.js                 JPL/Standish ephemeris, scene scaling (node-testable)
+  orbits.js                 JPL/Standish ephemeris, IAU pole axes, scene scaling (node-testable)
+  lunar.js                  ELP-2000/82 Moon, ΔT, precession, sidereal time (node-testable)
+  eclipses.js               Besselian-style eclipse search, paths, durations, local circumstances
+  eclipselab.js             Eclipses panel + Eclipse Lab map modal
+  worldmap.js               Natural Earth 1:110m coastlines & borders (generated, delta-encoded)
   i18n.js                   9 complete language tables (node-testable)
   audio.js                  procedural Web Audio soundscape + sonification
   nasa.js                   API client: caching, fallbacks, verified endpoints
@@ -105,7 +114,8 @@ js/
   ui.js                     panels, tabs, NASA views, settings, toasts
   main.js                   simulation clock, cameras, input, render loop
 scripts/build-artifact.mjs  single-file + artifact builds
-tests/unit                  ephemeris & i18n integrity (node --test)
+tests/unit                  ephemeris, lunar theory, eclipses vs NASA, i18n integrity
+tests/fixtures              NASA eclipse catalog 2026–2030 (ground truth)
 tests/e2e                   Playwright smoke: render → panels → export → record
 .github/workflows           CI + Pages deployment
 docs/                       guides, API notes, screenshots
@@ -114,7 +124,7 @@ docs/                       guides, API notes, screenshots
 ## 🧪 Verification
 
 ```bash
-node --test tests/unit/*.test.mjs   # Kepler solver, Standish table, i18n parity
+node --test tests/unit/*.test.mjs   # 48 tests: Kepler, Meeus examples, 24 NASA eclipses, i18n parity
 node scripts/build-artifact.mjs     # single-file builds + bundle sanity checks
 node tests/e2e/smoke.mjs            # real-browser journey (needs playwright)
 ```
@@ -126,4 +136,7 @@ The e2e run drives the actual user journey in headless Chromium: boot → render
 - Code: [MIT](LICENSE) © Felipe Genovese.
 - Planetary ephemeris: E.M. Standish (JPL), *Keplerian Elements for Approximate Positions of the Major Planets*; physical data from the [NSSDC planetary fact sheets](https://nssdc.gsfc.nasa.gov/planetary/factsheet/).
 - Data & imagery: courtesy of NASA — APOD, NeoWs, EPIC/DSCOVR, DONKI/CCMC, Mars rover missions, and the NASA Image and Video Library. NASA does not endorse this project.
+- Lunar theory & eclipse geometry: Jean Meeus, *Astronomical Algorithms* (2nd ed.) — truncated ELP‑2000/82 (Chapront-Touzé & Chapront), ΔT after Espenak & Meeus; eclipse ground truth from [NASA's Eclipse Web Site](https://eclipse.gsfc.nasa.gov/) (F. Espenak, GSFC).
+- Rotation poles: IAU Working Group on Cartographic Coordinates and Rotational Elements (WGCCRE) 2015.
+- World map: [Natural Earth](https://www.naturalearthdata.com/) 1:110m (public domain), via [world-atlas](https://github.com/topojson/world-atlas) (ISC © Mike Bostock).
 - Every texture, star, and sound in the 3D scene is generated procedurally — no third-party assets.

@@ -41,8 +41,28 @@ Try it: select the Moon, set *1 day/s*, and watch the phases and — with patien
 - **🌍 Earth from Space** — today's full-disc Earth photographs from the DSCOVR satellite at the L1 point, 1.5 million km away.
 - **☀️ Space Weather** — solar flares (30 days) and coronal mass ejections (7 days) from DONKI. **If the Sun has produced strong recent flares, the rendered Sun in the scene visibly seethes with extra energy.**
 - **🔭 NASA Media Library** — search 140,000+ images, or flip to **Sounds** for NASA sonifications and mission audio, playable in place.
+- **🌘 Eclipses** — every solar and lunar eclipse from four years ago to twelve years ahead, computed live from lunar theory. Each card shows the type, the time of greatest eclipse, magnitude, duration of totality or annularity, path width, and where on Earth it is best seen. See *Eclipse Lab* below.
 - **🎬 Capture & Export** — see below.
 - **⚙️ Settings** — see below.
+
+## Eclipse Lab
+
+Press **🗺 Map** on any eclipse card.
+
+- **The map** — a world map with night shading. For a solar eclipse it shows:
+  - the **path of the central shadow** (bright line, with its north and south limits);
+  - the region where the Sun is **partly covered** (red glow, deeper means more covered);
+  - a **★** at the point of greatest eclipse;
+  - a red dot where the shadow axis currently touches the ground.
+
+  For a lunar eclipse, it shades the half of the world where the Moon is above the horizon.
+- **Live shadow / Maximum eclipse** — *Live* follows the time slider; *Maximum* jumps to greatest eclipse.
+- **▶ Play** sweeps through the whole event. You can also drag the time slider.
+- **Side panel** — the Sun and Moon as seen from the greatest-eclipse point (or the Moon passing through Earth's shadow), and the key numbers.
+- **▶ Watch in 3D** closes the Lab and sets the 3D simulation to that instant, at true scale. You'll see the Moon's shadow on Earth, or a blood-red Moon.
+- **💾 Save map** downloads the current map as a PNG.
+
+Predictions are made by your browser, not looked up. They agree with NASA's published eclipse catalog to within about a minute in time and a fraction of a degree in place. Still, use official local circumstances when planning travel, and **never look at the Sun without certified eclipse glasses**.
 
 ## Capturing your view
 

@@ -115,3 +115,29 @@ test('distanceFromEarthAu behaves', () => {
   const mars = distanceFromEarthAu('mars', Date.now());
   assert.ok(mars > 0.35 && mars < 2.7);
 });
+
+test('IAU pole axes: Saturn rings edge-on 2025-03-23, open 27° in 2017', async () => {
+  const { poleAxisScene, earthHeliocentric } = await import('../../js/orbits.js');
+  const ax = poleAxisScene(BODIES[BODY_INDEX.saturn]);
+  const sc = (v) => [v[0], v[2], -v[1]];
+  const B = (ms) => {
+    const T = jdToCenturies(dateToJD(ms));
+    const s = sc(heliocentric('saturn', T)), e = sc(earthHeliocentric(T));
+    const d = [e[0] - s[0], e[1] - s[1], e[2] - s[2]];
+    return Math.asin((d[0] * ax[0] + d[1] * ax[1] + d[2] * ax[2]) / Math.hypot(...d)) * 180 / Math.PI;
+  };
+  assert.ok(Math.abs(B(Date.UTC(2025, 2, 23))) < 0.3);
+  assert.ok(B(Date.UTC(2017, 9, 16)) > 26);
+});
+
+test('Earth pole gives real seasons: Sun overhead at ±23.44° at the solstices', async () => {
+  const { poleAxisScene, earthHeliocentric } = await import('../../js/orbits.js');
+  const ax = poleAxisScene(BODIES[BODY_INDEX.earth]);
+  const sub = (ms) => {
+    const e = earthHeliocentric(jdToCenturies(dateToJD(ms)));
+    const s = [e[0], e[2], -e[1]];
+    return -Math.asin((s[0] * ax[0] + s[1] * ax[1] + s[2] * ax[2]) / Math.hypot(...s)) * 180 / Math.PI;
+  };
+  assert.ok(Math.abs(sub(Date.UTC(2026, 5, 21)) - 23.44) < 0.05);
+  assert.ok(Math.abs(sub(Date.UTC(2026, 11, 21)) + 23.44) < 0.05);
+});

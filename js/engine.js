@@ -100,8 +100,12 @@ float iSphere(vec3 ro, vec3 rd, vec3 c, float r) {
   return t > 0.0 ? t : -1.0;
 }
 
-/* ── shadowing: fraction of the solar disc visible from p ── */
+/* ── shadowing: fraction of the solar disc visible from p ──
+   gEarthShadow keeps Earth's own share, so a Moon inside Earth's
+   shadow can glow with sunlight refracted through our atmosphere. */
+float gEarthShadow = 1.0;
 float sunVisibility(vec3 p, int selfId) {
+  gEarthShadow = 1.0;
   vec3 sunC = uBodyPosR[0].xyz;
   float sunR = uBodyPosR[0].w;
   vec3 toSun = sunC - p;
@@ -119,7 +123,9 @@ float sunVisibility(vec3 p, int selfId) {
     float sep = acos(clamp(dot(oc / dOcc, L), -1.0, 1.0));
 #if SOFT_SHADOWS
     float t = clamp((sep - (aOcc - aSun)) / max(2.0 * aSun, 1e-5), 0.0, 1.0);
-    vis *= smoothstep(0.0, 1.0, t);
+    float f = smoothstep(0.0, 1.0, t);
+    vis *= f;
+    if (i == 3) gEarthShadow = f;
 #else
     vis *= sep < aOcc ? 0.0 : 1.0;
 #endif
@@ -411,6 +417,9 @@ void main() {
         float spec = pow(max(dot(n, h), 0.0), 90.0) * ocean * (1.0 - cloud) * vis;
         lit += vec3(1.0, 0.95, 0.8) * spec * 0.7;
       }
+      /* blood moon: in Earth's shadow the Moon keeps a deep red glow,
+         sunlight bent through Earth's atmosphere */
+      if (id == 4) lit += alb * diff * (1.0 - gEarthShadow) * vec3(0.62, 0.16, 0.05) * 0.6;
       /* soft ambient from starlight so night side isn't void-black */
       lit += alb * 0.012;
       /* city lights on the night side */

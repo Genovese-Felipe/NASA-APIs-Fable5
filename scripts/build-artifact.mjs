@@ -20,12 +20,16 @@ const read = (p) => readFileSync(join(root, p), 'utf8');
 /* dependency order (imports only ever point earlier in this list) */
 const JS_ORDER = [
   'js/i18n.js',
+  'js/lunar.js',
   'js/orbits.js',
   'js/engine.js',
   'js/audio.js',
   'js/nasa.js',
   'js/capture.js',
   'js/ui.js',
+  'js/eclipses.js',
+  'js/worldmap.js',
+  'js/eclipselab.js',
   'js/main.js',
 ];
 

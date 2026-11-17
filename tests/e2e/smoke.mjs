@@ -130,6 +130,55 @@ await page.click('#donki-load');
 const donkiText = await waitPanel('#donki-content');
 check('DONKI panel shows flare/CME sections', donkiText.length > 20);
 
+/* ── eclipses: list, Eclipse Lab map, export, jump into 3D ── */
+await page.click('.rail-btn[data-tab="eclipses"]');
+await page.waitForSelector('#ecl-list .ecl-card', { timeout: 20000 });
+const eclCards = await page.locator('#ecl-list .ecl-card').count();
+check('eclipse list computed in-browser', eclCards >= 10, `${eclCards} upcoming eclipses`);
+const firstTitle = (await page.textContent('#ecl-list .ecl-card b')).trim();
+check('eclipse names are localized strings, not keys', !/ecl\./.test(firstTitle), firstTitle);
+const aug12 = page.locator('#ecl-list .ecl-card', { hasText: '2026' }).first();
+const anyCard = (await aug12.count()) ? aug12 : page.locator('#ecl-list .ecl-card').first();
+await anyCard.locator('[data-act="map"]').click();
+await page.waitForSelector('#ecl-lab:not([hidden])');
+await page.waitForTimeout(400);
+const mapStats = await page.evaluate(() => {
+  const c = document.getElementById('ecl-map');
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  const colors = new Set();
+  let land = 0;
+  for (let i = 0; i < d.length; i += 4 * 97) {
+    colors.add((d[i] >> 4) * 256 + (d[i + 1] >> 4) * 16 + (d[i + 2] >> 4));
+    if (d[i + 2] > 60 && d[i] > 25) land++;
+  }
+  return { colors: colors.size, land };
+});
+check('eclipse map renders coastlines and shadow field', mapStats.colors > 40 && mapStats.land > 50, JSON.stringify(mapStats));
+await page.click('#ecl-play');
+await page.waitForTimeout(900);
+await page.click('#ecl-play');
+const clock = (await page.textContent('#ecl-clock')).trim();
+check('Eclipse Lab animates the shadow over time', /\d\d:\d\d:\d\d UT/.test(clock), clock);
+await page.click('#ecl-view button[data-v="max"]');
+await page.waitForTimeout(300);
+if (SHOTS) await page.screenshot({ path: join(shotsDir, 'eclipse-lab.png') });
+const mapDl = page.waitForEvent('download', { timeout: 20000 });
+await page.click('#ecl-save');
+try {
+  const dl = await mapDl;
+  check('eclipse map exports as PNG', /cosmoscope-eclipse-\d{4}-\d\d-\d\d\.png/.test(dl.suggestedFilename()), dl.suggestedFilename());
+} catch (e) {
+  check('eclipse map exports as PNG', false, String(e).slice(0, 100));
+}
+const before = (await page.textContent('#sim-date')).trim();
+await page.click('#ecl-watch');
+await page.waitForTimeout(2500);
+const after = (await page.textContent('#sim-date')).trim();
+check('"Watch in 3D" jumps the simulation to the eclipse', before !== after && (await page.textContent('#sel-name')).includes('Earth'), `${before} → ${after}`);
+if (SHOTS) await page.screenshot({ path: join(shotsDir, 'eclipse-3d.png') });
+await page.click('#btn-now');
+await page.evaluate(() => document.querySelector('#scale-seg button[data-s="showcase"]').click());
+
 /* still capture: full HD PNG download */
 await page.click('.rail-btn[data-tab="capture"]');
 await page.selectOption('#shot-res', '1920');
@@ -185,7 +234,7 @@ check('low-quality preset still renders', renderLow > 0.02, `lit=${(renderLow * 
 await page.click('#quality-seg button[data-q="high"]');
 
 /* true-scale mode swap */
-const isNoise = (e) => /net::|Failed to fetch|ERR_|load resource|WebGL.*performance|GroupMarkerNotSet/i.test(e);
+const isNoise = (e) => /net::|Failed to fetch|ERR_|load resource|blocked by CORS policy|WebGL.*performance|GroupMarkerNotSet/i.test(e);
 const errsBefore = pageErrors.filter((e) => !isNoise(e)).length;
 await page.click('#scale-seg button[data-s="true"]');
 await page.waitForTimeout(400);

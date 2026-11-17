@@ -12,6 +12,9 @@ No dependencies; pure-module imports.
   - 60-year sweep keeps every planet inside its true perihelion/aphelion bounds.
   - Earth ≈ 0.9833 au in early January (perihelion); Moon stays within 356–407 Mm.
   - Scene invariants for both scale modes (body count, finite positions, ring radii ordering, true-scale proportion check against the real au/Earth-radius ratio).
+  - Real orientations: Saturn's ring tilt B = 27° in October 2017, ≈0° at the March 2025 ring-plane crossing, and −27° in 2032. Earth's subsolar latitude is ±23.44° at the solstices.
+- **`lunar.test.mjs`** — Meeus worked examples reproduced exactly: 47.a (Moon on 1992-04-12, to 0.002″), 12.b (sidereal time), 21.c (precession, to 0.5″); ΔT continuity and range.
+- **`eclipses.test.mjs`** — all **24 eclipses of 2026–2030** checked against NASA's catalog (`tests/fixtures/`). Every one must be found with the right type. Tolerances: greatest-eclipse time < 90 s, gamma < 0.002, magnitudes < 0.006, central durations < 6 s, lunar phase durations < 2 min, ground point < 1° (the 2026-08-12 total eclipse < 0.3°/0.5°), and its path width < 3 %. Actual agreement is several times tighter (≤ 53 s, 0.001, 0.004, 3 s, 0.5°).
 - **`i18n.test.mjs`** — every one of the 9 languages must carry *exactly* the English key set, no empty strings, and identical `{placeholder}` sets — a translation can't silently drift.
 
 ### 2. Build verification — `node scripts/build-artifact.mjs`
@@ -31,9 +34,10 @@ Headless Chromium (Playwright) drives the real user journey against a local stat
 7. **Still export:** a real 1080p PNG download is intercepted and size-checked.
 8. **Video recording:** ~2.5 s capture, download size-checked (MP4 in Chromium).
 9. Quality preset changes and true-scale mode swap under an error listener.
-10. Zero unexpected page errors overall (network failures are expected offline noise).
+10. **Eclipses:** the list computes ≥ 10 upcoming events in-browser, with names localized after a language switch. The Lab map must contain land, night and obscuration pixels. Playback advances the clock, the Max-eclipse view works, the map exports as a PNG, and **Watch in 3D** moves the simulated date to the eclipse.
+11. Zero unexpected page errors overall (network failures are expected offline noise).
 
-`SHOTS=1` additionally captures the README screenshots (Saturn hero, Earth + explore panel, capture panel, the Sun, mobile layout) — so the documentation imagery is *always reproducible from the current code*.
+`SHOTS=1` additionally captures the README screenshots (Saturn hero, Earth + explore panel, capture panel, the Sun, mobile layout, Eclipse Lab, eclipse in 3D) — so the documentation imagery is *always reproducible from the current code*.
 
 ## Continuous integration
 

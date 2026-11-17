@@ -292,7 +292,52 @@ input[type="date"] { color-scheme: dark; }
 
 .noscript { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); color: var(--text); z-index: 999; padding: 30px; text-align: center; }
 
+/* ── eclipses ── */
+.ecl-card {
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px;
+  background: rgba(5,7,15,.4); display: flex; flex-direction: column; gap: 8px;
+  border-left: 3px solid var(--accent);
+}
+.ecl-card.tot { border-left-color: #fff2c8; }
+.ecl-card.ann { border-left-color: var(--accent-2); }
+.ecl-card.hyb { border-left-color: #c9a2ff; }
+.ecl-card.par { border-left-color: #ff9a5c; }
+.ecl-card.pen { border-left-color: #8b97b5; }
+.ecl-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ecl-top b { font-size: 14px; }
+.ecl-top .badge { margin-left: auto; }
+.ecl-ico { font-size: 18px; }
+.ecl-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+.ecl-facts div { min-width: 0; }
+.ecl-facts dt { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); }
+.ecl-facts dd { font-size: 12.5px; font-variant-numeric: tabular-nums; }
+#ecl-seg { margin: 4px 0 10px; }
+
+.lab-card {
+  position: relative; width: min(1560px, 100%); max-height: 100%; overflow: auto;
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow); padding: 18px 20px; display: flex; flex-direction: column; gap: 14px;
+  user-select: text;
+}
+.lab-head { padding-right: 48px; }
+.lab-kicker { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+.lab-head h2 { font-size: 22px; margin-top: 2px; text-wrap: balance; }
+.lab-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+#ecl-map { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); background: #0a1426; }
+.lab-side { display: flex; flex-direction: column; gap: 12px; }
+#ecl-disk { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
+.lab-facts { background: rgba(5,7,15,.4); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.lab-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.lab-time { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; font-size: 12px; color: var(--text-dim); }
+.lab-time input { flex: 1; }
+.lab-clock { font-variant-numeric: tabular-nums; color: var(--accent); min-width: 104px; font-size: 14px; }
+
 /* ── responsive ── */
+@media (max-width: 1100px) {
+  .lab-body { grid-template-columns: 1fr; }
+  .lab-side { flex-direction: row; }
+  #ecl-disk { width: 220px; flex: none; }
+}
 @media (max-width: 900px) {
   .brand-sub, .speed-label, .fps, #hint-line { display: none; }
   #panel { left: 62px; width: min(340px, calc(100vw - 72px)); }

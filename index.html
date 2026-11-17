@@ -50,6 +50,7 @@
   <button class="rail-btn" data-tab="earth"    data-i18n-title="tab.earth"    title="Earth from Space"><span>🌍</span></button>
   <button class="rail-btn" data-tab="weather"  data-i18n-title="tab.weather"  title="Space Weather"><span>☀️</span></button>
   <button class="rail-btn" data-tab="library"  data-i18n-title="tab.library"  title="NASA Media Library"><span>🔭</span></button>
+  <button class="rail-btn" data-tab="eclipses" data-i18n-title="tab.eclipses" title="Eclipses"><span>🌘</span></button>
   <div class="rail-spacer"></div>
   <button class="rail-btn" data-tab="capture"  data-i18n-title="tab.capture"  title="Capture &amp; Export"><span>🎬</span></button>
   <button class="rail-btn" data-tab="settings" data-i18n-title="tab.settings" title="Settings"><span>⚙️</span></button>
@@ -133,6 +134,16 @@
       <button class="btn primary" type="submit" data-i18n="ui.search">Search</button>
     </form>
     <div id="lib-content" class="api-content gallery" aria-live="polite"></div>
+  </section>
+
+  <section data-tab="eclipses" hidden>
+    <h2 data-i18n="tab.eclipses">Eclipses</h2>
+    <p class="hint" data-i18n="ecl.hint">Every solar and lunar eclipse, computed live in your browser from lunar theory and checked against NASA’s eclipse catalog.</p>
+    <div class="seg" id="ecl-seg" role="group" aria-label="Eclipses">
+      <button data-v="upcoming" class="active" aria-pressed="true" data-i18n="ecl.upcoming">Upcoming</button>
+      <button data-v="past" aria-pressed="false" data-i18n="ecl.past">Past</button>
+    </div>
+    <div id="ecl-list" class="api-content" aria-live="polite"></div>
   </section>
 
   <section data-tab="capture" hidden>
@@ -262,6 +273,35 @@
       <button id="welcome-quiet" class="btn big" data-i18n="welcome.startQuiet">Begin quietly</button>
     </div>
     <p class="hint" data-i18n="welcome.hint">Tip: drag to look around, scroll to zoom, click any world to visit it.</p>
+  </div>
+</div>
+
+<div id="ecl-lab" class="modal center" hidden role="dialog" aria-modal="true" aria-labelledby="ecl-lab-title">
+  <div class="lab-card">
+    <button class="icon-btn modal-close" id="ecl-lab-close" data-i18n-title="ui.close" title="Close">✕</button>
+    <div class="lab-head">
+      <span class="lab-kicker" data-i18n="ecl.labTitle">Eclipse Lab</span>
+      <h2 id="ecl-lab-title">—</h2>
+    </div>
+    <div class="lab-body">
+      <canvas id="ecl-map" width="1600" height="800" aria-label="World map of the eclipse"></canvas>
+      <aside class="lab-side">
+        <canvas id="ecl-disk" width="480" height="480" aria-label="Eclipse seen from the greatest-eclipse point"></canvas>
+        <dl id="ecl-lab-facts" class="ecl-facts lab-facts"></dl>
+      </aside>
+    </div>
+    <div class="lab-controls">
+      <button id="ecl-play" class="btn primary">▶ Play</button>
+      <label class="lab-time"><span data-i18n="ecl.time">Time (UT)</span>
+        <input id="ecl-time" type="range" min="-200" max="200" step="0.5" value="0" aria-label="Time around greatest eclipse"></label>
+      <output id="ecl-clock" class="lab-clock">—</output>
+      <div class="seg" id="ecl-view" role="group" aria-label="Map view">
+        <button data-v="live" class="active" aria-pressed="true" data-i18n="ecl.live">Live shadow</button>
+        <button data-v="max" aria-pressed="false" data-i18n="ecl.max">Maximum eclipse</button>
+      </div>
+      <button id="ecl-watch" class="btn" data-i18n="ecl.watch">▶ Watch in 3D</button>
+      <button id="ecl-save" class="btn" data-i18n="ecl.save">💾 Save map</button>
+    </div>
   </div>
 </div>
 

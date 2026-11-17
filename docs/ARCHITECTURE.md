@@ -14,8 +14,14 @@ graph TD
     subgraph Core
         MAIN[main.js — clock · cameras · input · loop]
         ENGINE[engine.js — WebGL2 ray tracer]
-        ORBITS[orbits.js — JPL ephemeris]
+        ORBITS[orbits.js — JPL ephemeris + IAU poles]
+        LUNAR[lunar.js — ELP-2000/82 Moon · ΔT · precession]
         I18N[i18n.js — 9 languages]
+    end
+    subgraph Eclipses
+        ECL[eclipses.js — search · paths · durations]
+        LAB[eclipselab.js — panel + map modal]
+        MAP[worldmap.js — Natural Earth 110m]
     end
     subgraph Services
         NASA[nasa.js — API client + cache + fallbacks]
@@ -31,9 +37,14 @@ graph TD
     UI --> I18N
     MAIN --> I18N
     CAPTURE --> ENGINE
+    ORBITS --> LUNAR
+    ECL --> LUNAR
+    LAB --> ECL
+    LAB --> MAP
+    MAIN --> LAB
 ```
 
-`orbits.js` and `i18n.js` are pure modules with no DOM access — Node imports them directly for unit testing.
+`orbits.js`, `lunar.js`, `eclipses.js` and `i18n.js` are pure modules with no DOM access — Node imports them directly for unit testing.
 
 ## The rendering pipeline
 
@@ -78,9 +89,25 @@ This sidesteps `MAX_RENDERBUFFER_SIZE` limits, MSAA memory blow-ups and GPU watc
 - Elements `a, e, I, L, ϖ, Ω` propagate linearly in Julian centuries from J2000.
 - Kepler's equation `M = E − e·sin E` is solved by Newton–Raphson (≤10 iterations, 1e-9 tolerance).
 - Orbital-plane coordinates rotate through `ω, I, Ω` into the J2000 ecliptic frame, then into the Y-up scene frame.
-- The Moon uses a simplified Keplerian orbit with nodal regression (18.6 y) and apsidal precession (8.85 y).
+- The Moon uses the truncated **ELP‑2000/82** theory from Meeus ch. 47: 60 longitude/distance terms and 60 latitude terms, plus the Venus, Jupiter and flattening corrections. It reproduces Meeus example 47.a to 0.002″. The geocentric of-date result is precessed to J2000 (Meeus 21.7). UTC is converted to dynamical time with a ΔT table (1990–2025) and polynomial extension.
+- Earth itself is placed at the **Earth–Moon barycentre minus μ·Moon** (μ = 1/82.3), so the 4,700 km wobble that matters for eclipses is modeled.
+- Every body has a real **rotation axis** from the IAU WGCCRE pole right ascension and declination, rotated into the ecliptic scene frame. Seasons and Saturn's ring-plane crossings (2025) come out of the geometry; the unit tests check them.
 
 Two scale models share the machinery: **showcase** compresses distances (`6·au^0.55`) and inflates radii (`0.05·√(km/6371)`) so all worlds are visible together; **true scale** maps 1 au = 6 units with honest radii.
+
+## Eclipse engine
+
+`eclipses.js` is a small eclipse predictor working directly from the ephemerides above (no pre-computed tables):
+
+1. **Search.** It steps through new and full moons (synoptic month from the mean phase) and keeps those near a node, where |β| is small.
+2. **Greatest eclipse.** It finds the minimum of the shadow-axis distance (solar) or the Moon–shadow-centre separation (lunar) by golden-section search in dynamical time. The Sun comes from Standish EMB minus the Moon's barycentric share, precessed to date, with annual aberration (−20.4898″/R).
+3. **Solar geometry.** It works in the fundamental plane, Besselian style: gamma is the axis's closest approach in Earth radii, and the penumbral and umbral cone radii L1/L2 are taken at the observer. The shadow axis is intersected with the **WGS‑84 ellipsoid** to give the ground point and central line. Path width uses the support function of the umbral footprint ellipse. Central duration bisects the second and third contacts at the greatest-eclipse point.
+4. **Classification.** Total, annular, hybrid or partial follows from the sign of L2 along the path. Lunar eclipses use Danjon's 1/85 atmospheric enlargement of the umbra.
+5. **Local circumstances.** `localSolar()` gives topocentric obscuration and solar altitude for any point on Earth. The Eclipse Lab samples it on a 2° grid to paint the partial-eclipse field.
+
+Validation (`tests/unit/eclipses.test.mjs`) runs against all 24 eclipses of 2026–2030 in NASA's catalog. Every eclipse is found with the correct type. Greatest eclipse lands within 1 minute, gamma within 0.001, magnitude within 0.004, central duration within a few seconds, and the ground point within 0.5°.
+
+`eclipselab.js` draws an equirectangular canvas map. `worldmap.js` provides the Natural Earth 110m land rings and border arcs, delta-encoded and decoded at load (43 KB). On top it shades night from the subsolar point, adds a red obscuration field that animates with time, and draws the north and south limits plus the central line. **Watch in 3D** calls `app.actions.jumpTo()`, which moves the simulation to the eclipse instant at true scale. The ray tracer then shows the result directly: the umbra on Earth, or the blood-red Moon. The shader's Earth-shadow factor tints lunar surfaces deep red.
 
 ## The NASA client
 
@@ -89,7 +116,7 @@ Two scale models share the machinery: **showcase** compresses distances (`6·au^
 | Concern | Decision |
 |---|---|
 | EPIC | `epic.gsfc.nasa.gov` directly (api.nasa.gov proxy 302s to a 404) |
-| DONKI | `kauai.ccmc.gsfc.nasa.gov` first (api.nasa.gov 503s), proxy as backup |
+| DONKI | `kauai.ccmc.gsfc.nasa.gov` first (api.nasa.gov 503s), proxy as backup; both currently down upstream (2026-11), so the embedded sample shows |
 | Mars rovers | Image & Video Library search (the dedicated API died with its Heroku backend) |
 | Rate limits | localStorage cache with per-source TTLs; 429 → user-facing hint to add a free key |
 | Offline / sandboxed | every source degrades to embedded sample data with a visible badge |

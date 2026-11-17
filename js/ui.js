@@ -76,6 +76,7 @@ export function initUI(app) {
     updateTourButton();
     $('btn-rec').textContent = recorder.recording ? t('cap.stop') : t('cap.record');
     $('lang').value = getLang();
+    if (app.onLangChange) app.onLangChange();
   }
 
   /* segmented controls: keep visual + ARIA state in sync */
