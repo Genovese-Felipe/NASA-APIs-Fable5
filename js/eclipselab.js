@@ -32,7 +32,10 @@ export function initEclipseLab(app, { toast }) {
   const fmtLatLon = (p) => `${Math.abs(p.lat).toFixed(1)}°${p.lat >= 0 ? 'N' : 'S'} ${Math.abs(p.lon).toFixed(1)}°${p.lon >= 0 ? 'E' : 'W'}`;
   const num = (v, d) => new Intl.NumberFormat(getLang(), { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
   const rel = (ms) => {
-    const days = Math.round((ms - Date.now()) / 86400000);
+    /* whole local calendar days, so "today"/"tomorrow" mean what they say */
+    const a = new Date(ms), b = new Date();
+    const days = Math.round((Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())
+      - Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())) / 86400000);
     const rtf = new Intl.RelativeTimeFormat(getLang(), { numeric: 'auto' });
     if (Math.abs(days) < 60) return rtf.format(days, 'day');
     if (Math.abs(days) < 730) return rtf.format(Math.round(days / 30.44), 'month');
@@ -108,6 +111,11 @@ export function initEclipseLab(app, { toast }) {
 
   /* ── jump into the 3D scene ── */
   function watch(e) {
+    /* on phones the side panel covers the scene: get it out of the way */
+    if (window.innerWidth < 900) {
+      const panel = byId('panel');
+      if (panel && !panel.classList.contains('hidden')) byId('panel-close')?.click();
+    }
     const lead = e.kind === 'solar' ? 40 * 60000 : Math.max(30 * 60000, (e.durParS || e.durPenS) * 500);
     app.actions.jumpTo({ ms: e.utMs - lead, bodyKey: e.kind === 'solar' ? 'earth' : 'moon', speedIdx: 1, scale: 'true', closeUp: e.kind === 'solar' ? 3.2 : 4.5 });
     toast(t(e.kind === 'solar' ? 'ecl.jumped' : 'ecl.jumpedLunar', { date: fmtUT(e.utMs) }), '', 6500);
@@ -128,6 +136,10 @@ export function initEclipseLab(app, { toast }) {
     for (let i = 0; i < GW; i++) grid.push(geodeticToEcef(90 - (j + 0.5) * GRID, -180 + (i + 0.5) * GRID));
   }
   let cur = null, path = [], maxField = null, view = 'live', playing = false, raf = 0, range = [0, 0];
+  let pos = 0;                 /* minutes from greatest eclipse; float, the slider only mirrors it */
+  let opener = null;           /* element to refocus when the Lab closes */
+  let maxToken = 0;            /* invalidates an in-flight Maximum-view build */
+  const maxCache = new Map();  /* eclipse jdTT → Float32Array */
 
   const X = (lon) => (lon + 180) / 360 * map.width;
   const Y = (lat) => (90 - lat) / 180 * map.height;
@@ -183,14 +195,15 @@ export function initEclipseLab(app, { toast }) {
   function computeField(jd) {
     const d = fimg.data;
     const sm = sunMoon(jd);
+    const useMax = view === 'max' && maxField !== null;   /* live until the max field is ready */
     for (let k = 0; k < grid.length; k++) {
       let r = 0, g = 0, b = 0, a = 0;
       if (cur.kind === 'solar') {
-        const v = view === 'max' ? maxField[k] : localSolar(jd, grid[k], sm);
-        const mag = view === 'max' ? v : v.mag;
-        if (view === 'live' && v.alt < 0) { r = 2; g = 4; b = 14; a = 150; }
+        const v = useMax ? maxField[k] : localSolar(jd, grid[k], sm);
+        const mag = useMax ? v : v.mag;
+        if (!useMax && v.alt < 0) { r = 2; g = 4; b = 14; a = 150; }
         if (mag > 0) {
-          const central = view === 'live' ? (v.total || v.annular) : mag >= 0.999;
+          const central = !useMax ? (v.total || v.annular) : mag >= 0.999;
           if (central) { r = 255; g = 250; b = 230; a = 250; }
           else { r = 255; g = 120 - 60 * mag; b = 40; a = 40 + 175 * mag; }
         }
@@ -204,17 +217,32 @@ export function initEclipseLab(app, { toast }) {
     fctx.putImageData(fimg, 0, 0);
   }
 
-  function buildMaxField() {
-    maxField = new Float32Array(grid.length);
-    const [a, b] = range;
-    for (let m = a; m <= b; m += 4) {
-      const jd = cur.jdTT + m / 1440;
-      const sm = sunMoon(jd);
-      for (let k = 0; k < grid.length; k++) {
-        const v = localSolar(jd, grid[k], sm);
-        if (v.mag > maxField[k]) maxField[k] = v.total || v.annular ? 1 : Math.min(0.998, v.mag);
+  /* maximum obscuration over the whole event, built in ~30 ms slices so
+     the page stays responsive; cached per eclipse */
+  function buildMaxField(done) {
+    const e = cur, token = ++maxToken;
+    if (maxCache.has(e.jdTT)) { maxField = maxCache.get(e.jdTT); done(); return; }
+    const out = new Float32Array(grid.length);
+    let m = range[0];
+    byId('ecl-clock').textContent = t('ecl.computing');
+    const step = () => {
+      if (token !== maxToken || cur !== e) return;
+      const t0 = performance.now();
+      while (m <= range[1] && performance.now() - t0 < 30) {
+        const jd = e.jdTT + m / 1440;
+        const sm = sunMoon(jd);
+        for (let k = 0; k < grid.length; k++) {
+          const v = localSolar(jd, grid[k], sm);
+          if (v.mag > out[k]) out[k] = v.total || v.annular ? 1 : Math.min(0.998, v.mag);
+        }
+        m += 4;
       }
-    }
+      if (m <= range[1]) { setTimeout(step, 0); return; }
+      maxCache.set(e.jdTT, out);
+      maxField = out;
+      done();
+    };
+    setTimeout(step, 0);
   }
 
   function drawMap(jd) {
@@ -262,18 +290,20 @@ export function initEclipseLab(app, { toast }) {
          ['rgba(2,4,14,0.9)', t('ecl.legendNight')], ['#ffc46b', `★ ${t('ecl.greatest')}`]]
       : [['rgba(127,212,255,0.35)', t('ecl.legendMoonUp')], ['rgba(2,4,14,0.9)', t('ecl.legendNight')], ['#ffc46b', `★ ${t('ecl.greatest')}`]];
     const W = map.width, H = map.height;
-    mctx.font = '22px system-ui, sans-serif';
-    let x = 24;
-    const y = H - 26;
+    /* keep the legend readable (≥ ~10 CSS px) however small the map is shown */
+    const k = Math.max(1, (10 * W / Math.max(1, map.clientWidth || W)) / 22);
+    mctx.font = `${Math.round(22 * k)}px system-ui, sans-serif`;
+    let x = 24 * k;
+    const y = H - 26 * k;
     mctx.fillStyle = 'rgba(5,7,15,0.72)';
-    const total = items.reduce((s, [, l]) => s + mctx.measureText(l).width + 60, 0);
-    mctx.fillRect(12, y - 26, Math.min(W - 24, total + 8), 40);
+    const total = items.reduce((s, [, l]) => s + mctx.measureText(l).width + 60 * k, 0);
+    mctx.fillRect(12, y - 26 * k, Math.min(W - 24, total + 8 * k), 40 * k);
     for (const [c, label] of items) {
       mctx.fillStyle = c;
-      mctx.fillRect(x, y - 14, 26, 16);
+      mctx.fillRect(x, y - 14 * k, 26 * k, 16 * k);
       mctx.fillStyle = '#e8eefc';
-      mctx.fillText(label, x + 34, y);
-      x += mctx.measureText(label).width + 60;
+      mctx.fillText(label, x + 34 * k, y);
+      x += mctx.measureText(label).width + 60 * k;
     }
   }
 
@@ -330,21 +360,29 @@ export function initEclipseLab(app, { toast }) {
   }
 
   function setTimeFromSlider() {
-    const jd = cur.jdTT + (+slider.value) / 1440;
+    const jd = cur.jdTT + pos / 1440;
     byId('ecl-clock').textContent = fmtClock(jdToMs(jd - dtSeconds(jd) / 86400));
     drawMap(jd);
     drawDisk(jd);
   }
 
-  function openLab(e) {
-    cur = e;
-    stop();
+  function relabel() {
+    const e = cur;
     byId('ecl-lab-title').textContent = `${nameOf(e)} · ${fmtUT(e.utMs, false)}`;
     byId('ecl-lab-facts').innerHTML = [[t('ecl.greatest'), fmtUT(e.utMs)], ...factsOf(e)]
       .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+    byId('ecl-play').textContent = playing ? `⏸ ${t('ecl.pause')}` : `▶ ${t('ecl.play')}`;
+  }
+
+  function openLab(e) {
+    if (lab.hidden) opener = document.activeElement;
+    cur = e;
+    stop();
+    maxToken++;
+    relabel();
     const half = e.kind === 'solar' ? 200 : Math.ceil(e.durPenS / 120 + 25);
     range = [-half, half];
-    slider.min = -half; slider.max = half; slider.value = 0;
+    slider.min = -half; slider.max = half; slider.value = 0; pos = 0;
     path = e.kind === 'solar' ? solarPath(e.jdTT, 2, 4) : [];
     maxField = null;
     view = 'live';
@@ -364,9 +402,9 @@ export function initEclipseLab(app, { toast }) {
   }
   byId('ecl-view').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     view = b.dataset.v;
-    if (view === 'max' && !maxField) buildMaxField();
     syncViewSeg();
-    setTimeFromSlider();
+    if (view === 'max' && !maxField) buildMaxField(() => { if (view === 'max') setTimeFromSlider(); });
+    else setTimeFromSlider();
   }));
 
   function stop() {
@@ -376,9 +414,9 @@ export function initEclipseLab(app, { toast }) {
   }
   function tick() {
     if (!playing) return;
-    let v = +slider.value + (range[1] - range[0]) / 600;
-    if (v > range[1]) v = range[0];
-    slider.value = v;
+    pos += (range[1] - range[0]) / 600;
+    if (pos > range[1]) pos = range[0];
+    slider.value = pos;
     setTimeFromSlider();
     raf = requestAnimationFrame(tick);
   }
@@ -388,12 +426,35 @@ export function initEclipseLab(app, { toast }) {
     byId('ecl-play').textContent = `⏸ ${t('ecl.pause')}`;
     raf = requestAnimationFrame(tick);
   });
-  slider.addEventListener('input', () => { stop(); setTimeFromSlider(); });
+  slider.addEventListener('input', () => { stop(); pos = +slider.value; setTimeFromSlider(); });
 
-  function closeLab() { stop(); lab.hidden = true; app.audio.ui('close'); }
+  function closeLab() {
+    stop();
+    maxToken++;
+    lab.hidden = true;
+    app.audio.ui('close');
+    if (opener && opener.isConnected && opener.offsetParent !== null) opener.focus();
+    opener = null;
+  }
   byId('ecl-lab-close').addEventListener('click', closeLab);
   lab.addEventListener('click', (ev) => { if (ev.target === lab) closeLab(); });
-  window.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !lab.hidden) closeLab(); });
+  /* while the Lab is open it owns the keyboard: Escape closes only the Lab,
+     and the 3D app's global shortcuts (Space, digits, H, S, R…) stay out.
+     Default actions (Space/Enter on buttons, Tab, slider arrows) still work. */
+  window.addEventListener('keydown', (ev) => {
+    if (lab.hidden) return;
+    ev.stopImmediatePropagation();
+    if (ev.key === 'Escape') { ev.preventDefault(); closeLab(); return; }
+    if (ev.key === 'Tab') {
+      /* keep focus inside the dialog */
+      const f = [...lab.querySelectorAll('button:not([hidden]), input, [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => el.offsetParent !== null && !el.disabled);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    }
+  }, true);
   byId('ecl-watch').addEventListener('click', () => { const e = cur; closeLab(); watch(e); });
 
   byId('ecl-save').addEventListener('click', () => {
@@ -414,7 +475,10 @@ export function initEclipseLab(app, { toast }) {
   });
 
   return {
-    refresh() { if (all && !byId('ecl-list').closest('section').hidden) renderList(); if (cur && !lab.hidden) openLab(cur); },
+    refresh() {
+      if (all && !byId('ecl-list').closest('section').hidden) renderList();
+      if (cur && !lab.hidden) { relabel(); setTimeFromSlider(); }
+    },
     list: () => compute(),
     openLab,
   };

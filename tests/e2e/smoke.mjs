@@ -159,8 +159,16 @@ await page.waitForTimeout(900);
 await page.click('#ecl-play');
 const clock = (await page.textContent('#ecl-clock')).trim();
 check('Eclipse Lab animates the shadow over time', /\d\d:\d\d:\d\d UT/.test(clock), clock);
-await page.click('#ecl-view button[data-v="max"]');
+/* the Lab owns the keyboard: Space on a focused Lab button must not pause the 3D sim */
+const simIcon = await page.textContent('#btn-play');
+await page.focus('#ecl-play');
+await page.keyboard.press('Space');
 await page.waitForTimeout(300);
+await page.keyboard.press('Space');
+check('global shortcuts stay out of the Eclipse Lab', (await page.textContent('#btn-play')) === simIcon && !(await page.isHidden('#ecl-lab')));
+await page.click('#ecl-view button[data-v="max"]');
+await page.waitForFunction(() => /UT$/.test(document.getElementById('ecl-clock').textContent), null, { timeout: 60000 });
+await page.waitForTimeout(200);
 if (SHOTS) await page.screenshot({ path: join(shotsDir, 'eclipse-lab.png') });
 const mapDl = page.waitForEvent('download', { timeout: 20000 });
 await page.click('#ecl-save');
@@ -170,6 +178,25 @@ try {
 } catch (e) {
   check('eclipse map exports as PNG', false, String(e).slice(0, 100));
 }
+/* Escape closes the Lab only, not the panel behind it */
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+check('Escape closes only the Eclipse Lab', (await page.isHidden('#ecl-lab'))
+  && !(await page.evaluate(() => document.getElementById('panel').classList.contains('hidden'))));
+/* short (penumbral) eclipses must still play */
+const pen = page.locator('#ecl-list .ecl-card.pen').first();
+if (await pen.count()) {
+  await pen.locator('[data-act="map"]').click();
+  await page.waitForSelector('#ecl-lab:not([hidden])');
+  await page.click('#ecl-play');
+  await page.waitForTimeout(1200);
+  await page.click('#ecl-play');
+  const v = await page.inputValue('#ecl-time');
+  check('playback advances for short eclipses', Math.abs(+v) > 0.5, `slider at ${(+v).toFixed(2)} min`);
+  await page.keyboard.press('Escape');
+}
+await anyCard.locator('[data-act="map"]').click();
+await page.waitForSelector('#ecl-lab:not([hidden])');
 const before = (await page.textContent('#sim-date')).trim();
 await page.click('#ecl-watch');
 await page.waitForTimeout(2500);

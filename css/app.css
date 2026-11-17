@@ -327,6 +327,7 @@ input[type="date"] { color-scheme: dark; }
 .lab-side { display: flex; flex-direction: column; gap: 12px; }
 #ecl-disk { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
 .lab-facts { background: rgba(5,7,15,.4); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.lab-side .lab-facts { flex: 1 1 auto; min-width: 0; }
 .lab-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .lab-time { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; font-size: 12px; color: var(--text-dim); }
 .lab-time input { flex: 1; }
@@ -335,8 +336,15 @@ input[type="date"] { color-scheme: dark; }
 /* ── responsive ── */
 @media (max-width: 1100px) {
   .lab-body { grid-template-columns: 1fr; }
-  .lab-side { flex-direction: row; }
-  #ecl-disk { width: 220px; flex: none; }
+  .lab-side { flex-direction: row; align-items: flex-start; }
+  #ecl-disk { width: 220px; height: auto; aspect-ratio: 1; flex: none; }
+}
+@media (max-width: 600px) {
+  .lab-side { flex-direction: column; align-items: stretch; }
+  #ecl-disk { width: min(240px, 100%); align-self: center; }
+  .lab-card { max-width: 100%; overflow-x: hidden; padding: 14px 12px; }
+  .lab-time { flex-basis: 100%; min-width: 0; }
+  .lab-clock { min-width: 0; }
 }
 @media (max-width: 900px) {
   .brand-sub, .speed-label, .fps, #hint-line { display: none; }

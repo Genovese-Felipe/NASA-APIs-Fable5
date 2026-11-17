@@ -39,6 +39,7 @@ uniform vec4 uBodyPosR[${MAX_BODIES}];   /* xyz, radius */
 uniform vec4 uBodyAxis[${MAX_BODIES}];   /* axis xyz, spin */
 uniform vec4 uBodyMisc[${MAX_BODIES}];   /* shaderId, ringInner, ringOuter, 0 */
 uniform float uBeltInner, uBeltOuter;    /* scene units; 0 = off */
+uniform float uShowcaseEM;    /* 1 in showcase scale: Earth–Moon shadows use true proportions */
 
 in vec2 vUV;
 layout(location=0) out vec4 fragColor;
@@ -117,17 +118,37 @@ float sunVisibility(vec3 p, int selfId) {
     if (i >= uNumBodies) break;
     if (i == selfId) continue;
     vec3 oc = uBodyPosR[i].xyz - p;
+    float rOcc = uBodyPosR[i].w;
+    vec3 Lx = L;
+    float aS = aSun;
+    if (uShowcaseEM > 0.5 && ((selfId == 4 && i == 3) || (selfId == 3 && i == 4))) {
+      /* showcase inflates Earth, Moon and Sun and squeezes their distances,
+         which would eclipse every full and new moon. For this pair, rebuild
+         true proportions in units of the Earth–Moon distance dEM: Moon
+         radius 0.00452, Earth radius 0.01659, Sun 389 dEM away with an
+         angular radius of 0.00465 rad. Directions are true already. */
+      vec3 c = uBodyPosR[selfId].xyz, e = uBodyPosR[3].xyz;
+      float dEM = length(e - uBodyPosR[4].xyz);
+      float selfK = selfId == 4 ? 0.004519 : 0.016593;
+      vec3 pp = c + (p - c) * (selfK * dEM / uBodyPosR[selfId].w);
+      oc = uBodyPosR[i].xyz - pp;
+      rOcc = (selfId == 4 ? 0.016593 : 0.004519) * dEM;
+      Lx = normalize(normalize(sunC - e) * (389.2 * dEM) - (pp - e));
+      aS = 0.004653;
+    }
     float dOcc = length(oc);
     if (dOcc >= dSun) continue;
-    float aOcc = asin(clamp(uBodyPosR[i].w / dOcc, 0.0, 1.0));
-    float sep = acos(clamp(dot(oc / dOcc, L), -1.0, 1.0));
+    float aOcc = asin(clamp(rOcc / dOcc, 0.0, 1.0));
+    float sep = acos(clamp(dot(oc / dOcc, Lx), -1.0, 1.0));
 #if SOFT_SHADOWS
-    float t = clamp((sep - (aOcc - aSun)) / max(2.0 * aSun, 1e-5), 0.0, 1.0);
+    float t = clamp((sep - (aOcc - aS)) / max(2.0 * aS, 1e-5), 0.0, 1.0);
     float f = smoothstep(0.0, 1.0, t);
     vis *= f;
     if (i == 3) gEarthShadow = f;
 #else
-    vis *= sep < aOcc ? 0.0 : 1.0;
+    float f = sep < aOcc ? 0.0 : 1.0;
+    vis *= f;
+    if (i == 3) gEarthShadow = f;
 #endif
   }
   return vis;
@@ -157,7 +178,7 @@ float ringOcclusion(vec3 p, int saturnIdx) {
 void bodyLocal(int i, vec3 p, out vec3 nLocal, out float lat, out float lon) {
   vec3 a = uBodyAxis[i].xyz;
   float spin = uBodyAxis[i].w;
-  vec3 t0 = abs(a.y) < 0.99 ? normalize(cross(vec3(0,1,0), a)) : vec3(1,0,0);
+  vec3 t0 = normalize(cross(abs(a.y) < 0.99 ? vec3(0,1,0) : vec3(1,0,0), a));
   vec3 b0 = cross(a, t0);
   vec3 q = normalize(p - uBodyPosR[i].xyz);
   vec3 loc = vec3(dot(q, t0), dot(q, a), dot(q, b0));
@@ -419,7 +440,8 @@ void main() {
       }
       /* blood moon: in Earth's shadow the Moon keeps a deep red glow,
          sunlight bent through Earth's atmosphere */
-      if (id == 4) lit += alb * diff * (1.0 - gEarthShadow) * vec3(0.62, 0.16, 0.05) * 0.6;
+      /* only inside the umbra: a penumbral eclipse merely dims the Moon */
+      if (id == 4) lit += alb * diff * smoothstep(0.4, 0.0, gEarthShadow) * vec3(0.62, 0.16, 0.05) * 0.6;
       /* soft ambient from starlight so night side isn't void-black */
       lit += alb * 0.012;
       /* city lights on the night side */
@@ -809,6 +831,7 @@ export class Engine {
     gl.uniform4fv(this.u(pr, 'uBodyMisc'), misc);
     gl.uniform1f(this.u(pr, 'uBeltInner'), frame.beltInner || 0);
     gl.uniform1f(this.u(pr, 'uBeltOuter'), frame.beltOuter || 0);
+    gl.uniform1f(this.u(pr, 'uShowcaseEM'), frame.showcase ? 1 : 0);
   }
 
   _drawOverlays(frame) {

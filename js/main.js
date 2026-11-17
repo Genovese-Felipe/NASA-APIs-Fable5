@@ -146,6 +146,22 @@ function boot() {
         state.scene = computeScene(state.simMs, m);
         const st = state.scene[state.selected];
         cam.dist = Math.max(st.radius * 5.5, st.radius + 0.02);
+        /* the new scale may put another world (an inflated Earth behind the
+           Moon, say) around or in front of the camera: swing around it */
+        for (let k = 0; k < 10; k++) {
+          const sp = Math.sin(cam.phi);
+          const p = [st.pos[0] + cam.dist * sp * Math.cos(cam.theta), st.pos[1] + cam.dist * Math.cos(cam.phi),
+            st.pos[2] + cam.dist * sp * Math.sin(cam.theta)];
+          const seg = v3.sub(st.pos, p), segLen = v3.len(seg), dir = v3.scale(seg, 1 / segLen);
+          const blocked = state.scene.some((o, j) => {
+            if (j === state.selected) return false;
+            const w = v3.sub(o.pos, p);
+            const along = Math.max(0, Math.min(segLen, w[0] * dir[0] + w[1] * dir[1] + w[2] * dir[2]));
+            return v3.len(v3.sub(w, v3.scale(dir, along))) < o.radius * 1.3;
+          });
+          if (!blocked) break;
+          cam.theta += 0.6;
+        }
         refreshPaths(true);
       },
       setActivity(x) { state.activityTarget = x; },
@@ -492,6 +508,7 @@ function boot() {
       sunActivity: state.activity,
       bodies,
       beltInner: dist(2.2), beltOuter: dist(3.25),
+      showcase: state.scaleMode === 'showcase',
       showOrbits: state.showOrbits,
       showPoints: state.neoVisualize,
     };

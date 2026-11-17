@@ -132,6 +132,7 @@ export const BODIES = [
   { key: 'mercury', glyph: '☿', radiusKm: 2440.5,   tiltDeg: 0.034,  rotHours: 1407.6,  poleRA: 281.0103, poleDec: 61.4155, shaderId: 1 },
   { key: 'venus',   glyph: '♀', radiusKm: 6051.8,   tiltDeg: 177.36, rotHours: -5832.6, poleRA: 272.76, poleDec: 67.16, shaderId: 2 },
   { key: 'earth',   glyph: '⊕', radiusKm: 6378.137, tiltDeg: 23.44,  rotHours: 23.9345, poleRA: 0.0, poleDec: 90.0, shaderId: 3 },
+  /* Moon pole: the IAU mean pole only — the ±1.5° physical-libration terms (E1…) are omitted */
   { key: 'moon',    glyph: '☾', radiusKm: 1738.1,   tiltDeg: 6.68,   rotHours: 655.72,  poleRA: 269.9949, poleDec: 66.5392, shaderId: 4, parent: 'earth' },
   { key: 'mars',    glyph: '♂', radiusKm: 3396.2,   tiltDeg: 25.19,  rotHours: 24.6229, poleRA: 317.68143, poleDec: 52.8865, shaderId: 5 },
   { key: 'jupiter', glyph: '♃', radiusKm: 71492,    tiltDeg: 3.13,   rotHours: 9.925,   poleRA: 268.056595, poleDec: 64.495303, shaderId: 6 },

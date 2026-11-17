@@ -329,6 +329,7 @@ input[type="date"] { color-scheme: dark; }
 .lab-side { display: flex; flex-direction: column; gap: 12px; }
 #ecl-disk { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
 .lab-facts { background: rgba(5,7,15,.4); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.lab-side .lab-facts { flex: 1 1 auto; min-width: 0; }
 .lab-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .lab-time { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; font-size: 12px; color: var(--text-dim); }
 .lab-time input { flex: 1; }
@@ -337,8 +338,15 @@ input[type="date"] { color-scheme: dark; }
 /* ── responsive ── */
 @media (max-width: 1100px) {
   .lab-body { grid-template-columns: 1fr; }
-  .lab-side { flex-direction: row; }
-  #ecl-disk { width: 220px; flex: none; }
+  .lab-side { flex-direction: row; align-items: flex-start; }
+  #ecl-disk { width: 220px; height: auto; aspect-ratio: 1; flex: none; }
+}
+@media (max-width: 600px) {
+  .lab-side { flex-direction: column; align-items: stretch; }
+  #ecl-disk { width: min(240px, 100%); align-self: center; }
+  .lab-card { max-width: 100%; overflow-x: hidden; padding: 14px 12px; }
+  .lab-time { flex-basis: 100%; min-width: 0; }
+  .lab-clock { min-width: 0; }
 }
 @media (max-width: 900px) {
   .brand-sub, .speed-label, .fps, #hint-line { display: none; }
@@ -505,7 +513,7 @@ input[type="date"] { color-scheme: dark; }
   <section data-tab="eclipses" hidden>
     <h2 data-i18n="tab.eclipses">Eclipses</h2>
     <p class="hint" data-i18n="ecl.hint">Every solar and lunar eclipse, computed live in your browser from lunar theory and checked against NASA’s eclipse catalog.</p>
-    <div class="seg" id="ecl-seg" role="group" aria-label="Eclipses">
+    <div class="seg" id="ecl-seg" role="group" aria-label="Eclipses" data-i18n-aria="tab.eclipses">
       <button data-v="upcoming" class="active" aria-pressed="true" data-i18n="ecl.upcoming">Upcoming</button>
       <button data-v="past" aria-pressed="false" data-i18n="ecl.past">Past</button>
     </div>
@@ -650,18 +658,18 @@ input[type="date"] { color-scheme: dark; }
       <h2 id="ecl-lab-title">—</h2>
     </div>
     <div class="lab-body">
-      <canvas id="ecl-map" width="1600" height="800" aria-label="World map of the eclipse"></canvas>
+      <canvas id="ecl-map" width="1600" height="800" role="img" aria-label="World map of the eclipse" data-i18n-aria="ecl.mapAria"></canvas>
       <aside class="lab-side">
-        <canvas id="ecl-disk" width="480" height="480" aria-label="Eclipse seen from the greatest-eclipse point"></canvas>
+        <canvas id="ecl-disk" width="480" height="480" role="img" aria-label="Eclipse seen from the greatest-eclipse point" data-i18n-aria="ecl.fromHere"></canvas>
         <dl id="ecl-lab-facts" class="ecl-facts lab-facts"></dl>
       </aside>
     </div>
     <div class="lab-controls">
       <button id="ecl-play" class="btn primary">▶ Play</button>
       <label class="lab-time"><span data-i18n="ecl.time">Time (UT)</span>
-        <input id="ecl-time" type="range" min="-200" max="200" step="0.5" value="0" aria-label="Time around greatest eclipse"></label>
+        <input id="ecl-time" type="range" min="-200" max="200" step="any" value="0" aria-label="Time around greatest eclipse" data-i18n-aria="ecl.time"></label>
       <output id="ecl-clock" class="lab-clock">—</output>
-      <div class="seg" id="ecl-view" role="group" aria-label="Map view">
+      <div class="seg" id="ecl-view" role="group" aria-label="Map view" data-i18n-aria="ecl.mapView">
         <button data-v="live" class="active" aria-pressed="true" data-i18n="ecl.live">Live shadow</button>
         <button data-v="max" aria-pressed="false" data-i18n="ecl.max">Maximum eclipse</button>
       </div>
@@ -820,6 +828,8 @@ en: {
   'ecl.totalPhase': "Total phase",
   'ecl.map': "🗺 Map",
   'ecl.watch': "▶ Watch in 3D",
+  'ecl.mapAria': "World map of the eclipse",
+  'ecl.mapView': "Map view",
   'ecl.labTitle': "Eclipse Lab",
   'ecl.live': "Live shadow",
   'ecl.max': "Maximum eclipse",
@@ -957,6 +967,8 @@ zh: {
   'ecl.totalPhase': "全食阶段",
   'ecl.map': "🗺 地图",
   'ecl.watch': "▶ 在 3D 中观看",
+  'ecl.mapAria': "日月食世界地图",
+  'ecl.mapView': "地图视图",
   'ecl.labTitle': "日月食实验室",
   'ecl.live': "实时阴影",
   'ecl.max': "最大食分",
@@ -1094,6 +1106,8 @@ pt: {
   'ecl.totalPhase': "Fase total",
   'ecl.map': "🗺 Mapa",
   'ecl.watch': "▶ Ver em 3D",
+  'ecl.mapAria': "Mapa-múndi do eclipse",
+  'ecl.mapView': "Visualização do mapa",
   'ecl.labTitle': "Laboratório de Eclipses",
   'ecl.live': "Sombra ao vivo",
   'ecl.max': "Eclipse máximo",
@@ -1231,6 +1245,8 @@ es: {
   'ecl.totalPhase': "Fase total",
   'ecl.map': "🗺 Mapa",
   'ecl.watch': "▶ Ver en 3D",
+  'ecl.mapAria': "Mapa mundial del eclipse",
+  'ecl.mapView': "Vista del mapa",
   'ecl.labTitle': "Laboratorio de Eclipses",
   'ecl.live': "Sombra en vivo",
   'ecl.max': "Eclipse máximo",
@@ -1368,6 +1384,8 @@ ko: {
   'ecl.totalPhase': "개기식 단계",
   'ecl.map': "🗺 지도",
   'ecl.watch': "▶ 3D로 보기",
+  'ecl.mapAria': "식 세계 지도",
+  'ecl.mapView': "지도 보기",
   'ecl.labTitle': "식 실험실",
   'ecl.live': "실시간 그림자",
   'ecl.max': "최대 식분",
@@ -1505,6 +1523,8 @@ fr: {
   'ecl.totalPhase': "Phase totale",
   'ecl.map': "🗺 Carte",
   'ecl.watch': "▶ Voir en 3D",
+  'ecl.mapAria': "Carte du monde de l'éclipse",
+  'ecl.mapView': "Vue de la carte",
   'ecl.labTitle': "Laboratoire des éclipses",
   'ecl.live': "Ombre en direct",
   'ecl.max': "Éclipse maximale",
@@ -1642,6 +1662,8 @@ de: {
   'ecl.totalPhase': "Totale Phase",
   'ecl.map': "🗺 Karte",
   'ecl.watch': "▶ In 3D ansehen",
+  'ecl.mapAria': "Weltkarte der Finsternis",
+  'ecl.mapView': "Kartenansicht",
   'ecl.labTitle': "Finsternis-Labor",
   'ecl.live': "Schatten live",
   'ecl.max': "Maximale Finsternis",
@@ -1779,6 +1801,8 @@ ja: {
   'ecl.totalPhase': "皆既食の段階",
   'ecl.map': "🗺 地図",
   'ecl.watch': "▶ 3D で見る",
+  'ecl.mapAria': "食の世界地図",
+  'ecl.mapView': "地図表示",
   'ecl.labTitle': "日食・月食ラボ",
   'ecl.live': "リアルタイムの影",
   'ecl.max': "最大食分",
@@ -1916,6 +1940,8 @@ ru: {
   'ecl.totalPhase': "Полная фаза",
   'ecl.map': "🗺 Карта",
   'ecl.watch': "▶ Смотреть в 3D",
+  'ecl.mapAria': "Карта затмения",
+  'ecl.mapView': "Вид карты",
   'ecl.labTitle': "Лаборатория затмений",
   'ecl.live': "Тень в реальном времени",
   'ecl.max': "Максимальная фаза",
@@ -2312,6 +2338,7 @@ const BODIES = [
   { key: 'mercury', glyph: '☿', radiusKm: 2440.5,   tiltDeg: 0.034,  rotHours: 1407.6,  poleRA: 281.0103, poleDec: 61.4155, shaderId: 1 },
   { key: 'venus',   glyph: '♀', radiusKm: 6051.8,   tiltDeg: 177.36, rotHours: -5832.6, poleRA: 272.76, poleDec: 67.16, shaderId: 2 },
   { key: 'earth',   glyph: '⊕', radiusKm: 6378.137, tiltDeg: 23.44,  rotHours: 23.9345, poleRA: 0.0, poleDec: 90.0, shaderId: 3 },
+  /* Moon pole: the IAU mean pole only — the ±1.5° physical-libration terms (E1…) are omitted */
   { key: 'moon',    glyph: '☾', radiusKm: 1738.1,   tiltDeg: 6.68,   rotHours: 655.72,  poleRA: 269.9949, poleDec: 66.5392, shaderId: 4, parent: 'earth' },
   { key: 'mars',    glyph: '♂', radiusKm: 3396.2,   tiltDeg: 25.19,  rotHours: 24.6229, poleRA: 317.68143, poleDec: 52.8865, shaderId: 5 },
   { key: 'jupiter', glyph: '♃', radiusKm: 71492,    tiltDeg: 3.13,   rotHours: 9.925,   poleRA: 268.056595, poleDec: 64.495303, shaderId: 6 },
@@ -2517,6 +2544,7 @@ uniform vec4 uBodyPosR[${MAX_BODIES}];   /* xyz, radius */
 uniform vec4 uBodyAxis[${MAX_BODIES}];   /* axis xyz, spin */
 uniform vec4 uBodyMisc[${MAX_BODIES}];   /* shaderId, ringInner, ringOuter, 0 */
 uniform float uBeltInner, uBeltOuter;    /* scene units; 0 = off */
+uniform float uShowcaseEM;    /* 1 in showcase scale: Earth–Moon shadows use true proportions */
 
 in vec2 vUV;
 layout(location=0) out vec4 fragColor;
@@ -2595,17 +2623,37 @@ float sunVisibility(vec3 p, int selfId) {
     if (i >= uNumBodies) break;
     if (i == selfId) continue;
     vec3 oc = uBodyPosR[i].xyz - p;
+    float rOcc = uBodyPosR[i].w;
+    vec3 Lx = L;
+    float aS = aSun;
+    if (uShowcaseEM > 0.5 && ((selfId == 4 && i == 3) || (selfId == 3 && i == 4))) {
+      /* showcase inflates Earth, Moon and Sun and squeezes their distances,
+         which would eclipse every full and new moon. For this pair, rebuild
+         true proportions in units of the Earth–Moon distance dEM: Moon
+         radius 0.00452, Earth radius 0.01659, Sun 389 dEM away with an
+         angular radius of 0.00465 rad. Directions are true already. */
+      vec3 c = uBodyPosR[selfId].xyz, e = uBodyPosR[3].xyz;
+      float dEM = length(e - uBodyPosR[4].xyz);
+      float selfK = selfId == 4 ? 0.004519 : 0.016593;
+      vec3 pp = c + (p - c) * (selfK * dEM / uBodyPosR[selfId].w);
+      oc = uBodyPosR[i].xyz - pp;
+      rOcc = (selfId == 4 ? 0.016593 : 0.004519) * dEM;
+      Lx = normalize(normalize(sunC - e) * (389.2 * dEM) - (pp - e));
+      aS = 0.004653;
+    }
     float dOcc = length(oc);
     if (dOcc >= dSun) continue;
-    float aOcc = asin(clamp(uBodyPosR[i].w / dOcc, 0.0, 1.0));
-    float sep = acos(clamp(dot(oc / dOcc, L), -1.0, 1.0));
+    float aOcc = asin(clamp(rOcc / dOcc, 0.0, 1.0));
+    float sep = acos(clamp(dot(oc / dOcc, Lx), -1.0, 1.0));
 #if SOFT_SHADOWS
-    float t = clamp((sep - (aOcc - aSun)) / max(2.0 * aSun, 1e-5), 0.0, 1.0);
+    float t = clamp((sep - (aOcc - aS)) / max(2.0 * aS, 1e-5), 0.0, 1.0);
     float f = smoothstep(0.0, 1.0, t);
     vis *= f;
     if (i == 3) gEarthShadow = f;
 #else
-    vis *= sep < aOcc ? 0.0 : 1.0;
+    float f = sep < aOcc ? 0.0 : 1.0;
+    vis *= f;
+    if (i == 3) gEarthShadow = f;
 #endif
   }
   return vis;
@@ -2635,7 +2683,7 @@ float ringOcclusion(vec3 p, int saturnIdx) {
 void bodyLocal(int i, vec3 p, out vec3 nLocal, out float lat, out float lon) {
   vec3 a = uBodyAxis[i].xyz;
   float spin = uBodyAxis[i].w;
-  vec3 t0 = abs(a.y) < 0.99 ? normalize(cross(vec3(0,1,0), a)) : vec3(1,0,0);
+  vec3 t0 = normalize(cross(abs(a.y) < 0.99 ? vec3(0,1,0) : vec3(1,0,0), a));
   vec3 b0 = cross(a, t0);
   vec3 q = normalize(p - uBodyPosR[i].xyz);
   vec3 loc = vec3(dot(q, t0), dot(q, a), dot(q, b0));
@@ -2897,7 +2945,8 @@ void main() {
       }
       /* blood moon: in Earth's shadow the Moon keeps a deep red glow,
          sunlight bent through Earth's atmosphere */
-      if (id == 4) lit += alb * diff * (1.0 - gEarthShadow) * vec3(0.62, 0.16, 0.05) * 0.6;
+      /* only inside the umbra: a penumbral eclipse merely dims the Moon */
+      if (id == 4) lit += alb * diff * smoothstep(0.4, 0.0, gEarthShadow) * vec3(0.62, 0.16, 0.05) * 0.6;
       /* soft ambient from starlight so night side isn't void-black */
       lit += alb * 0.012;
       /* city lights on the night side */
@@ -3287,6 +3336,7 @@ class Engine {
     gl.uniform4fv(this.u(pr, 'uBodyMisc'), misc);
     gl.uniform1f(this.u(pr, 'uBeltInner'), frame.beltInner || 0);
     gl.uniform1f(this.u(pr, 'uBeltOuter'), frame.beltOuter || 0);
+    gl.uniform1f(this.u(pr, 'uShowcaseEM'), frame.showcase ? 1 : 0);
   }
 
   _drawOverlays(frame) {
@@ -4293,6 +4343,7 @@ function initUI(app) {
       el.setAttribute('aria-label', t(el.dataset.i18nTitle));
     });
     document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
     renderBodyList();
     renderBodyCard();
     renderHelp();
@@ -5365,7 +5416,10 @@ function initEclipseLab(app, { toast }) {
   const fmtLatLon = (p) => `${Math.abs(p.lat).toFixed(1)}°${p.lat >= 0 ? 'N' : 'S'} ${Math.abs(p.lon).toFixed(1)}°${p.lon >= 0 ? 'E' : 'W'}`;
   const num = (v, d) => new Intl.NumberFormat(getLang(), { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
   const rel = (ms) => {
-    const days = Math.round((ms - Date.now()) / 86400000);
+    /* whole local calendar days, so "today"/"tomorrow" mean what they say */
+    const a = new Date(ms), b = new Date();
+    const days = Math.round((Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())
+      - Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())) / 86400000);
     const rtf = new Intl.RelativeTimeFormat(getLang(), { numeric: 'auto' });
     if (Math.abs(days) < 60) return rtf.format(days, 'day');
     if (Math.abs(days) < 730) return rtf.format(Math.round(days / 30.44), 'month');
@@ -5441,6 +5495,11 @@ function initEclipseLab(app, { toast }) {
 
   /* ── jump into the 3D scene ── */
   function watch(e) {
+    /* on phones the side panel covers the scene: get it out of the way */
+    if (window.innerWidth < 900) {
+      const panel = byId('panel');
+      if (panel && !panel.classList.contains('hidden')) byId('panel-close')?.click();
+    }
     const lead = e.kind === 'solar' ? 40 * 60000 : Math.max(30 * 60000, (e.durParS || e.durPenS) * 500);
     app.actions.jumpTo({ ms: e.utMs - lead, bodyKey: e.kind === 'solar' ? 'earth' : 'moon', speedIdx: 1, scale: 'true', closeUp: e.kind === 'solar' ? 3.2 : 4.5 });
     toast(t(e.kind === 'solar' ? 'ecl.jumped' : 'ecl.jumpedLunar', { date: fmtUT(e.utMs) }), '', 6500);
@@ -5461,6 +5520,10 @@ function initEclipseLab(app, { toast }) {
     for (let i = 0; i < GW; i++) grid.push(geodeticToEcef(90 - (j + 0.5) * GRID, -180 + (i + 0.5) * GRID));
   }
   let cur = null, path = [], maxField = null, view = 'live', playing = false, raf = 0, range = [0, 0];
+  let pos = 0;                 /* minutes from greatest eclipse; float, the slider only mirrors it */
+  let opener = null;           /* element to refocus when the Lab closes */
+  let maxToken = 0;            /* invalidates an in-flight Maximum-view build */
+  const maxCache = new Map();  /* eclipse jdTT → Float32Array */
 
   const X = (lon) => (lon + 180) / 360 * map.width;
   const Y = (lat) => (90 - lat) / 180 * map.height;
@@ -5516,14 +5579,15 @@ function initEclipseLab(app, { toast }) {
   function computeField(jd) {
     const d = fimg.data;
     const sm = sunMoon(jd);
+    const useMax = view === 'max' && maxField !== null;   /* live until the max field is ready */
     for (let k = 0; k < grid.length; k++) {
       let r = 0, g = 0, b = 0, a = 0;
       if (cur.kind === 'solar') {
-        const v = view === 'max' ? maxField[k] : localSolar(jd, grid[k], sm);
-        const mag = view === 'max' ? v : v.mag;
-        if (view === 'live' && v.alt < 0) { r = 2; g = 4; b = 14; a = 150; }
+        const v = useMax ? maxField[k] : localSolar(jd, grid[k], sm);
+        const mag = useMax ? v : v.mag;
+        if (!useMax && v.alt < 0) { r = 2; g = 4; b = 14; a = 150; }
         if (mag > 0) {
-          const central = view === 'live' ? (v.total || v.annular) : mag >= 0.999;
+          const central = !useMax ? (v.total || v.annular) : mag >= 0.999;
           if (central) { r = 255; g = 250; b = 230; a = 250; }
           else { r = 255; g = 120 - 60 * mag; b = 40; a = 40 + 175 * mag; }
         }
@@ -5537,17 +5601,32 @@ function initEclipseLab(app, { toast }) {
     fctx.putImageData(fimg, 0, 0);
   }
 
-  function buildMaxField() {
-    maxField = new Float32Array(grid.length);
-    const [a, b] = range;
-    for (let m = a; m <= b; m += 4) {
-      const jd = cur.jdTT + m / 1440;
-      const sm = sunMoon(jd);
-      for (let k = 0; k < grid.length; k++) {
-        const v = localSolar(jd, grid[k], sm);
-        if (v.mag > maxField[k]) maxField[k] = v.total || v.annular ? 1 : Math.min(0.998, v.mag);
+  /* maximum obscuration over the whole event, built in ~30 ms slices so
+     the page stays responsive; cached per eclipse */
+  function buildMaxField(done) {
+    const e = cur, token = ++maxToken;
+    if (maxCache.has(e.jdTT)) { maxField = maxCache.get(e.jdTT); done(); return; }
+    const out = new Float32Array(grid.length);
+    let m = range[0];
+    byId('ecl-clock').textContent = t('ecl.computing');
+    const step = () => {
+      if (token !== maxToken || cur !== e) return;
+      const t0 = performance.now();
+      while (m <= range[1] && performance.now() - t0 < 30) {
+        const jd = e.jdTT + m / 1440;
+        const sm = sunMoon(jd);
+        for (let k = 0; k < grid.length; k++) {
+          const v = localSolar(jd, grid[k], sm);
+          if (v.mag > out[k]) out[k] = v.total || v.annular ? 1 : Math.min(0.998, v.mag);
+        }
+        m += 4;
       }
-    }
+      if (m <= range[1]) { setTimeout(step, 0); return; }
+      maxCache.set(e.jdTT, out);
+      maxField = out;
+      done();
+    };
+    setTimeout(step, 0);
   }
 
   function drawMap(jd) {
@@ -5595,18 +5674,20 @@ function initEclipseLab(app, { toast }) {
          ['rgba(2,4,14,0.9)', t('ecl.legendNight')], ['#ffc46b', `★ ${t('ecl.greatest')}`]]
       : [['rgba(127,212,255,0.35)', t('ecl.legendMoonUp')], ['rgba(2,4,14,0.9)', t('ecl.legendNight')], ['#ffc46b', `★ ${t('ecl.greatest')}`]];
     const W = map.width, H = map.height;
-    mctx.font = '22px system-ui, sans-serif';
-    let x = 24;
-    const y = H - 26;
+    /* keep the legend readable (≥ ~10 CSS px) however small the map is shown */
+    const k = Math.max(1, (10 * W / Math.max(1, map.clientWidth || W)) / 22);
+    mctx.font = `${Math.round(22 * k)}px system-ui, sans-serif`;
+    let x = 24 * k;
+    const y = H - 26 * k;
     mctx.fillStyle = 'rgba(5,7,15,0.72)';
-    const total = items.reduce((s, [, l]) => s + mctx.measureText(l).width + 60, 0);
-    mctx.fillRect(12, y - 26, Math.min(W - 24, total + 8), 40);
+    const total = items.reduce((s, [, l]) => s + mctx.measureText(l).width + 60 * k, 0);
+    mctx.fillRect(12, y - 26 * k, Math.min(W - 24, total + 8 * k), 40 * k);
     for (const [c, label] of items) {
       mctx.fillStyle = c;
-      mctx.fillRect(x, y - 14, 26, 16);
+      mctx.fillRect(x, y - 14 * k, 26 * k, 16 * k);
       mctx.fillStyle = '#e8eefc';
-      mctx.fillText(label, x + 34, y);
-      x += mctx.measureText(label).width + 60;
+      mctx.fillText(label, x + 34 * k, y);
+      x += mctx.measureText(label).width + 60 * k;
     }
   }
 
@@ -5663,21 +5744,29 @@ function initEclipseLab(app, { toast }) {
   }
 
   function setTimeFromSlider() {
-    const jd = cur.jdTT + (+slider.value) / 1440;
+    const jd = cur.jdTT + pos / 1440;
     byId('ecl-clock').textContent = fmtClock(jdToMs(jd - dtSeconds(jd) / 86400));
     drawMap(jd);
     drawDisk(jd);
   }
 
-  function openLab(e) {
-    cur = e;
-    stop();
+  function relabel() {
+    const e = cur;
     byId('ecl-lab-title').textContent = `${nameOf(e)} · ${fmtUT(e.utMs, false)}`;
     byId('ecl-lab-facts').innerHTML = [[t('ecl.greatest'), fmtUT(e.utMs)], ...factsOf(e)]
       .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+    byId('ecl-play').textContent = playing ? `⏸ ${t('ecl.pause')}` : `▶ ${t('ecl.play')}`;
+  }
+
+  function openLab(e) {
+    if (lab.hidden) opener = document.activeElement;
+    cur = e;
+    stop();
+    maxToken++;
+    relabel();
     const half = e.kind === 'solar' ? 200 : Math.ceil(e.durPenS / 120 + 25);
     range = [-half, half];
-    slider.min = -half; slider.max = half; slider.value = 0;
+    slider.min = -half; slider.max = half; slider.value = 0; pos = 0;
     path = e.kind === 'solar' ? solarPath(e.jdTT, 2, 4) : [];
     maxField = null;
     view = 'live';
@@ -5697,9 +5786,9 @@ function initEclipseLab(app, { toast }) {
   }
   byId('ecl-view').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     view = b.dataset.v;
-    if (view === 'max' && !maxField) buildMaxField();
     syncViewSeg();
-    setTimeFromSlider();
+    if (view === 'max' && !maxField) buildMaxField(() => { if (view === 'max') setTimeFromSlider(); });
+    else setTimeFromSlider();
   }));
 
   function stop() {
@@ -5709,9 +5798,9 @@ function initEclipseLab(app, { toast }) {
   }
   function tick() {
     if (!playing) return;
-    let v = +slider.value + (range[1] - range[0]) / 600;
-    if (v > range[1]) v = range[0];
-    slider.value = v;
+    pos += (range[1] - range[0]) / 600;
+    if (pos > range[1]) pos = range[0];
+    slider.value = pos;
     setTimeFromSlider();
     raf = requestAnimationFrame(tick);
   }
@@ -5721,12 +5810,35 @@ function initEclipseLab(app, { toast }) {
     byId('ecl-play').textContent = `⏸ ${t('ecl.pause')}`;
     raf = requestAnimationFrame(tick);
   });
-  slider.addEventListener('input', () => { stop(); setTimeFromSlider(); });
+  slider.addEventListener('input', () => { stop(); pos = +slider.value; setTimeFromSlider(); });
 
-  function closeLab() { stop(); lab.hidden = true; app.audio.ui('close'); }
+  function closeLab() {
+    stop();
+    maxToken++;
+    lab.hidden = true;
+    app.audio.ui('close');
+    if (opener && opener.isConnected && opener.offsetParent !== null) opener.focus();
+    opener = null;
+  }
   byId('ecl-lab-close').addEventListener('click', closeLab);
   lab.addEventListener('click', (ev) => { if (ev.target === lab) closeLab(); });
-  window.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !lab.hidden) closeLab(); });
+  /* while the Lab is open it owns the keyboard: Escape closes only the Lab,
+     and the 3D app's global shortcuts (Space, digits, H, S, R…) stay out.
+     Default actions (Space/Enter on buttons, Tab, slider arrows) still work. */
+  window.addEventListener('keydown', (ev) => {
+    if (lab.hidden) return;
+    ev.stopImmediatePropagation();
+    if (ev.key === 'Escape') { ev.preventDefault(); closeLab(); return; }
+    if (ev.key === 'Tab') {
+      /* keep focus inside the dialog */
+      const f = [...lab.querySelectorAll('button:not([hidden]), input, [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => el.offsetParent !== null && !el.disabled);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    }
+  }, true);
   byId('ecl-watch').addEventListener('click', () => { const e = cur; closeLab(); watch(e); });
 
   byId('ecl-save').addEventListener('click', () => {
@@ -5747,7 +5859,10 @@ function initEclipseLab(app, { toast }) {
   });
 
   return {
-    refresh() { if (all && !byId('ecl-list').closest('section').hidden) renderList(); if (cur && !lab.hidden) openLab(cur); },
+    refresh() {
+      if (all && !byId('ecl-list').closest('section').hidden) renderList();
+      if (cur && !lab.hidden) { relabel(); setTimeFromSlider(); }
+    },
     list: () => compute(),
     openLab,
   };
@@ -5896,6 +6011,22 @@ function boot() {
         state.scene = computeScene(state.simMs, m);
         const st = state.scene[state.selected];
         cam.dist = Math.max(st.radius * 5.5, st.radius + 0.02);
+        /* the new scale may put another world (an inflated Earth behind the
+           Moon, say) around or in front of the camera: swing around it */
+        for (let k = 0; k < 10; k++) {
+          const sp = Math.sin(cam.phi);
+          const p = [st.pos[0] + cam.dist * sp * Math.cos(cam.theta), st.pos[1] + cam.dist * Math.cos(cam.phi),
+            st.pos[2] + cam.dist * sp * Math.sin(cam.theta)];
+          const seg = v3.sub(st.pos, p), segLen = v3.len(seg), dir = v3.scale(seg, 1 / segLen);
+          const blocked = state.scene.some((o, j) => {
+            if (j === state.selected) return false;
+            const w = v3.sub(o.pos, p);
+            const along = Math.max(0, Math.min(segLen, w[0] * dir[0] + w[1] * dir[1] + w[2] * dir[2]));
+            return v3.len(v3.sub(w, v3.scale(dir, along))) < o.radius * 1.3;
+          });
+          if (!blocked) break;
+          cam.theta += 0.6;
+        }
         refreshPaths(true);
       },
       setActivity(x) { state.activityTarget = x; },
@@ -6242,6 +6373,7 @@ function boot() {
       sunActivity: state.activity,
       bodies,
       beltInner: dist(2.2), beltOuter: dist(3.25),
+      showcase: state.scaleMode === 'showcase',
       showOrbits: state.showOrbits,
       showPoints: state.neoVisualize,
     };
