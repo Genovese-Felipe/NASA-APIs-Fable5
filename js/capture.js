@@ -44,17 +44,44 @@ function stamp() {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
 
-export function download(blob, name) {
-  const url = URL.createObjectURL(blob);
+/* Inside the Claude artifact viewer, pages may not download directly: the
+   host's `downloads` capability asks the viewer to confirm each save.
+   Everywhere else (GitHub Pages, the standalone file) a plain anchor
+   download is used. */
+let downloadsCap = null;
+function getDownloadsCap() {
+  if (!downloadsCap) {
+    const host = typeof window !== 'undefined' ? window.claude : null;
+    downloadsCap = host && typeof host.use === 'function'
+      ? host.use('downloads').catch(() => null)
+      : Promise.resolve(null);
+  }
+  return downloadsCap;
+}
+function anchorSave(url, name) {
   const a = document.createElement('a');
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  /* keep the URL alive briefly so the click lands, then release */
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-  return url;
+}
+export function saveFile(blob, name, url = null) {
+  return getDownloadsCap().then((cap) => {
+    if (cap) {
+      return cap.save({ filename: name, data: blob }).catch((e) => {
+        if (e && e.code === 'declined') return;
+        console.warn('save failed:', e && e.code);
+      });
+    }
+    const u = url || URL.createObjectURL(blob);
+    anchorSave(u, name);
+    /* keep the URL alive briefly so the click lands, then release */
+    if (!url) setTimeout(() => URL.revokeObjectURL(u), 60000);
+  });
+}
+export function download(blob, name) {
+  saveFile(blob, name);
 }
 
 /* ── stills ── */

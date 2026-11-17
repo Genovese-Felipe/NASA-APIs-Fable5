@@ -4159,17 +4159,44 @@ function stamp() {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
 
-function download(blob, name) {
-  const url = URL.createObjectURL(blob);
+/* Inside the Claude artifact viewer, pages may not download directly: the
+   host's `downloads` capability asks the viewer to confirm each save.
+   Everywhere else (GitHub Pages, the standalone file) a plain anchor
+   download is used. */
+let downloadsCap = null;
+function getDownloadsCap() {
+  if (!downloadsCap) {
+    const host = typeof window !== 'undefined' ? window.claude : null;
+    downloadsCap = host && typeof host.use === 'function'
+      ? host.use('downloads').catch(() => null)
+      : Promise.resolve(null);
+  }
+  return downloadsCap;
+}
+function anchorSave(url, name) {
   const a = document.createElement('a');
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  /* keep the URL alive briefly so the click lands, then release */
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-  return url;
+}
+function saveFile(blob, name, url = null) {
+  return getDownloadsCap().then((cap) => {
+    if (cap) {
+      return cap.save({ filename: name, data: blob }).catch((e) => {
+        if (e && e.code === 'declined') return;
+        console.warn('save failed:', e && e.code);
+      });
+    }
+    const u = url || URL.createObjectURL(blob);
+    anchorSave(u, name);
+    /* keep the URL alive briefly so the click lands, then release */
+    if (!url) setTimeout(() => URL.revokeObjectURL(u), 60000);
+  });
+}
+function download(blob, name) {
+  saveFile(blob, name);
 }
 
 /* ── stills ── */
@@ -4845,16 +4872,13 @@ function initUI(app) {
 
   function addDownload(blob, name) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    saveFile(blob, name, url);
     const item = document.createElement('div');
     item.className = 'dl-item';
     const size = blob.size > 1048576 ? (blob.size / 1048576).toFixed(1) + ' MB' : Math.round(blob.size / 1024) + ' KB';
     item.innerHTML = `<span>💾</span><a href="${url}" download="${escapeHtml(name)}">${escapeHtml(name)}</a><span class="hint">${size}</span>`;
     item.dataset.url = url;
+    item.querySelector('a').addEventListener('click', (ev) => { ev.preventDefault(); saveFile(blob, name, url); });
     const list = $('downloads');
     list.prepend(item);
     /* bound the list; release object URLs of evicted entries */
