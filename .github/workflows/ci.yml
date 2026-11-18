@@ -8,13 +8,15 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 cannot
+    # install browser dependencies for
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Unit tests (ephemeris + i18n integrity)
+      - name: Unit tests (ephemeris, lunar theory, eclipses vs NASA, i18n)
         run: node --test tests/unit/*.test.mjs
       - name: Build single-file bundles
         run: node scripts/build-artifact.mjs

@@ -294,7 +294,60 @@ input[type="date"] { color-scheme: dark; }
 
 .noscript { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); color: var(--text); z-index: 999; padding: 30px; text-align: center; }
 
+/* ── eclipses ── */
+.ecl-card {
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px;
+  background: rgba(5,7,15,.4); display: flex; flex-direction: column; gap: 8px;
+  border-left: 3px solid var(--accent);
+}
+.ecl-card.tot { border-left-color: #fff2c8; }
+.ecl-card.ann { border-left-color: var(--accent-2); }
+.ecl-card.hyb { border-left-color: #c9a2ff; }
+.ecl-card.par { border-left-color: #ff9a5c; }
+.ecl-card.pen { border-left-color: #8b97b5; }
+.ecl-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ecl-top b { font-size: 14px; }
+.ecl-top .badge { margin-left: auto; }
+.ecl-ico { font-size: 18px; }
+.ecl-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+.ecl-facts div { min-width: 0; }
+.ecl-facts dt { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); }
+.ecl-facts dd { font-size: 12.5px; font-variant-numeric: tabular-nums; }
+#ecl-seg { margin: 4px 0 10px; }
+
+.lab-card {
+  position: relative; width: min(1560px, 100%); max-height: 100%; overflow: auto;
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 18px;
+  box-shadow: var(--shadow); padding: 18px 20px; display: flex; flex-direction: column; gap: 14px;
+  user-select: text;
+}
+.lab-head { padding-right: 48px; }
+.lab-kicker { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+.lab-head h2 { font-size: 22px; margin-top: 2px; text-wrap: balance; }
+.lab-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+#ecl-map { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); background: #0a1426; }
+.lab-side { display: flex; flex-direction: column; gap: 12px; }
+#ecl-disk { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
+.lab-facts { background: rgba(5,7,15,.4); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.lab-side .lab-facts { flex: 1 1 auto; min-width: 0; }
+.lab-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.lab-time { display: flex; align-items: center; gap: 10px; flex: 1 1 260px; font-size: 12px; color: var(--text-dim); }
+.lab-time input { flex: 1; }
+.lab-clock { font-variant-numeric: tabular-nums; color: var(--accent); min-width: 104px; font-size: 14px; }
+
 /* ── responsive ── */
+@media (max-width: 1100px) {
+  .lab-body { grid-template-columns: 1fr; }
+  .lab-side { flex-direction: row; align-items: flex-start; }
+  #ecl-disk { width: 220px; height: auto; aspect-ratio: 1; flex: none; }
+}
+@media (max-width: 600px) {
+  .lab-side { flex-direction: column; align-items: stretch; }
+  #ecl-disk { width: min(240px, 100%); align-self: center; }
+  .lab-card { max-width: 100%; overflow-x: hidden; padding: 14px 12px; }
+  .lab-time { flex-basis: 100%; min-width: 0; }
+  .lab-clock { min-width: 0; }
+}
 @media (max-width: 900px) {
   .brand-sub, .speed-label, .fps, #hint-line { display: none; }
   #panel { left: 62px; width: min(340px, calc(100vw - 72px)); }
@@ -371,6 +424,7 @@ input[type="date"] { color-scheme: dark; }
   <button class="rail-btn" data-tab="earth"    data-i18n-title="tab.earth"    title="Earth from Space"><span>🌍</span></button>
   <button class="rail-btn" data-tab="weather"  data-i18n-title="tab.weather"  title="Space Weather"><span>☀️</span></button>
   <button class="rail-btn" data-tab="library"  data-i18n-title="tab.library"  title="NASA Media Library"><span>🔭</span></button>
+  <button class="rail-btn" data-tab="eclipses" data-i18n-title="tab.eclipses" title="Eclipses"><span>🌘</span></button>
   <div class="rail-spacer"></div>
   <button class="rail-btn" data-tab="capture"  data-i18n-title="tab.capture"  title="Capture &amp; Export"><span>🎬</span></button>
   <button class="rail-btn" data-tab="settings" data-i18n-title="tab.settings" title="Settings"><span>⚙️</span></button>
@@ -454,6 +508,16 @@ input[type="date"] { color-scheme: dark; }
       <button class="btn primary" type="submit" data-i18n="ui.search">Search</button>
     </form>
     <div id="lib-content" class="api-content gallery" aria-live="polite"></div>
+  </section>
+
+  <section data-tab="eclipses" hidden>
+    <h2 data-i18n="tab.eclipses">Eclipses</h2>
+    <p class="hint" data-i18n="ecl.hint">Every solar and lunar eclipse, computed live in your browser from lunar theory and checked against NASA’s eclipse catalog.</p>
+    <div class="seg" id="ecl-seg" role="group" aria-label="Eclipses" data-i18n-aria="tab.eclipses">
+      <button data-v="upcoming" class="active" aria-pressed="true" data-i18n="ecl.upcoming">Upcoming</button>
+      <button data-v="past" aria-pressed="false" data-i18n="ecl.past">Past</button>
+    </div>
+    <div id="ecl-list" class="api-content" aria-live="polite"></div>
   </section>
 
   <section data-tab="capture" hidden>
@@ -586,6 +650,35 @@ input[type="date"] { color-scheme: dark; }
   </div>
 </div>
 
+<div id="ecl-lab" class="modal center" hidden role="dialog" aria-modal="true" aria-labelledby="ecl-lab-title">
+  <div class="lab-card">
+    <button class="icon-btn modal-close" id="ecl-lab-close" data-i18n-title="ui.close" title="Close">✕</button>
+    <div class="lab-head">
+      <span class="lab-kicker" data-i18n="ecl.labTitle">Eclipse Lab</span>
+      <h2 id="ecl-lab-title">—</h2>
+    </div>
+    <div class="lab-body">
+      <canvas id="ecl-map" width="1600" height="800" role="img" aria-label="World map of the eclipse" data-i18n-aria="ecl.mapAria"></canvas>
+      <aside class="lab-side">
+        <canvas id="ecl-disk" width="480" height="480" role="img" aria-label="Eclipse seen from the greatest-eclipse point" data-i18n-aria="ecl.fromHere"></canvas>
+        <dl id="ecl-lab-facts" class="ecl-facts lab-facts"></dl>
+      </aside>
+    </div>
+    <div class="lab-controls">
+      <button id="ecl-play" class="btn primary">▶ Play</button>
+      <label class="lab-time"><span data-i18n="ecl.time">Time (UT)</span>
+        <input id="ecl-time" type="range" min="-200" max="200" step="any" value="0" aria-label="Time around greatest eclipse" data-i18n-aria="ecl.time"></label>
+      <output id="ecl-clock" class="lab-clock">—</output>
+      <div class="seg" id="ecl-view" role="group" aria-label="Map view" data-i18n-aria="ecl.mapView">
+        <button data-v="live" class="active" aria-pressed="true" data-i18n="ecl.live">Live shadow</button>
+        <button data-v="max" aria-pressed="false" data-i18n="ecl.max">Maximum eclipse</button>
+      </div>
+      <button id="ecl-watch" class="btn" data-i18n="ecl.watch">▶ Watch in 3D</button>
+      <button id="ecl-save" class="btn" data-i18n="ecl.save">💾 Save map</button>
+    </div>
+  </div>
+</div>
+
 <div id="help" class="modal center" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
   <div class="welcome-card help-card">
     <button class="icon-btn modal-close" id="help-close" data-i18n-title="ui.close" title="Close">✕</button>
@@ -710,6 +803,50 @@ en: {
   'blurb.neptune': 'The windiest world: supersonic storms sweep this deep-blue giant at 2,000 km/h.',
   'unit.km': 'km', 'unit.au': 'AU', 'unit.hours': 'h', 'unit.days': 'days', 'unit.years': 'years',
   'unit.kmh': 'km/h', 'unit.m': 'm', 'unit.kms': 'km/s',
+  'tab.eclipses': "Eclipses",
+  'ecl.hint': "Every solar and lunar eclipse, computed live in your browser from lunar theory and checked against NASA’s eclipse catalog.",
+  'ecl.upcoming': "Upcoming",
+  'ecl.past': "Past",
+  'ecl.n.solar.total': "Total solar eclipse",
+  'ecl.n.solar.annular': "Annular solar eclipse",
+  'ecl.n.solar.hybrid': "Hybrid solar eclipse",
+  'ecl.n.solar.partial': "Partial solar eclipse",
+  'ecl.n.lunar.total': "Total lunar eclipse",
+  'ecl.n.lunar.partial': "Partial lunar eclipse",
+  'ecl.n.lunar.penumbral': "Penumbral lunar eclipse",
+  'ecl.greatest': "Greatest eclipse",
+  'ecl.magnitude': "Magnitude",
+  'ecl.totality': "Totality",
+  'ecl.annularity': "Annularity",
+  'ecl.width': "Path width",
+  'ecl.where': "Greatest at",
+  'ecl.sunAlt': "Sun altitude",
+  'ecl.gamma': "Gamma",
+  'ecl.umbral': "Umbral magnitude",
+  'ecl.penumbral': "Penumbral magnitude",
+  'ecl.partialPhase': "Partial phase",
+  'ecl.totalPhase': "Total phase",
+  'ecl.map': "🗺 Map",
+  'ecl.watch': "▶ Watch in 3D",
+  'ecl.mapAria': "World map of the eclipse",
+  'ecl.mapView': "Map view",
+  'ecl.labTitle': "Eclipse Lab",
+  'ecl.live': "Live shadow",
+  'ecl.max': "Maximum eclipse",
+  'ecl.play': "Play",
+  'ecl.pause': "Pause",
+  'ecl.save': "💾 Save map",
+  'ecl.time': "Time (UT)",
+  'ecl.legendCentral': "Path of the central shadow",
+  'ecl.legendPartial': "Sun partly covered",
+  'ecl.legendNight': "Night",
+  'ecl.legendMoonUp': "Moon above the horizon",
+  'ecl.verified': "Checked against NASA: all 24 eclipses of 2026–2030 found, every type right, greatest-eclipse times within a minute.",
+  'ecl.computing': "Computing eclipses…",
+  'ecl.fromHere': "Seen from the greatest-eclipse point",
+  'ecl.shadowView': "The Moon in Earth’s shadow",
+  'ecl.jumped': "Jumped to {date} — watch the Moon’s shadow cross Earth (true scale).",
+  'ecl.jumpedLunar': "Jumped to {date} — watch the Moon slide into Earth’s shadow (true scale).",
 },
 
 /* ═══════════════════════ 中文 (简体) ═══════════════════════ */
@@ -805,6 +942,50 @@ zh: {
   'blurb.neptune': '风暴最狂野的世界：超音速风暴以 2000 公里/小时横扫这颗深蓝巨星。',
   'unit.km': '公里', 'unit.au': '天文单位', 'unit.hours': '小时', 'unit.days': '天', 'unit.years': '年',
   'unit.kmh': '公里/小时', 'unit.m': '米', 'unit.kms': '公里/秒',
+  'tab.eclipses': "日月食",
+  'ecl.hint': "所有日食与月食，均由月球理论在你的浏览器中实时计算，并与 NASA 日月食星表核对过。",
+  'ecl.upcoming': "即将发生",
+  'ecl.past': "已发生",
+  'ecl.n.solar.total': "日全食",
+  'ecl.n.solar.annular': "日环食",
+  'ecl.n.solar.hybrid': "全环食",
+  'ecl.n.solar.partial': "日偏食",
+  'ecl.n.lunar.total': "月全食",
+  'ecl.n.lunar.partial': "月偏食",
+  'ecl.n.lunar.penumbral': "半影月食",
+  'ecl.greatest': "食甚",
+  'ecl.magnitude': "食分",
+  'ecl.totality': "全食持续时间",
+  'ecl.annularity': "环食持续时间",
+  'ecl.width': "食带宽度",
+  'ecl.where': "食甚位置",
+  'ecl.sunAlt': "太阳高度角",
+  'ecl.gamma': "Gamma 值",
+  'ecl.umbral': "本影食分",
+  'ecl.penumbral': "半影食分",
+  'ecl.partialPhase': "偏食阶段",
+  'ecl.totalPhase': "全食阶段",
+  'ecl.map': "🗺 地图",
+  'ecl.watch': "▶ 在 3D 中观看",
+  'ecl.mapAria': "日月食世界地图",
+  'ecl.mapView': "地图视图",
+  'ecl.labTitle': "日月食实验室",
+  'ecl.live': "实时阴影",
+  'ecl.max': "最大食分",
+  'ecl.play': "播放",
+  'ecl.pause': "暂停",
+  'ecl.save': "💾 保存地图",
+  'ecl.time': "时间（UT）",
+  'ecl.legendCentral': "中心阴影路径",
+  'ecl.legendPartial': "太阳被部分遮挡",
+  'ecl.legendNight': "夜晚",
+  'ecl.legendMoonUp': "月亮在地平线以上",
+  'ecl.verified': "已与 NASA 核对：2026–2030 年全部 24 次日月食均被找到，类型全部正确，食甚时刻误差在一分钟以内。",
+  'ecl.computing': "正在计算日月食…",
+  'ecl.fromHere': "从食甚地点看到的景象",
+  'ecl.shadowView': "处于地球阴影中的月亮",
+  'ecl.jumped': "已跳转到 {date}——观看月影掠过地球（真实比例）。",
+  'ecl.jumpedLunar': "已跳转到 {date}——观看月亮滑入地球阴影（真实比例）。",
 },
 
 /* ═══════════════════════ PORTUGUÊS (BR) ═══════════════════════ */
@@ -900,6 +1081,50 @@ pt: {
   'blurb.neptune': 'O mundo mais ventoso: tempestades supersônicas varrem este gigante azul a 2.000 km/h.',
   'unit.km': 'km', 'unit.au': 'UA', 'unit.hours': 'h', 'unit.days': 'dias', 'unit.years': 'anos',
   'unit.kmh': 'km/h', 'unit.m': 'm', 'unit.kms': 'km/s',
+  'tab.eclipses': "Eclipses",
+  'ecl.hint': "Todos os eclipses solares e lunares, calculados ao vivo no seu navegador a partir da teoria lunar e conferidos com o catálogo de eclipses da NASA.",
+  'ecl.upcoming': "Próximos",
+  'ecl.past': "Passados",
+  'ecl.n.solar.total': "Eclipse solar total",
+  'ecl.n.solar.annular': "Eclipse solar anular",
+  'ecl.n.solar.hybrid': "Eclipse solar híbrido",
+  'ecl.n.solar.partial': "Eclipse solar parcial",
+  'ecl.n.lunar.total': "Eclipse lunar total",
+  'ecl.n.lunar.partial': "Eclipse lunar parcial",
+  'ecl.n.lunar.penumbral': "Eclipse lunar penumbral",
+  'ecl.greatest': "Máximo do eclipse",
+  'ecl.magnitude': "Magnitude",
+  'ecl.totality': "Totalidade",
+  'ecl.annularity': "Fase anular",
+  'ecl.width': "Largura da faixa",
+  'ecl.where': "Máximo em",
+  'ecl.sunAlt': "Altura do Sol",
+  'ecl.gamma': "Gama",
+  'ecl.umbral': "Magnitude umbral",
+  'ecl.penumbral': "Magnitude penumbral",
+  'ecl.partialPhase': "Fase parcial",
+  'ecl.totalPhase': "Fase total",
+  'ecl.map': "🗺 Mapa",
+  'ecl.watch': "▶ Ver em 3D",
+  'ecl.mapAria': "Mapa-múndi do eclipse",
+  'ecl.mapView': "Visualização do mapa",
+  'ecl.labTitle': "Laboratório de Eclipses",
+  'ecl.live': "Sombra ao vivo",
+  'ecl.max': "Eclipse máximo",
+  'ecl.play': "Reproduzir",
+  'ecl.pause': "Pausar",
+  'ecl.save': "💾 Salvar mapa",
+  'ecl.time': "Hora (UT)",
+  'ecl.legendCentral': "Trajetória da sombra central",
+  'ecl.legendPartial': "Sol parcialmente coberto",
+  'ecl.legendNight': "Noite",
+  'ecl.legendMoonUp': "Lua acima do horizonte",
+  'ecl.verified': "Conferido com a NASA: todos os 24 eclipses de 2026–2030 encontrados, todos os tipos corretos e horários de máximo com erro de menos de um minuto.",
+  'ecl.computing': "Calculando eclipses…",
+  'ecl.fromHere': "Visto do ponto de máximo do eclipse",
+  'ecl.shadowView': "A Lua na sombra da Terra",
+  'ecl.jumped': "Indo para {date} — veja a sombra da Lua atravessar a Terra (escala real).",
+  'ecl.jumpedLunar': "Indo para {date} — veja a Lua entrar na sombra da Terra (escala real).",
 },
 
 /* ═══════════════════════ ESPAÑOL ═══════════════════════ */
@@ -995,6 +1220,50 @@ es: {
   'blurb.neptune': 'El mundo más ventoso: tormentas supersónicas barren este gigante azul a 2.000 km/h.',
   'unit.km': 'km', 'unit.au': 'UA', 'unit.hours': 'h', 'unit.days': 'días', 'unit.years': 'años',
   'unit.kmh': 'km/h', 'unit.m': 'm', 'unit.kms': 'km/s',
+  'tab.eclipses': "Eclipses",
+  'ecl.hint': "Todos los eclipses solares y lunares, calculados en vivo en tu navegador a partir de la teoría lunar y contrastados con el catálogo de eclipses de la NASA.",
+  'ecl.upcoming': "Próximos",
+  'ecl.past': "Pasados",
+  'ecl.n.solar.total': "Eclipse solar total",
+  'ecl.n.solar.annular': "Eclipse solar anular",
+  'ecl.n.solar.hybrid': "Eclipse solar híbrido",
+  'ecl.n.solar.partial': "Eclipse solar parcial",
+  'ecl.n.lunar.total': "Eclipse lunar total",
+  'ecl.n.lunar.partial': "Eclipse lunar parcial",
+  'ecl.n.lunar.penumbral': "Eclipse lunar penumbral",
+  'ecl.greatest': "Máximo del eclipse",
+  'ecl.magnitude': "Magnitud",
+  'ecl.totality': "Totalidad",
+  'ecl.annularity': "Fase anular",
+  'ecl.width': "Anchura de la franja",
+  'ecl.where': "Máximo en",
+  'ecl.sunAlt': "Altura del Sol",
+  'ecl.gamma': "Gamma",
+  'ecl.umbral': "Magnitud umbral",
+  'ecl.penumbral': "Magnitud penumbral",
+  'ecl.partialPhase': "Fase parcial",
+  'ecl.totalPhase': "Fase total",
+  'ecl.map': "🗺 Mapa",
+  'ecl.watch': "▶ Ver en 3D",
+  'ecl.mapAria': "Mapa mundial del eclipse",
+  'ecl.mapView': "Vista del mapa",
+  'ecl.labTitle': "Laboratorio de Eclipses",
+  'ecl.live': "Sombra en vivo",
+  'ecl.max': "Eclipse máximo",
+  'ecl.play': "Reproducir",
+  'ecl.pause': "Pausar",
+  'ecl.save': "💾 Guardar mapa",
+  'ecl.time': "Hora (UT)",
+  'ecl.legendCentral': "Trayectoria de la sombra central",
+  'ecl.legendPartial': "Sol parcialmente cubierto",
+  'ecl.legendNight': "Noche",
+  'ecl.legendMoonUp': "Luna sobre el horizonte",
+  'ecl.verified': "Contrastado con la NASA: los 24 eclipses de 2026–2030 encontrados, todos los tipos correctos y los máximos con menos de un minuto de error.",
+  'ecl.computing': "Calculando eclipses…",
+  'ecl.fromHere': "Visto desde el punto de máximo eclipse",
+  'ecl.shadowView': "La Luna en la sombra de la Tierra",
+  'ecl.jumped': "Saltando a {date}: mira la sombra de la Luna cruzar la Tierra (escala real).",
+  'ecl.jumpedLunar': "Saltando a {date}: mira la Luna entrar en la sombra de la Tierra (escala real).",
 },
 
 /* ═══════════════════════ 한국어 ═══════════════════════ */
@@ -1090,6 +1359,50 @@ ko: {
   'blurb.neptune': '가장 바람이 거센 세계: 시속 2,000km의 초음속 폭풍이 이 짙푸른 거인을 휩씁니다.',
   'unit.km': 'km', 'unit.au': 'AU', 'unit.hours': '시간', 'unit.days': '일', 'unit.years': '년',
   'unit.kmh': 'km/h', 'unit.m': 'm', 'unit.kms': 'km/s',
+  'tab.eclipses': "일식·월식",
+  'ecl.hint': "모든 일식과 월식을 달 운동 이론으로 브라우저에서 실시간 계산하고, NASA 일·월식 목록과 대조해 검증했습니다.",
+  'ecl.upcoming': "다가오는",
+  'ecl.past': "지난",
+  'ecl.n.solar.total': "개기일식",
+  'ecl.n.solar.annular': "금환일식",
+  'ecl.n.solar.hybrid': "혼성일식",
+  'ecl.n.solar.partial': "부분일식",
+  'ecl.n.lunar.total': "개기월식",
+  'ecl.n.lunar.partial': "부분월식",
+  'ecl.n.lunar.penumbral': "반영월식",
+  'ecl.greatest': "최대식",
+  'ecl.magnitude': "식분",
+  'ecl.totality': "개기식 지속 시간",
+  'ecl.annularity': "금환식 지속 시간",
+  'ecl.width': "식대 폭",
+  'ecl.where': "최대식 위치",
+  'ecl.sunAlt': "태양 고도",
+  'ecl.gamma': "감마",
+  'ecl.umbral': "본영 식분",
+  'ecl.penumbral': "반영 식분",
+  'ecl.partialPhase': "부분식 단계",
+  'ecl.totalPhase': "개기식 단계",
+  'ecl.map': "🗺 지도",
+  'ecl.watch': "▶ 3D로 보기",
+  'ecl.mapAria': "식 세계 지도",
+  'ecl.mapView': "지도 보기",
+  'ecl.labTitle': "식 실험실",
+  'ecl.live': "실시간 그림자",
+  'ecl.max': "최대 식분",
+  'ecl.play': "재생",
+  'ecl.pause': "일시정지",
+  'ecl.save': "💾 지도 저장",
+  'ecl.time': "시각 (UT)",
+  'ecl.legendCentral': "중심 그림자 경로",
+  'ecl.legendPartial': "태양이 일부 가려짐",
+  'ecl.legendNight': "밤",
+  'ecl.legendMoonUp': "달이 지평선 위에 있음",
+  'ecl.verified': "NASA와 대조 완료: 2026–2030년의 일·월식 24건을 모두 찾았고, 종류는 모두 일치하며 최대식 시각 오차는 1분 이내입니다.",
+  'ecl.computing': "일·월식 계산 중…",
+  'ecl.fromHere': "최대식 지점에서 본 모습",
+  'ecl.shadowView': "지구 그림자 속의 달",
+  'ecl.jumped': "{date}(으)로 이동했습니다 — 달 그림자가 지구를 가로지르는 모습을 보세요(실제 축척).",
+  'ecl.jumpedLunar': "{date}(으)로 이동했습니다 — 달이 지구 그림자 속으로 들어가는 모습을 보세요(실제 축척).",
 },
 
 /* ═══════════════════════ FRANÇAIS ═══════════════════════ */
@@ -1185,6 +1498,50 @@ fr: {
   'blurb.neptune': 'Le monde le plus venteux : des tempêtes supersoniques balaient cette géante bleu profond à 2 000 km/h.',
   'unit.km': 'km', 'unit.au': 'ua', 'unit.hours': 'h', 'unit.days': 'jours', 'unit.years': 'ans',
   'unit.kmh': 'km/h', 'unit.m': 'm', 'unit.kms': 'km/s',
+  'tab.eclipses': "Éclipses",
+  'ecl.hint': "Toutes les éclipses de Soleil et de Lune, calculées en direct dans votre navigateur à partir de la théorie lunaire et vérifiées avec le catalogue d’éclipses de la NASA.",
+  'ecl.upcoming': "À venir",
+  'ecl.past': "Passées",
+  'ecl.n.solar.total': "Éclipse solaire totale",
+  'ecl.n.solar.annular': "Éclipse solaire annulaire",
+  'ecl.n.solar.hybrid': "Éclipse solaire hybride",
+  'ecl.n.solar.partial': "Éclipse solaire partielle",
+  'ecl.n.lunar.total': "Éclipse lunaire totale",
+  'ecl.n.lunar.partial': "Éclipse lunaire partielle",
+  'ecl.n.lunar.penumbral': "Éclipse lunaire par la pénombre",
+  'ecl.greatest': "Maximum de l’éclipse",
+  'ecl.magnitude': "Magnitude",
+  'ecl.totality': "Totalité",
+  'ecl.annularity': "Phase annulaire",
+  'ecl.width': "Largeur de la bande",
+  'ecl.where': "Maximum à",
+  'ecl.sunAlt': "Hauteur du Soleil",
+  'ecl.gamma': "Gamma",
+  'ecl.umbral': "Magnitude de l’ombre",
+  'ecl.penumbral': "Magnitude de la pénombre",
+  'ecl.partialPhase': "Phase partielle",
+  'ecl.totalPhase': "Phase totale",
+  'ecl.map': "🗺 Carte",
+  'ecl.watch': "▶ Voir en 3D",
+  'ecl.mapAria': "Carte du monde de l'éclipse",
+  'ecl.mapView': "Vue de la carte",
+  'ecl.labTitle': "Laboratoire des éclipses",
+  'ecl.live': "Ombre en direct",
+  'ecl.max': "Éclipse maximale",
+  'ecl.play': "Lecture",
+  'ecl.pause': "Pause",
+  'ecl.save': "💾 Enregistrer la carte",
+  'ecl.time': "Heure (UT)",
+  'ecl.legendCentral': "Trajet de l’ombre centrale",
+  'ecl.legendPartial': "Soleil partiellement masqué",
+  'ecl.legendNight': "Nuit",
+  'ecl.legendMoonUp': "Lune au-dessus de l’horizon",
+  'ecl.verified': "Vérifié avec la NASA : les 24 éclipses de 2026–2030 trouvées, tous les types exacts et les instants du maximum à moins d’une minute.",
+  'ecl.computing': "Calcul des éclipses…",
+  'ecl.fromHere': "Vu depuis le point du maximum",
+  'ecl.shadowView': "La Lune dans l’ombre de la Terre",
+  'ecl.jumped': "Direction le {date} — regardez l’ombre de la Lune balayer la Terre (échelle réelle).",
+  'ecl.jumpedLunar': "Direction le {date} — regardez la Lune entrer dans l’ombre de la Terre (échelle réelle).",
 },
 
 /* ═══════════════════════ DEUTSCH ═══════════════════════ */
@@ -1280,6 +1637,50 @@ de: {
   'blurb.neptune': 'Die stürmischste Welt: Überschallstürme fegen mit 2.000 km/h über diesen tiefblauen Riesen.',
   'unit.km': 'km', 'unit.au': 'AE', 'unit.hours': 'h', 'unit.days': 'Tage', 'unit.years': 'Jahre',
   'unit.kmh': 'km/h', 'unit.m': 'm', 'unit.kms': 'km/s',
+  'tab.eclipses': "Finsternisse",
+  'ecl.hint': "Alle Sonnen- und Mondfinsternisse, live in Ihrem Browser aus der Mondtheorie berechnet und mit dem Finsternis-Katalog der NASA abgeglichen.",
+  'ecl.upcoming': "Kommende",
+  'ecl.past': "Vergangene",
+  'ecl.n.solar.total': "Totale Sonnenfinsternis",
+  'ecl.n.solar.annular': "Ringförmige Sonnenfinsternis",
+  'ecl.n.solar.hybrid': "Hybride Sonnenfinsternis",
+  'ecl.n.solar.partial': "Partielle Sonnenfinsternis",
+  'ecl.n.lunar.total': "Totale Mondfinsternis",
+  'ecl.n.lunar.partial': "Partielle Mondfinsternis",
+  'ecl.n.lunar.penumbral': "Halbschatten-Mondfinsternis",
+  'ecl.greatest': "Maximum der Finsternis",
+  'ecl.magnitude': "Größe",
+  'ecl.totality': "Totalität",
+  'ecl.annularity': "Ringphase",
+  'ecl.width': "Breite der Zone",
+  'ecl.where': "Maximum bei",
+  'ecl.sunAlt': "Sonnenhöhe",
+  'ecl.gamma': "Gamma",
+  'ecl.umbral': "Kernschatten-Größe",
+  'ecl.penumbral': "Halbschatten-Größe",
+  'ecl.partialPhase': "Partielle Phase",
+  'ecl.totalPhase': "Totale Phase",
+  'ecl.map': "🗺 Karte",
+  'ecl.watch': "▶ In 3D ansehen",
+  'ecl.mapAria': "Weltkarte der Finsternis",
+  'ecl.mapView': "Kartenansicht",
+  'ecl.labTitle': "Finsternis-Labor",
+  'ecl.live': "Schatten live",
+  'ecl.max': "Maximale Finsternis",
+  'ecl.play': "Abspielen",
+  'ecl.pause': "Pause",
+  'ecl.save': "💾 Karte speichern",
+  'ecl.time': "Zeit (UT)",
+  'ecl.legendCentral': "Pfad des Zentralschattens",
+  'ecl.legendPartial': "Sonne teilweise bedeckt",
+  'ecl.legendNight': "Nacht",
+  'ecl.legendMoonUp': "Mond über dem Horizont",
+  'ecl.verified': "Mit der NASA abgeglichen: alle 24 Finsternisse 2026–2030 gefunden, alle Typen korrekt, Zeitpunkte des Maximums auf unter eine Minute genau.",
+  'ecl.computing': "Finsternisse werden berechnet…",
+  'ecl.fromHere': "Gesehen vom Ort des Maximums",
+  'ecl.shadowView': "Der Mond im Erdschatten",
+  'ecl.jumped': "Sprung zum {date} — sehen Sie, wie der Mondschatten über die Erde zieht (wahrer Maßstab).",
+  'ecl.jumpedLunar': "Sprung zum {date} — sehen Sie, wie der Mond in den Erdschatten gleitet (wahrer Maßstab).",
 },
 
 /* ═══════════════════════ 日本語 ═══════════════════════ */
@@ -1375,6 +1776,50 @@ ja: {
   'blurb.neptune': '最も風の強い世界：時速 2,000 km の超音速の嵐がこの深い青の巨人を吹き荒れます。',
   'unit.km': 'km', 'unit.au': '天文単位', 'unit.hours': '時間', 'unit.days': '日', 'unit.years': '年',
   'unit.kmh': 'km/h', 'unit.m': 'm', 'unit.kms': 'km/s',
+  'tab.eclipses': "日食・月食",
+  'ecl.hint': "すべての日食と月食を、月の運動理論からブラウザ内でリアルタイムに計算し、NASA の日食・月食カタログと照合しています。",
+  'ecl.upcoming': "これから",
+  'ecl.past': "過去",
+  'ecl.n.solar.total': "皆既日食",
+  'ecl.n.solar.annular': "金環日食",
+  'ecl.n.solar.hybrid': "金環皆既日食",
+  'ecl.n.solar.partial': "部分日食",
+  'ecl.n.lunar.total': "皆既月食",
+  'ecl.n.lunar.partial': "部分月食",
+  'ecl.n.lunar.penumbral': "半影月食",
+  'ecl.greatest': "食の最大",
+  'ecl.magnitude': "食分",
+  'ecl.totality': "皆既の継続時間",
+  'ecl.annularity': "金環の継続時間",
+  'ecl.width': "食帯の幅",
+  'ecl.where': "最大食の地点",
+  'ecl.sunAlt': "太陽高度",
+  'ecl.gamma': "ガンマ",
+  'ecl.umbral': "本影食分",
+  'ecl.penumbral': "半影食分",
+  'ecl.partialPhase': "部分食の段階",
+  'ecl.totalPhase': "皆既食の段階",
+  'ecl.map': "🗺 地図",
+  'ecl.watch': "▶ 3D で見る",
+  'ecl.mapAria': "食の世界地図",
+  'ecl.mapView': "地図表示",
+  'ecl.labTitle': "日食・月食ラボ",
+  'ecl.live': "リアルタイムの影",
+  'ecl.max': "最大食分",
+  'ecl.play': "再生",
+  'ecl.pause': "一時停止",
+  'ecl.save': "💾 地図を保存",
+  'ecl.time': "時刻（UT）",
+  'ecl.legendCentral': "中心の影の経路",
+  'ecl.legendPartial': "太陽が一部隠れる",
+  'ecl.legendNight': "夜",
+  'ecl.legendMoonUp': "月が地平線より上",
+  'ecl.verified': "NASA と照合済み：2026〜2030 年の 24 件すべてを検出し、種類はすべて一致、食の最大の時刻の誤差は 1 分以内です。",
+  'ecl.computing': "日食・月食を計算中…",
+  'ecl.fromHere': "最大食の地点から見た様子",
+  'ecl.shadowView': "地球の影に入る月",
+  'ecl.jumped': "{date} に移動しました — 月の影が地球を横切る様子をご覧ください（実縮尺）。",
+  'ecl.jumpedLunar': "{date} に移動しました — 月が地球の影に入っていく様子をご覧ください（実縮尺）。",
 },
 
 /* ═══════════════════════ РУССКИЙ ═══════════════════════ */
@@ -1470,6 +1915,50 @@ ru: {
   'blurb.neptune': 'Самый ветреный мир: сверхзвуковые бури несутся по этому тёмно-синему гиганту со скоростью 2000 км/ч.',
   'unit.km': 'км', 'unit.au': 'а.е.', 'unit.hours': 'ч', 'unit.days': 'сут.', 'unit.years': 'года',
   'unit.kmh': 'км/ч', 'unit.m': 'м', 'unit.kms': 'км/с',
+  'tab.eclipses': "Затмения",
+  'ecl.hint': "Все солнечные и лунные затмения рассчитываются прямо в браузере по теории движения Луны и сверены с каталогом затмений NASA.",
+  'ecl.upcoming': "Предстоящие",
+  'ecl.past': "Прошедшие",
+  'ecl.n.solar.total': "Полное солнечное затмение",
+  'ecl.n.solar.annular': "Кольцеобразное солнечное затмение",
+  'ecl.n.solar.hybrid': "Гибридное солнечное затмение",
+  'ecl.n.solar.partial': "Частное солнечное затмение",
+  'ecl.n.lunar.total': "Полное лунное затмение",
+  'ecl.n.lunar.partial': "Частное лунное затмение",
+  'ecl.n.lunar.penumbral': "Полутеневое лунное затмение",
+  'ecl.greatest': "Наибольшая фаза",
+  'ecl.magnitude': "Фаза",
+  'ecl.totality': "Длительность полной фазы",
+  'ecl.annularity': "Длительность кольцеобразной фазы",
+  'ecl.width': "Ширина полосы",
+  'ecl.where': "Наибольшая фаза в точке",
+  'ecl.sunAlt': "Высота Солнца",
+  'ecl.gamma': "Гамма",
+  'ecl.umbral': "Теневая фаза",
+  'ecl.penumbral': "Полутеневая фаза",
+  'ecl.partialPhase': "Частная фаза",
+  'ecl.totalPhase': "Полная фаза",
+  'ecl.map': "🗺 Карта",
+  'ecl.watch': "▶ Смотреть в 3D",
+  'ecl.mapAria': "Карта затмения",
+  'ecl.mapView': "Вид карты",
+  'ecl.labTitle': "Лаборатория затмений",
+  'ecl.live': "Тень в реальном времени",
+  'ecl.max': "Максимальная фаза",
+  'ecl.play': "Пуск",
+  'ecl.pause': "Пауза",
+  'ecl.save': "💾 Сохранить карту",
+  'ecl.time': "Время (UT)",
+  'ecl.legendCentral': "Путь центральной тени",
+  'ecl.legendPartial': "Солнце частично закрыто",
+  'ecl.legendNight': "Ночь",
+  'ecl.legendMoonUp': "Луна над горизонтом",
+  'ecl.verified': "Сверено с NASA: найдены все 24 затмения 2026–2030 годов, все типы определены верно, моменты наибольшей фазы — с точностью до минуты.",
+  'ecl.computing': "Вычисляем затмения…",
+  'ecl.fromHere': "Вид из точки наибольшей фазы",
+  'ecl.shadowView': "Луна в тени Земли",
+  'ecl.jumped': "Переходим к {date} — смотрите, как тень Луны пересекает Землю (реальный масштаб).",
+  'ecl.jumpedLunar': "Переходим к {date} — смотрите, как Луна входит в тень Земли (реальный масштаб).",
 },
 };
 
@@ -1509,6 +1998,212 @@ function t(key, vars) {
 }
 
 
+/* ══════ js/lunar.js ══════ */
+/* ── Cosmoscope · lunar.js ──────────────────────────────────────────
+   The Moon from the truncated ELP-2000/82 lunar theory as published
+   in J. Meeus, "Astronomical Algorithms" (2nd ed.), chapter 47:
+   ~10" in longitude and ~4" in latitude — enough to predict eclipses
+   to within a minute or so. Also: ΔT (TT − UT), ecliptic precession
+   (Meeus 21.7), obliquity and Greenwich mean sidereal time.        */
+
+const D2R = Math.PI / 180;
+const ARCSEC = D2R / 3600;
+
+/* Table 47.A — D, M, M', F, Σl (1e-6 °), Σr (1e-3 km) */
+const LR = [
+  [0, 0, 1, 0, 6288774, -20905355], [2, 0, -1, 0, 1274027, -3699111],
+  [2, 0, 0, 0, 658314, -2955968], [0, 0, 2, 0, 213618, -569925],
+  [0, 1, 0, 0, -185116, 48888], [0, 0, 0, 2, -114332, -3149],
+  [2, 0, -2, 0, 58793, 246158], [2, -1, -1, 0, 57066, -152138],
+  [2, 0, 1, 0, 53322, -170733], [2, -1, 0, 0, 45758, -204586],
+  [0, 1, -1, 0, -40923, -129620], [1, 0, 0, 0, -34720, 108743],
+  [0, 1, 1, 0, -30383, 104755], [2, 0, 0, -2, 15327, 10321],
+  [0, 0, 1, 2, -12528, 0], [0, 0, 1, -2, 10980, 79661],
+  [4, 0, -1, 0, 10675, -34782], [0, 0, 3, 0, 10034, -23210],
+  [4, 0, -2, 0, 8548, -21636], [2, 1, -1, 0, -7888, 24208],
+  [2, 1, 0, 0, -6766, 30824], [1, 0, -1, 0, -5163, -8379],
+  [1, 1, 0, 0, 4987, -16675], [2, -1, 1, 0, 4036, -12831],
+  [2, 0, 2, 0, 3994, -10445], [4, 0, 0, 0, 3861, -11650],
+  [2, 0, -3, 0, 3665, 14403], [0, 1, -2, 0, -2689, -7003],
+  [2, 0, -1, 2, -2602, 0], [2, -1, -2, 0, 2390, 10056],
+  [1, 0, 1, 0, -2348, 6322], [2, -2, 0, 0, 2236, -9884],
+  [0, 1, 2, 0, -2120, 5751], [0, 2, 0, 0, -2069, 0],
+  [2, -2, -1, 0, 2048, -4950], [2, 0, 1, -2, -1773, 4130],
+  [2, 0, 0, 2, -1595, 0], [4, -1, -1, 0, 1215, -3958],
+  [0, 0, 2, 2, -1110, 0], [3, 0, -1, 0, -892, 3258],
+  [2, 1, 1, 0, -810, 2616], [4, -1, -2, 0, 759, -1897],
+  [0, 2, -1, 0, -713, -2117], [2, 2, -1, 0, -700, 2354],
+  [2, 1, -2, 0, 691, 0], [2, -1, 0, -2, 596, 0],
+  [4, 0, 1, 0, 549, -1423], [0, 0, 4, 0, 537, -1117],
+  [4, -1, 0, 0, 520, -1571], [1, 0, -2, 0, -487, -1739],
+  [2, 1, 0, -2, -399, 0], [0, 0, 2, -2, -381, -4421],
+  [1, 1, 1, 0, 351, 0], [3, 0, -2, 0, -340, 0],
+  [4, 0, -3, 0, 330, 0], [2, -1, 2, 0, 327, 0],
+  [0, 2, 1, 0, -323, 1165], [1, 1, -1, 0, 299, 0],
+  [2, 0, 3, 0, 294, 0], [2, 0, -1, -2, 0, 8752],
+];
+
+/* Table 47.B — D, M, M', F, Σb (1e-6 °) */
+const B = [
+  [0, 0, 0, 1, 5128122], [0, 0, 1, 1, 280602], [0, 0, 1, -1, 277693],
+  [2, 0, 0, -1, 173237], [2, 0, -1, 1, 55413], [2, 0, -1, -1, 46271],
+  [2, 0, 0, 1, 32573], [0, 0, 2, 1, 17198], [2, 0, 1, -1, 9266],
+  [0, 0, 2, -1, 8822], [2, -1, 0, -1, 8216], [2, 0, -2, -1, 4324],
+  [2, 0, 1, 1, 4200], [2, 1, 0, -1, -3359], [2, -1, -1, 1, 2463],
+  [2, -1, 0, 1, 2211], [2, -1, -1, -1, 2065], [0, 1, -1, -1, -1870],
+  [4, 0, -1, -1, 1828], [0, 1, 0, 1, -1794], [0, 0, 0, 3, -1749],
+  [0, 1, -1, 1, -1565], [1, 0, 0, 1, -1491], [0, 1, 1, 1, -1475],
+  [0, 1, 1, -1, -1410], [0, 1, 0, -1, -1344], [1, 0, 0, -1, -1335],
+  [0, 0, 3, 1, 1107], [4, 0, 0, -1, 1021], [4, 0, -1, 1, 833],
+  [0, 0, 1, -3, 777], [4, 0, -2, 1, 671], [2, 0, 0, -3, 607],
+  [2, 0, 2, -1, 596], [2, -1, 1, -1, 491], [2, 0, -2, 1, -451],
+  [0, 0, 3, -1, 439], [2, 0, 2, 1, 422], [2, 0, -3, -1, 421],
+  [2, 1, -1, 1, -366], [2, 1, 0, 1, -351], [4, 0, 0, 1, 331],
+  [2, -1, 1, 1, 315], [2, -2, 0, -1, 302], [0, 0, 1, 3, -283],
+  [2, 1, 1, -1, -229], [1, 1, 0, -1, 223], [1, 1, 0, 1, 223],
+  [0, 1, -2, -1, -220], [2, 1, -1, -1, -220], [1, 0, 1, 1, -185],
+  [2, -1, -2, -1, 181], [0, 1, 2, 1, -177], [4, 0, -2, -1, 176],
+  [4, -1, -1, -1, 166], [1, 0, 1, -1, -164], [4, 0, 1, -1, 132],
+  [1, 0, -1, -1, -119], [4, -1, 0, -1, 115], [2, -2, 0, 1, 107],
+];
+
+function norm360(x) { x %= 360; return x < 0 ? x + 360 : x; }
+
+/* Geocentric Moon, mean ecliptic & equinox OF DATE (no nutation).
+   jdTT: Julian Ephemeris Day. Returns { lon, lat } in degrees, dist km. */
+function moonEclipticOfDate(jdTT) {
+  const T = (jdTT - 2451545.0) / 36525;
+  const T2 = T * T, T3 = T2 * T, T4 = T3 * T;
+  const Lp = norm360(218.3164477 + 481267.88123421 * T - 0.0015786 * T2 + T3 / 538841 - T4 / 65194000);
+  const D = norm360(297.8501921 + 445267.1114034 * T - 0.0018819 * T2 + T3 / 545868 - T4 / 113065000);
+  const M = norm360(357.5291092 + 35999.0502909 * T - 0.0001536 * T2 + T3 / 24490000);
+  const Mp = norm360(134.9633964 + 477198.8675055 * T + 0.0087414 * T2 + T3 / 69699 - T4 / 14712000);
+  const F = norm360(93.2720950 + 483202.0175233 * T - 0.0036539 * T2 - T3 / 3526000 + T4 / 863310000);
+  const A1 = norm360(119.75 + 131.849 * T);
+  const A2 = norm360(53.09 + 479264.290 * T);
+  const A3 = norm360(313.45 + 481266.484 * T);
+  const E = 1 - 0.002516 * T - 0.0000074 * T2;
+  const E2 = E * E;
+
+  let sl = 0, sr = 0, sb = 0;
+  for (const [d, m, mp, f, cl, cr] of LR) {
+    const arg = (d * D + m * M + mp * Mp + f * F) * D2R;
+    const e = m === 0 ? 1 : (Math.abs(m) === 1 ? E : E2);
+    sl += cl * e * Math.sin(arg);
+    sr += cr * e * Math.cos(arg);
+  }
+  for (const [d, m, mp, f, cb] of B) {
+    const arg = (d * D + m * M + mp * Mp + f * F) * D2R;
+    const e = m === 0 ? 1 : (Math.abs(m) === 1 ? E : E2);
+    sb += cb * e * Math.sin(arg);
+  }
+  sl += 3958 * Math.sin(A1 * D2R) + 1962 * Math.sin((Lp - F) * D2R) + 318 * Math.sin(A2 * D2R);
+  sb += -2235 * Math.sin(Lp * D2R) + 382 * Math.sin(A3 * D2R)
+      + 175 * Math.sin((A1 - F) * D2R) + 175 * Math.sin((A1 + F) * D2R)
+      + 127 * Math.sin((Lp - Mp) * D2R) - 115 * Math.sin((Lp + Mp) * D2R);
+
+  return {
+    lon: norm360(Lp + sl / 1e6),
+    lat: sb / 1e6,
+    dist: 385000.56 + sr / 1000,
+  };
+}
+
+/* Ecliptic precession between two epochs (Meeus 21.7). Angles in degrees. */
+function precessEcliptic(lonDeg, latDeg, jdFrom, jdTo) {
+  const T = (jdFrom - 2451545.0) / 36525;
+  const t = (jdTo - jdFrom) / 36525;
+  const eta = ((47.0029 - 0.06603 * T + 0.000598 * T * T) * t
+    + (-0.03302 + 0.000598 * T) * t * t + 0.000060 * t * t * t) * ARCSEC;
+  const Pi = 174.876384 * D2R + ((3289.4789 * T + 0.60622 * T * T)
+    - (869.8089 + 0.50491 * T) * t + 0.03536 * t * t) * ARCSEC;
+  const p = ((5029.0966 + 2.22226 * T - 0.000042 * T * T) * t
+    + (1.11113 - 0.000042 * T) * t * t - 0.000006 * t * t * t) * ARCSEC;
+  const lam = lonDeg * D2R, bet = latDeg * D2R;
+  const A = Math.cos(eta) * Math.cos(bet) * Math.sin(Pi - lam) - Math.sin(eta) * Math.sin(bet);
+  const Bv = Math.cos(bet) * Math.cos(Pi - lam);
+  const C = Math.cos(eta) * Math.sin(bet) + Math.sin(eta) * Math.cos(bet) * Math.sin(Pi - lam);
+  return {
+    lon: norm360((p + Pi - Math.atan2(A, Bv)) / D2R),
+    lat: Math.asin(Math.max(-1, Math.min(1, C))) / D2R,
+  };
+}
+
+/* Mean obliquity of the ecliptic of date (Meeus 22.2), degrees. */
+function meanObliquity(jdTT) {
+  const T = (jdTT - 2451545.0) / 36525;
+  return 23.439291111 - (46.8150 * T + 0.00059 * T * T - 0.001813 * T * T * T) / 3600;
+}
+
+/* Greenwich mean sidereal time (Meeus 12.4), degrees. jdUT: UT1 Julian Day. */
+function gmstDeg(jdUT) {
+  const T = (jdUT - 2451545.0) / 36525;
+  return norm360(280.46061837 + 360.98564736629 * (jdUT - 2451545.0)
+    + 0.000387933 * T * T - T * T * T / 38710000);
+}
+
+/* ΔT = TT − UT in seconds. Observed values 1990–2025 (IERS); elsewhere
+   the Espenak–Meeus piecewise polynomials (NASA, "Polynomial Expressions
+   for Delta T"). 2025–2050 eases from the observed ≈69 s plateau into the
+   2050–2150 expression so the curve is continuous in value and slope.  */
+const DT_TABLE = [
+  [1990, 56.86], [1995, 60.78], [2000, 63.83], [2005, 64.69], [2010, 66.07],
+  [2015, 67.64], [2020, 69.36], [2025, 69.20],
+];
+const dtFar = (year) => { const u = (year - 1820) / 100; return -20 + 32 * u * u; };
+const dt2050 = (year) => dtFar(year) - 0.5628 * (2150 - year);
+function deltaT(year) {
+  let t, u;
+  if (year >= 1990 && year <= 2025) {
+    for (let i = 0; i < DT_TABLE.length - 1; i++) {
+      const [y0, v0] = DT_TABLE[i], [y1, v1] = DT_TABLE[i + 1];
+      if (year <= y1) return v0 + (v1 - v0) * (year - y0) / (y1 - y0);
+    }
+  }
+  if (year > 2025 && year < 2050) {
+    const s = (year - 2025) / 25;
+    return 69.2 + (dt2050(2050) - 69.2) * s * s;
+  }
+  if (year >= 2050 && year <= 2150) return dt2050(year);
+  if (year > 2150 || year < -500) return dtFar(year);
+  if (year >= 1986) { t = year - 2000; return 63.86 + 0.3345 * t - 0.060374 * t ** 2 + 0.0017275 * t ** 3 + 0.000651814 * t ** 4 + 0.00002373599 * t ** 5; }
+  if (year >= 1961) { t = year - 1975; return 45.45 + 1.067 * t - t ** 2 / 260 - t ** 3 / 718; }
+  if (year >= 1941) { t = year - 1950; return 29.07 + 0.407 * t - t ** 2 / 233 + t ** 3 / 2547; }
+  if (year >= 1920) { t = year - 1920; return 21.20 + 0.84493 * t - 0.0761 * t ** 2 + 0.0020936 * t ** 3; }
+  if (year >= 1900) { t = year - 1900; return -2.79 + 1.494119 * t - 0.0598939 * t ** 2 + 0.0061966 * t ** 3 - 0.000197 * t ** 4; }
+  if (year >= 1860) { t = year - 1860; return 7.62 + 0.5737 * t - 0.251754 * t ** 2 + 0.01680668 * t ** 3 - 0.0004473624 * t ** 4 + t ** 5 / 233174; }
+  if (year >= 1800) {
+    t = year - 1800;
+    return 13.72 - 0.332447 * t + 0.0068612 * t ** 2 + 0.0041116 * t ** 3 - 0.00037436 * t ** 4
+      + 0.0000121272 * t ** 5 - 0.0000001699 * t ** 6 + 0.000000000875 * t ** 7;
+  }
+  if (year >= 1700) { t = year - 1700; return 8.83 + 0.1603 * t - 0.0059285 * t ** 2 + 0.00013336 * t ** 3 - t ** 4 / 1174000; }
+  if (year >= 1600) { t = year - 1600; return 120 - 0.9808 * t - 0.01532 * t ** 2 + t ** 3 / 7129; }
+  if (year >= 500) {
+    u = (year - 1000) / 100;
+    return 1574.2 - 556.01 * u + 71.23472 * u ** 2 + 0.319781 * u ** 3 - 0.8503463 * u ** 4
+      - 0.005050998 * u ** 5 + 0.0083572073 * u ** 6;
+  }
+  u = year / 100;
+  return 10583.6 - 1014.41 * u + 33.78311 * u ** 2 - 5.952053 * u ** 3 - 0.1798452 * u ** 4
+    + 0.022174192 * u ** 5 + 0.0090316521 * u ** 6;
+}
+
+function jdFromMs(ms) { return 2440587.5 + ms / 86400000; }
+function yearOfMs(ms) { return 1970 + ms / 31557600000; }
+
+/* Geocentric Moon in the J2000 ecliptic frame, as a vector in km.
+   ms: UTC epoch milliseconds (ΔT applied internally). */
+function moonJ2000Km(ms) {
+  const jdUT = jdFromMs(ms);
+  const jdTT = jdUT + deltaT(yearOfMs(ms)) / 86400;
+  const m = moonEclipticOfDate(jdTT);
+  const p = precessEcliptic(m.lon, m.lat, jdTT, 2451545.0);
+  const lo = p.lon * D2R, la = p.lat * D2R;
+  return [m.dist * Math.cos(la) * Math.cos(lo), m.dist * Math.cos(la) * Math.sin(lo), m.dist * Math.sin(la)];
+}
+
+
 /* ══════ js/orbits.js ══════ */
 /* ── Cosmoscope · orbits.js ─────────────────────────────────────────
    Real planetary ephemeris: E.M. Standish, "Keplerian Elements for
@@ -1516,6 +2211,7 @@ function t(key, vars) {
    valid 1800–2050 AD. Heliocentric J2000 ecliptic coordinates.
    Scene frame: X = ecliptic x, Y = ecliptic north (z), Z = -ecliptic y
    (right-handed, Y-up for rendering).                                */
+
 
 const J2000_JD = 2451545.0;
 const AU_KM = 149597870.7;
@@ -1610,38 +2306,27 @@ function heliocentric(planetKey, T) {
   return [xEcl, yEcl, zEcl];
 }
 
-/* Moon: simplified Keplerian orbit around Earth (good to ~a degree —
-   plenty for visualization). a in au. */
-const MOON = {
-  a: 384400 / AU_KM,
-  e: 0.0549,
-  i: 5.145 * DEG,
-  periodDays: 27.321661,
-  nodePeriodYears: -18.6,   /* nodal regression */
-  perigeePeriodYears: 8.85, /* apsidal precession */
-  L0: 218.316 * DEG,        /* mean longitude at J2000 */
-  P0: 83.353 * DEG,         /* mean longitude of perigee at J2000 */
-  N0: 125.045 * DEG,        /* mean longitude of node at J2000 */
-};
+/* Moon: truncated ELP-2000/82 lunar theory (Meeus ch. 47, see
+   lunar.js) — ~10" accuracy, enough for real eclipse geometry.
+   T counts Julian centuries of UT from J2000; ΔT is applied inside. */
+const MOON = { periodDays: 27.321661 };
+const EMB_MOON_FRACTION = 1 / (1 + 81.30056); /* Moon mass / (Earth + Moon) */
+
+function centuriesToMs(T) {
+  return (T * 36525 + 2451545.0 - 2440587.5) * DAY_MS;
+}
 
 function moonGeocentric(T) {
-  const d = T * 36525; /* days since J2000 */
-  const L = MOON.L0 + (2 * Math.PI / MOON.periodDays) * d;
-  const P = MOON.P0 + (2 * Math.PI / (MOON.perigeePeriodYears * 365.25)) * d;
-  const N = MOON.N0 + (2 * Math.PI / (MOON.nodePeriodYears * 365.25)) * d;
-  const M = wrapAngle(L - P);
-  const w = P - N;
-  const E = solveKepler(M, MOON.e);
-  const xp = MOON.a * (Math.cos(E) - MOON.e);
-  const yp = MOON.a * Math.sqrt(1 - MOON.e * MOON.e) * Math.sin(E);
-  const cw = Math.cos(w), sw = Math.sin(w);
-  const cI = Math.cos(MOON.i), sI = Math.sin(MOON.i);
-  const cn = Math.cos(N), sn = Math.sin(N);
-  return [
-    (cw * cn - sw * sn * cI) * xp + (-sw * cn - cw * sn * cI) * yp,
-    (cw * sn + sw * cn * cI) * xp + (-sw * sn + cw * cn * cI) * yp,
-    (sw * sI) * xp + (cw * sI) * yp,
-  ];
+  const v = moonJ2000Km(centuriesToMs(T));
+  return [v[0] / AU_KM, v[1] / AU_KM, v[2] / AU_KM];
+}
+
+/* Earth's centre: Standish gives the Earth–Moon barycentre, which sits
+   ~4,670 km from Earth's centre toward the Moon. */
+function earthHeliocentric(T) {
+  const b = heliocentric('earth', T);
+  const m = moonGeocentric(T);
+  return [b[0] - EMB_MOON_FRACTION * m[0], b[1] - EMB_MOON_FRACTION * m[1], b[2] - EMB_MOON_FRACTION * m[2]];
 }
 
 /* ── Physical data ──────────────────────────────────────────────────
@@ -1649,19 +2334,33 @@ function moonGeocentric(T) {
    planetary fact sheets (nssdc.gsfc.nasa.gov/planetary/factsheet).
    Negative rotation = retrograde.                                   */
 const BODIES = [
-  { key: 'sun',     glyph: '☉', radiusKm: 695700,   tiltDeg: 7.25,   rotHours: 609.12,  shaderId: 0 },
-  { key: 'mercury', glyph: '☿', radiusKm: 2440.5,   tiltDeg: 0.034,  rotHours: 1407.6,  shaderId: 1 },
-  { key: 'venus',   glyph: '♀', radiusKm: 6051.8,   tiltDeg: 177.36, rotHours: -5832.6, shaderId: 2 },
-  { key: 'earth',   glyph: '⊕', radiusKm: 6378.137, tiltDeg: 23.44,  rotHours: 23.9345, shaderId: 3 },
-  { key: 'moon',    glyph: '☾', radiusKm: 1738.1,   tiltDeg: 6.68,   rotHours: 655.72,  shaderId: 4, parent: 'earth' },
-  { key: 'mars',    glyph: '♂', radiusKm: 3396.2,   tiltDeg: 25.19,  rotHours: 24.6229, shaderId: 5 },
-  { key: 'jupiter', glyph: '♃', radiusKm: 71492,    tiltDeg: 3.13,   rotHours: 9.925,   shaderId: 6 },
-  { key: 'saturn',  glyph: '♄', radiusKm: 60268,    tiltDeg: 26.73,  rotHours: 10.656,  shaderId: 7,
+  { key: 'sun',     glyph: '☉', radiusKm: 695700,   tiltDeg: 7.25,   rotHours: 609.12,  poleRA: 286.13, poleDec: 63.87, shaderId: 0 },
+  { key: 'mercury', glyph: '☿', radiusKm: 2440.5,   tiltDeg: 0.034,  rotHours: 1407.6,  poleRA: 281.0103, poleDec: 61.4155, shaderId: 1 },
+  { key: 'venus',   glyph: '♀', radiusKm: 6051.8,   tiltDeg: 177.36, rotHours: -5832.6, poleRA: 272.76, poleDec: 67.16, shaderId: 2 },
+  { key: 'earth',   glyph: '⊕', radiusKm: 6378.137, tiltDeg: 23.44,  rotHours: 23.9345, poleRA: 0.0, poleDec: 90.0, shaderId: 3 },
+  /* Moon pole: the IAU mean pole only — the ±1.5° physical-libration terms (E1…) are omitted */
+  { key: 'moon',    glyph: '☾', radiusKm: 1738.1,   tiltDeg: 6.68,   rotHours: 655.72,  poleRA: 269.9949, poleDec: 66.5392, shaderId: 4, parent: 'earth' },
+  { key: 'mars',    glyph: '♂', radiusKm: 3396.2,   tiltDeg: 25.19,  rotHours: 24.6229, poleRA: 317.68143, poleDec: 52.8865, shaderId: 5 },
+  { key: 'jupiter', glyph: '♃', radiusKm: 71492,    tiltDeg: 3.13,   rotHours: 9.925,   poleRA: 268.056595, poleDec: 64.495303, shaderId: 6 },
+  { key: 'saturn',  glyph: '♄', radiusKm: 60268,    tiltDeg: 26.73,  rotHours: 10.656,  poleRA: 40.589, poleDec: 83.537, shaderId: 7,
     /* NSSDC Saturnian Rings Fact Sheet: C-ring inner → A-ring outer */
     ringInnerKm: 74658, ringOuterKm: 136780 },
-  { key: 'uranus',  glyph: '♅', radiusKm: 25559,    tiltDeg: 97.77,  rotHours: -17.24,  shaderId: 8 },
-  { key: 'neptune', glyph: '♆', radiusKm: 24764,    tiltDeg: 28.32,  rotHours: 16.11,   shaderId: 9 },
+  { key: 'uranus',  glyph: '♅', radiusKm: 25559,    tiltDeg: 97.77,  rotHours: -17.24,  poleRA: 257.311, poleDec: -15.175, shaderId: 8 },
+  { key: 'neptune', glyph: '♆', radiusKm: 24764,    tiltDeg: 28.32,  rotHours: 16.11,   poleRA: 299.36, poleDec: 43.46, shaderId: 9 },
 ];
+
+/* North-pole direction of each body in the scene frame, from the IAU
+   WGCCRE pole right ascension/declination (J2000 equator), rotated
+   into the J2000 ecliptic and then into the Y-up scene frame. This
+   gives Earth its real seasons and Saturn its real ring tilt. */
+const OBLIQUITY_J2000 = 23.4392911 * DEG;
+function poleAxisScene(body) {
+  const ra = body.poleRA * DEG, de = body.poleDec * DEG;
+  const xq = Math.cos(de) * Math.cos(ra), yq = Math.cos(de) * Math.sin(ra), zq = Math.sin(de);
+  const ce = Math.cos(OBLIQUITY_J2000), se = Math.sin(OBLIQUITY_J2000);
+  const ecl = [xq, ce * yq + se * zq, -se * yq + ce * zq];
+  return [ecl[0], ecl[2], -ecl[1]];
+}
 
 const BODY_INDEX = Object.fromEntries(BODIES.map((b, i) => [b.key, i]));
 
@@ -1731,7 +2430,7 @@ function computeScene(dateMs, mode) {
       out.push({ pos: moonScene, radius: radius(b.radiusKm), spin, distAu: dSun });
       continue;
     }
-    const ecl = heliocentric(b.key, T);
+    const ecl = b.key === 'earth' ? earthHeliocentric(T) : heliocentric(b.key, T);
     const dAu = Math.hypot(ecl[0], ecl[1], ecl[2]);
     const s = toScene(scaleVec(ecl, dist(dAu) / dAu));
     const st = { pos: s, radius: radius(b.radiusKm), spin, distAu: dAu };
@@ -1792,7 +2491,7 @@ function orbitPath(key, dateMs, mode, n = 180) {
 function distanceFromEarthAu(key, dateMs) {
   const T = jdToCenturies(dateToJD(dateMs));
   if (key === 'earth') return 0;
-  const e = heliocentric('earth', T);
+  const e = earthHeliocentric(T);
   if (key === 'sun') return Math.hypot(e[0], e[1], e[2]);
   if (key === 'moon') {
     const g = moonGeocentric(T);
@@ -1845,6 +2544,7 @@ uniform vec4 uBodyPosR[${MAX_BODIES}];   /* xyz, radius */
 uniform vec4 uBodyAxis[${MAX_BODIES}];   /* axis xyz, spin */
 uniform vec4 uBodyMisc[${MAX_BODIES}];   /* shaderId, ringInner, ringOuter, 0 */
 uniform float uBeltInner, uBeltOuter;    /* scene units; 0 = off */
+uniform float uShowcaseEM;    /* 1 in showcase scale: Earth–Moon shadows use true proportions */
 
 in vec2 vUV;
 layout(location=0) out vec4 fragColor;
@@ -1906,8 +2606,12 @@ float iSphere(vec3 ro, vec3 rd, vec3 c, float r) {
   return t > 0.0 ? t : -1.0;
 }
 
-/* ── shadowing: fraction of the solar disc visible from p ── */
+/* ── shadowing: fraction of the solar disc visible from p ──
+   gEarthShadow keeps Earth's own share, so a Moon inside Earth's
+   shadow can glow with sunlight refracted through our atmosphere. */
+float gEarthShadow = 1.0;
 float sunVisibility(vec3 p, int selfId) {
+  gEarthShadow = 1.0;
   vec3 sunC = uBodyPosR[0].xyz;
   float sunR = uBodyPosR[0].w;
   vec3 toSun = sunC - p;
@@ -1919,15 +2623,37 @@ float sunVisibility(vec3 p, int selfId) {
     if (i >= uNumBodies) break;
     if (i == selfId) continue;
     vec3 oc = uBodyPosR[i].xyz - p;
+    float rOcc = uBodyPosR[i].w;
+    vec3 Lx = L;
+    float aS = aSun;
+    if (uShowcaseEM > 0.5 && ((selfId == 4 && i == 3) || (selfId == 3 && i == 4))) {
+      /* showcase inflates Earth, Moon and Sun and squeezes their distances,
+         which would eclipse every full and new moon. For this pair, rebuild
+         true proportions in units of the Earth–Moon distance dEM: Moon
+         radius 0.00452, Earth radius 0.01659, Sun 389 dEM away with an
+         angular radius of 0.00465 rad. Directions are true already. */
+      vec3 c = uBodyPosR[selfId].xyz, e = uBodyPosR[3].xyz;
+      float dEM = length(e - uBodyPosR[4].xyz);
+      float selfK = selfId == 4 ? 0.004519 : 0.016593;
+      vec3 pp = c + (p - c) * (selfK * dEM / uBodyPosR[selfId].w);
+      oc = uBodyPosR[i].xyz - pp;
+      rOcc = (selfId == 4 ? 0.016593 : 0.004519) * dEM;
+      Lx = normalize(normalize(sunC - e) * (389.2 * dEM) - (pp - e));
+      aS = 0.004653;
+    }
     float dOcc = length(oc);
     if (dOcc >= dSun) continue;
-    float aOcc = asin(clamp(uBodyPosR[i].w / dOcc, 0.0, 1.0));
-    float sep = acos(clamp(dot(oc / dOcc, L), -1.0, 1.0));
+    float aOcc = asin(clamp(rOcc / dOcc, 0.0, 1.0));
+    float sep = acos(clamp(dot(oc / dOcc, Lx), -1.0, 1.0));
 #if SOFT_SHADOWS
-    float t = clamp((sep - (aOcc - aSun)) / max(2.0 * aSun, 1e-5), 0.0, 1.0);
-    vis *= smoothstep(0.0, 1.0, t);
+    float t = clamp((sep - (aOcc - aS)) / max(2.0 * aS, 1e-5), 0.0, 1.0);
+    float f = smoothstep(0.0, 1.0, t);
+    vis *= f;
+    if (i == 3) gEarthShadow = f;
 #else
-    vis *= sep < aOcc ? 0.0 : 1.0;
+    float f = sep < aOcc ? 0.0 : 1.0;
+    vis *= f;
+    if (i == 3) gEarthShadow = f;
 #endif
   }
   return vis;
@@ -1957,7 +2683,7 @@ float ringOcclusion(vec3 p, int saturnIdx) {
 void bodyLocal(int i, vec3 p, out vec3 nLocal, out float lat, out float lon) {
   vec3 a = uBodyAxis[i].xyz;
   float spin = uBodyAxis[i].w;
-  vec3 t0 = abs(a.y) < 0.99 ? normalize(cross(vec3(0,1,0), a)) : vec3(1,0,0);
+  vec3 t0 = normalize(cross(abs(a.y) < 0.99 ? vec3(0,1,0) : vec3(1,0,0), a));
   vec3 b0 = cross(a, t0);
   vec3 q = normalize(p - uBodyPosR[i].xyz);
   vec3 loc = vec3(dot(q, t0), dot(q, a), dot(q, b0));
@@ -2217,6 +2943,10 @@ void main() {
         float spec = pow(max(dot(n, h), 0.0), 90.0) * ocean * (1.0 - cloud) * vis;
         lit += vec3(1.0, 0.95, 0.8) * spec * 0.7;
       }
+      /* blood moon: in Earth's shadow the Moon keeps a deep red glow,
+         sunlight bent through Earth's atmosphere */
+      /* only inside the umbra: a penumbral eclipse merely dims the Moon */
+      if (id == 4) lit += alb * diff * smoothstep(0.4, 0.0, gEarthShadow) * vec3(0.62, 0.16, 0.05) * 0.6;
       /* soft ambient from starlight so night side isn't void-black */
       lit += alb * 0.012;
       /* city lights on the night side */
@@ -2606,6 +3336,7 @@ class Engine {
     gl.uniform4fv(this.u(pr, 'uBodyMisc'), misc);
     gl.uniform1f(this.u(pr, 'uBeltInner'), frame.beltInner || 0);
     gl.uniform1f(this.u(pr, 'uBeltOuter'), frame.beltOuter || 0);
+    gl.uniform1f(this.u(pr, 'uShowcaseEM'), frame.showcase ? 1 : 0);
   }
 
   _drawOverlays(frame) {
@@ -3415,17 +4146,44 @@ function stamp() {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
 
-function download(blob, name) {
-  const url = URL.createObjectURL(blob);
+/* Inside the Claude artifact viewer, pages may not download directly: the
+   host's `downloads` capability asks the viewer to confirm each save.
+   Everywhere else (GitHub Pages, the standalone file) a plain anchor
+   download is used. */
+let downloadsCap = null;
+function getDownloadsCap() {
+  if (!downloadsCap) {
+    const host = typeof window !== 'undefined' ? window.claude : null;
+    downloadsCap = host && typeof host.use === 'function'
+      ? host.use('downloads').catch(() => null)
+      : Promise.resolve(null);
+  }
+  return downloadsCap;
+}
+function anchorSave(url, name) {
   const a = document.createElement('a');
   a.href = url;
   a.download = name;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  /* keep the URL alive briefly so the click lands, then release */
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-  return url;
+}
+function saveFile(blob, name, url = null) {
+  return getDownloadsCap().then((cap) => {
+    if (cap) {
+      return cap.save({ filename: name, data: blob }).catch((e) => {
+        if (e && e.code === 'declined') return;
+        console.warn('save failed:', e && e.code);
+      });
+    }
+    const u = url || URL.createObjectURL(blob);
+    anchorSave(u, name);
+    /* keep the URL alive briefly so the click lands, then release */
+    if (!url) setTimeout(() => URL.revokeObjectURL(u), 60000);
+  });
+}
+function download(blob, name) {
+  saveFile(blob, name);
 }
 
 /* ── stills ── */
@@ -3612,6 +4370,7 @@ function initUI(app) {
       el.setAttribute('aria-label', t(el.dataset.i18nTitle));
     });
     document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
     renderBodyList();
     renderBodyCard();
     renderHelp();
@@ -3625,6 +4384,7 @@ function initUI(app) {
     updateTourButton();
     $('btn-rec').textContent = recorder.recording ? t('cap.stop') : t('cap.record');
     $('lang').value = getLang();
+    if (app.onLangChange) app.onLangChange();
   }
 
   /* segmented controls: keep visual + ARIA state in sync */
@@ -4099,16 +4859,13 @@ function initUI(app) {
 
   function addDownload(blob, name) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    saveFile(blob, name, url);
     const item = document.createElement('div');
     item.className = 'dl-item';
     const size = blob.size > 1048576 ? (blob.size / 1048576).toFixed(1) + ' MB' : Math.round(blob.size / 1024) + ' KB';
     item.innerHTML = `<span>💾</span><a href="${url}" download="${escapeHtml(name)}">${escapeHtml(name)}</a><span class="hint">${size}</span>`;
     item.dataset.url = url;
+    item.querySelector('a').addEventListener('click', (ev) => { ev.preventDefault(); saveFile(blob, name, url); });
     const list = $('downloads');
     list.prepend(item);
     /* bound the list; release object URLs of evicted entries */
@@ -4284,6 +5041,858 @@ function initUI(app) {
 }
 
 
+/* ══════ js/eclipses.js ══════ */
+/* ── Cosmoscope · eclipses.js ───────────────────────────────────────
+   Finds solar and lunar eclipses from first principles: geocentric
+   Sun (JPL/Standish elements, Earth–Moon barycentre corrected, annual
+   aberration) and Moon (ELP-2000/82, lunar.js), both in the equator
+   and equinox of date. Solar eclipses use the Moon's shadow cones and
+   a WGS-84 ellipsoid; lunar eclipses use Earth's shadow with Danjon's
+   enlargement. Results are checked in tests/unit/eclipses.test.mjs
+   against NASA's Five Millennium Canon (Espenak & Meeus).          */
+
+
+const RAD = Math.PI / 180;
+const AU = 149597870.7;
+const R_SUN = 696000;            /* km — NASA canon value */
+const EARTH_A = 6378.137;        /* WGS-84 equatorial radius, km */
+const K_MOON = 0.2725076;        /* IAU lunar radius in Earth radii: penumbral contacts */
+const K_UMBRA = 0.272281;        /* NASA's smaller k for umbral/antumbral contacts (mean limb valleys) */
+const R_MOON = K_MOON * EARTH_A;     /* 1738.1 km */
+const R_MOON_U = K_UMBRA * EARTH_A;  /* 1736.6 km */
+const EARTH_F = 1 / 298.257223563;
+const EARTH_B = EARTH_A * (1 - EARTH_F);
+const EARTH_E2 = EARTH_F * (2 - EARTH_F);
+const MU = 1 / (1 + 81.30056);   /* Moon mass fraction of the Earth–Moon system */
+const SYNODIC = 29.530588861;
+
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const len = (a) => Math.hypot(a[0], a[1], a[2]);
+const unit = (a) => mul(a, 1 / len(a));
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+
+const jdToMs = (jd) => (jd - 2440587.5) * 86400000;
+const dtSeconds = (jd) => deltaT(2000 + (jd - 2451545.0) / 365.25);
+
+function eclToEq(lonDeg, latDeg, r, epsDeg) {
+  const l = lonDeg * RAD, b = latDeg * RAD, e = epsDeg * RAD;
+  const x = Math.cos(b) * Math.cos(l), y = Math.cos(b) * Math.sin(l), z = Math.sin(b);
+  return [r * x, r * (Math.cos(e) * y - Math.sin(e) * z), r * (Math.sin(e) * y + Math.cos(e) * z)];
+}
+
+/* Geocentric apparent Sun and geometric Moon, equator of date, km. */
+function sunMoon(jdTT) {
+  const T = (jdTT - 2451545.0) / 36525;
+  const eps = meanObliquity(jdTT);
+  /* Moon */
+  const m = moonEclipticOfDate(jdTT);
+  const M = eclToEq(m.lon, m.lat, m.dist, eps);
+  /* Sun: Earth centre = barycentre − μ·Moon, all in J2000 ecliptic */
+  const emb = heliocentric('earth', T);
+  const msUT = jdToMs(jdTT - dtSeconds(jdTT) / 86400);
+  const mk = moonJ2000Km(msUT);
+  const ex = emb[0] * AU - MU * mk[0], ey = emb[1] * AU - MU * mk[1], ez = emb[2] * AU - MU * mk[2];
+  const rS = Math.hypot(ex, ey, ez);
+  const lonJ = Math.atan2(-ey, -ex) / RAD, latJ = Math.asin(-ez / rS) / RAD;
+  const sd = precessEcliptic(lonJ, latJ, 2451545.0, jdTT);
+  const aberr = -20.4898 / 3600 / (rS / AU);
+  const S = eclToEq(sd.lon + aberr, sd.lat, rS, eps);
+  return { S, M };
+}
+
+/* ── Earth model ── */
+function geodeticToEcef(latDeg, lonDeg) {
+  const p = latDeg * RAD, l = lonDeg * RAD;
+  const N = EARTH_A / Math.sqrt(1 - EARTH_E2 * Math.sin(p) ** 2);
+  return [N * Math.cos(p) * Math.cos(l), N * Math.cos(p) * Math.sin(l), N * (1 - EARTH_E2) * Math.sin(p)];
+}
+function ecefToGeodetic(v) {
+  const lon = Math.atan2(v[1], v[0]) / RAD;
+  const lat = Math.atan2(v[2], (1 - EARTH_F) ** 2 * Math.hypot(v[0], v[1])) / RAD;
+  return { lat, lon };
+}
+function eqToEcef(v, theta) {
+  const c = Math.cos(theta), s = Math.sin(theta);
+  return [c * v[0] + s * v[1], -s * v[0] + c * v[1], v[2]];
+}
+function ecefToEq(v, theta) {
+  const c = Math.cos(theta), s = Math.sin(theta);
+  return [c * v[0] - s * v[1], s * v[0] + c * v[1], v[2]];
+}
+const thetaAt = (jdTT) => gmstDeg(jdTT - dtSeconds(jdTT) / 86400) * RAD;
+
+/* First intersection of the line P0 + s·u with the ellipsoid (s ≥ 0). */
+function hitEllipsoid(P0, u) {
+  const k = EARTH_A / EARTH_B;
+  const p = [P0[0], P0[1], P0[2] * k], d = [u[0], u[1], u[2] * k];
+  const A = dot(d, d), Bq = 2 * dot(p, d), C = dot(p, p) - EARTH_A * EARTH_A;
+  const disc = Bq * Bq - 4 * A * C;
+  if (disc < 0) return null;
+  const s = (-Bq - Math.sqrt(disc)) / (2 * A);
+  if (s < 0) return null;
+  return add(P0, mul(u, s));
+}
+
+/* ── solar geometry at one instant ── */
+function solarGeom(jdTT) {
+  const { S, M } = sunMoon(jdTT);
+  const D = len(sub(S, M));
+  const a = unit(sub(M, S));                 /* shadow axis, Moon → away from Sun */
+  const s0 = -dot(M, a);                     /* Moon → fundamental plane through Earth's centre */
+  const Pc = add(M, mul(a, s0));             /* axis point closest to Earth's centre */
+  const north = unit(sub([0, 0, 1], mul(a, a[2])));
+  const gamma = Math.sign(dot(Pc, north) || 1) * len(Pc) / EARTH_A;
+  const L1 = (s) => R_MOON + s * (R_SUN + R_MOON) / D;  /* penumbra radius */
+  const L2 = (s) => R_MOON_U - s * (R_SUN - R_MOON_U) / D;  /* umbra (+) / antumbra (−) */
+  return { S, M, a, D, s0, Pc, gamma, L1, L2 };
+}
+
+function minimize(f, a, b, tol = 1e-7) {
+  const g = (Math.sqrt(5) - 1) / 2;
+  let c = b - g * (b - a), d = a + g * (b - a), fc = f(c), fd = f(d);
+  while (b - a > tol) {
+    if (fc < fd) { b = d; d = c; fd = fc; c = b - g * (b - a); fc = f(c); }
+    else { a = c; c = d; fc = fd; d = a + g * (b - a); fd = f(d); }
+  }
+  return (a + b) / 2;
+}
+function bisect(f, a, b, n = 50) {
+  let fa = f(a);
+  for (let i = 0; i < n; i++) {
+    const m = (a + b) / 2, fm = f(m);
+    if ((fm < 0) === (fa < 0)) { a = m; fa = fm; } else b = m;
+  }
+  return (a + b) / 2;
+}
+
+/* Central-line point, local umbra radius and cross-track width at jdTT. */
+function centralPoint(jdTT) {
+  const g = solarGeom(jdTT);
+  const hit = hitEllipsoid(g.M, g.a);
+  if (!hit) return null;
+  const s = dot(sub(hit, g.M), g.a);
+  const th = thetaAt(jdTT);
+  return { g, hit, s, l2: g.L2(s), ecef: eqToEcef(hit, th), th };
+}
+
+/* Duration of the central phase for an observer fixed on the ground. */
+function centralDuration(jdG, ecefObs) {
+  const f = (jd) => {
+    const g = solarGeom(jd);
+    const P = ecefToEq(ecefObs, thetaAt(jd));
+    const o = sub(P, g.M);
+    const s = dot(o, g.a);
+    return len(sub(o, mul(g.a, s))) - Math.abs(g.L2(s));
+  };
+  if (f(jdG) > 0) return 0;
+  const span = 12 / 1440;
+  const t1 = bisect(f, jdG - span, jdG), t2 = bisect(f, jdG, jdG + span);
+  return (t2 - t1) * 86400;
+}
+
+/* Ground track: central line with northern/southern limits. */
+function solarPath(jdG, stepMin = 2, spanH = 4) {
+  const pts = [];
+  for (let k = -spanH * 60; k <= spanH * 60; k += stepMin) {
+    const jd = jdG + k / 1440;
+    const c = centralPoint(jd);
+    if (!c) continue;
+    pts.push({ jd, c });
+  }
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const { jd, c } = pts[i];
+    const nb = pts[Math.min(i + 1, pts.length - 1)].c, pb = pts[Math.max(i - 1, 0)].c;
+    const track = unit(sub(nb.ecef, pb.ecef).every((x) => x === 0) ? [1, 0, 0] : sub(nb.ecef, pb.ecef));
+    const N = unit(c.ecef);
+    const cx = unit(cross(N, track));
+    const aE = eqToEcef(c.g.a, c.th);
+    /* the umbral footprint is the axis-aligned cylinder cut by the ground
+       plane — an ellipse; its limits are that ellipse's support width
+       perpendicular to the track */
+    const w = sub(cx, mul(N, dot(aE, cx) / dot(aE, N)));
+    const half = Math.abs(c.l2) * len(sub(w, mul(aE, dot(w, aE))));
+    const lim = (sgn) => ecefToGeodetic(add(c.ecef, mul(cx, sgn * half)));
+    out.push({
+      jd, center: ecefToGeodetic(c.ecef), north: lim(1), south: lim(-1),
+      widthKm: 2 * half, total: c.l2 > 0,
+    });
+  }
+  return out;
+}
+
+/* Obscuration (fraction of the Sun's diameter covered) seen from a
+   ground point; 0 when the Sun is below the horizon. */
+function localSolar(jdTT, ecefObs, cache, ignoreHorizon = false) {
+  const sm = cache || sunMoon(jdTT);
+  const P = ecefToEq(ecefObs, thetaAt(jdTT));
+  const toS = sub(sm.S, P), toM = sub(sm.M, P);
+  const up = unit(P);
+  const alt = Math.asin(dot(unit(toS), up));
+  if (!ignoreHorizon && alt < -0.0145) return { mag: 0, alt, total: false, annular: false };
+  const ds = len(toS), dm = len(toM);
+  const rs = Math.asin(R_SUN / ds), rm = Math.asin(R_MOON / dm), ru = Math.asin(R_MOON_U / dm);
+  const sep = Math.acos(Math.max(-1, Math.min(1, dot(toS, toM) / (ds * dm))));
+  const mag = Math.max(0, (rs + rm - sep) / (2 * rs));
+  return { mag, alt, total: ru > rs && sep < ru - rs, annular: ru < rs && sep < rs - ru };
+}
+
+function analyseSolar(jdNear) {
+  /* true syzygy can sit up to ≈0.59 d from the mean phase: search ±0.9 d */
+  const jdG = minimize((jd) => Math.abs(solarGeom(jd).gamma), jdNear - 0.9, jdNear + 0.9);
+  const g = solarGeom(jdG);
+  const gAbs = Math.abs(g.gamma);
+  const l1 = g.L1(g.s0) / EARTH_A, l2 = g.L2(g.s0) / EARTH_A;
+  /* Earth's outline in the fundamental plane is an ellipse squashed along
+     the projected pole: stretch the axis offset's north component by 1/ρ */
+  const north = unit(sub([0, 0, 1], mul(g.a, g.a[2])));
+  const yN = dot(g.Pc, north) / EARTH_A, xE = Math.sqrt(Math.max(0, gAbs * gAbs - yN * yN));
+  const rho = Math.sqrt(1 - EARTH_E2 * (1 - g.a[2] * g.a[2]));
+  if (Math.hypot(xE, yN / rho) > 1 + l1) return null;
+  const res = { kind: 'solar', jdTT: jdG, gamma: g.gamma };
+  const c = centralPoint(jdG);
+  if (c) {
+    const ge = ecefToGeodetic(c.ecef);
+    const ls = localSolar(jdG, c.ecef);
+    const P = c.hit;
+    const dm = len(sub(g.M, P)), ds = len(sub(g.S, P));
+    res.magnitude = (R_MOON_U / dm) / (R_SUN / ds);
+    res.ge = ge;
+    res.sunAltDeg = ls.alt / RAD;
+    res.durationS = centralDuration(jdG, c.ecef);
+    const near = solarPath(jdG, 1, 1 / 60);
+    const mid = near.find((p) => Math.abs(p.jd - jdG) < 1e-9);
+    res.widthKm = mid ? mid.widthKm : 0;
+    /* hybrid stretches can be seconds long at the very ends of the path:
+       sample the track and also its exact first and last instants */
+    const onEarth = (jd) => (centralPoint(jd) ? 1 : -1);
+    const tBeg = bisect(onEarth, jdG - 0.2, jdG), tEnd = bisect(onEarth, jdG, jdG + 0.2);
+    const edge = 1 / 86400;
+    const totalAt = solarPath(jdG, 4, 4).map((p) => p.total);
+    for (const jd of [tBeg + edge, tEnd - edge]) {
+      const ce = centralPoint(jd);
+      if (ce) totalAt.push(ce.l2 > 0);
+    }
+    const allT = totalAt.every(Boolean), allA = totalAt.every((t) => !t);
+    res.type = allT ? 'total' : allA ? 'annular' : 'hybrid';
+  } else {
+    /* partial: magnitude at the point of Earth closest to the axis */
+    /* greatest eclipse: the point of Earth's surface closest to the axis,
+       where the Sun sits on the horizon — magnitude measured right there */
+    const P = mul(unit(g.Pc), EARTH_A);
+    const ecef = eqToEcef(P, thetaAt(jdG));
+    res.ge = ecefToGeodetic(ecef);
+    res.magnitude = localSolar(jdG, geodeticToEcef(res.ge.lat, res.ge.lon), null, true).mag;
+    res.type = gAbs < 1 + Math.abs(l2) ? (l2 > 0 ? 'total' : 'annular') : 'partial';
+    res.durationS = 0;
+  }
+  return res;
+}
+
+/* ── lunar eclipses ── */
+function lunarGeom(jdTT) {
+  const { S, M } = sunMoon(jdTT);
+  const dm = len(M), ds = len(S);
+  const anti = mul(unit(S), -1);
+  const sep = Math.acos(Math.max(-1, Math.min(1, dot(anti, unit(M)))));
+  const pim = Math.asin(EARTH_A / dm), pis = Math.asin(EARTH_A / ds);
+  const ss = Math.asin(R_SUN / ds), sm = Math.asin(K_MOON * EARTH_A / dm);
+  /* Danjon: Earth's radius enlarged by the atmosphere, 1/85 of the
+     parallax, on a mean radius that accounts for Earth's flattening */
+  const enl = (1 + 1 / 85) * (1 - EARTH_F / 2);
+  const rhoU = enl * pim - ss + pis, rhoP = enl * pim + ss + pis;
+  const north = unit(sub([0, 0, 1], mul(anti, anti[2])));
+  const sign = Math.sign(dot(unit(M), north) || 1);
+  return { M, anti, sep, sm, rhoU, rhoP, gamma: sign * Math.sin(sep) * dm / EARTH_A };
+}
+
+function analyseLunar(jdNear) {
+  const jdG = minimize((jd) => lunarGeom(jd).sep, jdNear - 0.9, jdNear + 0.9);
+  const g = lunarGeom(jdG);
+  const pen = (g.rhoP + g.sm - g.sep) / (2 * g.sm);
+  const umb = (g.rhoU + g.sm - g.sep) / (2 * g.sm);
+  if (pen <= 0) return null;
+  const contact = (fn) => {
+    if (fn(jdG) >= 0) return 0;
+    const t1 = bisect(fn, jdG - 0.3, jdG), t2 = bisect(fn, jdG, jdG + 0.3);
+    return (t2 - t1) * 86400;
+  };
+  const th = thetaAt(jdG);
+  const zen = ecefToGeodetic(eqToEcef(unit(g.M), th));
+  return {
+    kind: 'lunar', jdTT: jdG, gamma: g.gamma,
+    type: umb >= 1 ? 'total' : umb > 0 ? 'partial' : 'penumbral',
+    umbral: umb, penumbral: pen,
+    durPenS: contact((jd) => { const q = lunarGeom(jd); return q.sep - (q.rhoP + q.sm); }),
+    durParS: contact((jd) => { const q = lunarGeom(jd); return q.sep - (q.rhoU + q.sm); }),
+    durTotS: contact((jd) => { const q = lunarGeom(jd); return q.sep - (q.rhoU - q.sm); }),
+    zenith: { lat: Math.asin(unit(g.M)[2]) / RAD, lon: zen.lon },
+  };
+}
+
+/* All eclipses between two UTC instants, sorted by time. */
+function findEclipses(fromMs, toMs) {
+  const jd0 = jdFromMs(fromMs), jd1 = jdFromMs(toMs);
+  const k0 = Math.floor((jd0 - 2451550.09766) / SYNODIC) - 1;
+  const out = [];
+  for (let k = k0; ; k++) {
+    const jdNew = 2451550.09766 + SYNODIC * k;
+    if (jdNew > jd1 + 30) break;
+    for (const [jdApprox, fn] of [[jdNew, analyseSolar], [jdNew + SYNODIC / 2, analyseLunar]]) {
+      const e = fn(jdApprox);
+      if (!e) continue;
+      e.utMs = jdToMs(e.jdTT - dtSeconds(e.jdTT) / 86400);
+      e.tdMs = jdToMs(e.jdTT);
+      if (e.utMs >= fromMs && e.utMs <= toMs) out.push(e);
+    }
+  }
+  return out.sort((a, b) => a.jdTT - b.jdTT);
+}
+
+/* ── views for the Eclipse Lab ── */
+
+/* Sun and Moon disks as seen from a ground point: angular radii and
+   the Moon's offset from the Sun (radians; x east, y north). */
+function solarDiskView(jdTT, ecefObs) {
+  const sm = sunMoon(jdTT);
+  const P = ecefToEq(ecefObs, thetaAt(jdTT));
+  const toS = sub(sm.S, P), toM = sub(sm.M, P);
+  const s = unit(toS), mu = unit(toM);
+  const e1 = unit(cross([0, 0, 1], s)), e2 = cross(s, e1);
+  const k = 1 / dot(mu, s);
+  return {
+    rs: Math.asin(R_SUN / len(toS)), rm: Math.asin(R_MOON_U / len(toM)),
+    dx: dot(mu, e1) * k, dy: dot(mu, e2) * k, alt: Math.asin(dot(s, unit(P))),
+  };
+}
+
+/* The Moon against Earth's shadow, seen from Earth's centre. */
+function lunarShadowView(jdTT) {
+  const g = lunarGeom(jdTT);
+  const e1 = unit(cross([0, 0, 1], g.anti)), e2 = cross(g.anti, e1);
+  const mu = unit(g.M), k = 1 / dot(mu, g.anti);
+  return { rhoU: g.rhoU, rhoP: g.rhoP, sm: g.sm, dx: dot(mu, e1) * k, dy: dot(mu, e2) * k };
+}
+
+/* Where the shadow axis meets the ground right now (null if it misses). */
+function axisGround(jdTT) {
+  const c = centralPoint(jdTT);
+  return c ? { ...ecefToGeodetic(c.ecef), total: c.l2 > 0 } : null;
+}
+
+/* Moon altitude (radians) from a ground point; pass sunMoon(jd) as cache. */
+function moonAltitude(jdTT, ecefObs, cache) {
+  const sm = cache || sunMoon(jdTT);
+  const P = ecefToEq(ecefObs, thetaAt(jdTT));
+  return Math.asin(dot(unit(sub(sm.M, P)), unit(P)));
+}
+
+
+/* ══════ js/worldmap.js ══════ */
+/* ── Cosmoscope · worldmap.js ──────────────────────────────────────
+   Land outlines and country borders at 1:110m, from Natural Earth
+   (public domain) via the world-atlas package (ISC, © Mike Bostock).
+   Each line is delta-encoded longitude/latitude in tenths of a degree;
+   generated by a converter, not edited by hand. */
+const WORLD_LAND = ["-596,-800,-3,-5,-3,-5,-21,1,-22,0,-12,3,-6,3,23,0,21,-1,8,4,5,4,10,-4","-1592,-795,-19,-1,-13,3,-6,4,-7,3,6,4,19,-2,10,-3,7,-3,3,-5","-452,-780,13,-5,4,-6,1,-4,1,-5,-16,-3,-16,-3,-19,-2,-21,-2,-24,0,-13,4,2,4,21,3,9,3,6,4,5,4,6,3,6,5,5,0,15,2,15,-2","-1212,-735,13,-2,12,2,-6,-3,-9,-3,-14,1,-10,3,2,4,12,-2","-1256,-735,16,-4,-6,1,-13,1,-14,2,7,3,10,-3","-990,-719,11,-2,11,1,6,-5,-8,1,-12,-1,-12,1,-14,-1,-10,2,-5,4,6,2,13,-2,14,0","-685,-710,2,-4,-2,-4,-3,-4,-12,-1,-11,-2,-13,0,5,4,-12,-1,-11,-2,-8,3,0,4,11,4,7,1,11,0,3,5,1,4,0,8,5,5,9,1,6,-4,2,-3,4,-5,4,-4,2,-5","-1800,-847,9,6,18,-4,4,2,4,1,3,1,3,0,15,-4,13,4,2,0,29,2,10,-2,5,-1,15,-4,28,-2,23,-3,38,-3,29,3,43,-2,24,-3,26,3,28,3,2,4,-39,1,-33,2,-8,4,-27,2,2,5,4,4,3,3,-2,5,-16,2,-8,4,-15,3,24,-1,23,2,15,-3,17,3,17,3,8,4,-4,4,-13,2,-14,3,-21,1,-18,1,-19,1,-7,4,-13,3,-8,4,-3,11,5,-1,9,-3,17,1,16,1,8,-4,16,1,13,2,13,3,11,3,15,1,0,4,-4,4,3,3,13,2,6,-3,15,2,12,2,14,0,13,1,14,3,11,2,12,2,8,-1,7,0,14,1,14,-2,13,0,14,2,13,-1,15,-1,14,0,14,0,15,0,14,0,10,3,12,2,13,-2,12,1,11,4,6,-3,4,-4,6,-3,10,3,12,-4,14,-1,11,-3,15,1,12,2,15,-1,14,-1,14,-2,5,4,-7,4,-5,3,-12,1,-6,4,-2,3,-4,8,8,-2,13,0,13,0,12,-1,10,-3,4,-4,14,0,13,1,13,2,13,1,10,-2,13,1,9,7,8,-4,11,-2,13,1,8,-4,13,0,12,-1,12,-3,8,4,4,4,10,-4,14,1,10,-2,7,-4,13,1,10,2,11,3,12,1,14,2,13,1,9,2,6,3,3,5,-2,4,-3,4,-3,3,-3,4,-3,4,0,4,1,4,4,3,4,5,2,3,-2,5,-1,4,4,4,6,3,6,4,7,3,8,3,4,4,6,3,6,3,10,0,6,3,7,2,8,1,7,3,6,3,8,1,6,-2,-4,-4,-10,-3,-4,-2,-8,2,-8,-1,-7,-2,-7,-3,-5,-3,-1,-4,0,-4,5,-3,-7,-2,-9,-1,-6,-3,-6,-3,-6,-5,-2,-4,4,-4,5,-3,8,-2,8,-3,4,-4,2,-4,3,-4,5,-3,3,-4,1,-9,3,-4,1,-4,3,-4,-1,-5,-6,-4,-6,-3,-13,-2,-4,-3,-7,-4,-15,-3,-13,-2,-12,-2,-14,-2,-8,-4,-16,-1,-18,1,-16,-1,-16,0,3,-4,15,-2,11,-3,6,-3,-11,-3,-17,1,-14,-3,-1,-4,0,-4,12,-3,2,-4,12,-4,22,-1,18,-3,14,-3,18,-3,25,-2,24,-2,17,-3,19,-4,10,-4,5,-4,12,3,16,3,18,3,21,3,17,3,25,0,25,-1,20,-3,6,4,14,3,26,1,19,2,19,2,21,1,22,2,15,3,-7,3,-4,4,0,3,-19,0,-21,-2,-19,0,-3,4,1,8,5,2,14,2,17,2,12,3,12,3,9,4,14,2,13,1,7,1,16,1,14,1,13,2,12,2,11,3,14,3,9,3,9,3,3,4,-11,2,4,4,7,4,10,1,11,3,10,3,8,4,5,5,7,2,12,0,5,-4,12,0,0,4,5,4,11,-1,3,-4,12,-1,13,2,12,1,11,0,5,-4,11,3,10,2,11,1,11,1,11,3,11,1,8,3,6,3,8,-2,10,1,8,-5,5,-3,12,2,4,4,10,2,13,0,4,-4,8,4,11,1,12,0,11,0,11,-1,11,-1,4,-3,7,-3,11,2,11,0,12,0,11,0,10,2,11,1,8,3,10,1,10,1,8,3,5,6,6,3,10,-2,4,-3,9,-2,10,0,7,-3,7,-3,11,3,3,4,9,2,11,3,9,1,12,2,8,2,8,3,8,2,9,-1,9,3,7,3,9,0,9,2,1,4,9,3,8,1,10,2,9,1,9,-1,10,-1,8,-2,1,-5,8,-3,6,-3,12,-1,7,-3,8,-3,10,0,8,2,9,4,9,-2,10,-1,9,-2,10,0,10,0,8,-11,0,-2,-1,-5,-10,-2,-8,-4,1,-4,12,0,-2,-4,-5,-3,-5,-5,8,-3,12,-1,11,2,6,4,3,4,6,3,6,3,2,3,6,5,6,1,11,1,10,1,10,1,5,4,3,4,7,4,10,2,8,2,6,4,6,1,7,2,10,-1,9,1,10,1,11,0,7,2,5,7,4,-3,4,-5,9,-1,9,-1,10,1,10,-1,9,0,7,1,8,-1,8,-2,9,2,11,0,9,1,10,-1,7,3,5,3,7,3,12,7,7,-1,7,-3,7,-3,13,-6,10,-1,9,0,11,2,10,1,9,3,6,3,12,0,7,2,8,-2,5,-3,7,-3,11,0,7,-2,12,-3,12,-1,11,1,8,3,6,3,9,1,9,-1,11,-1,9,1,9,0,9,-1,9,-1,9,2,11,2,10,0,11,0,10,1,9,1,2,5,1,4,6,-3,2,-4,3,-4,4,-4,9,-2,11,1,13,0,9,1,13,0,10,0,13,0,11,-1,7,-3,-2,-4,6,-3,11,-2,11,-3,13,-2,14,-1,10,-2,11,0,7,3,9,-2,7,-3,9,-3,12,-1,12,-1,5,-4,11,-2,8,-4,11,-1,11,0,11,-1,12,0,12,0,11,-2,11,-2,10,-2,7,-3,-1,-4,-5,-3,-5,-5,-3,-3,-5,-5,-13,-1,-6,-4,-13,-2,-5,-4,-6,-3,-8,-4,-4,-4,-2,-3,-1,-5,0,-4,6,-4,2,-3,4,-4,19,-1,4,-5,-18,-1,-15,-2,-19,-1,-9,-5,-2,-5,-4,-4,-5,-3,13,-4,5,-4,9,-4,12,-3,14,-3,15,-3,23,-3,5,-5,29,-2,2,-1,7,-3,28,2,23,-3,-3583,-2","-678,-538,13,-7,14,-2,-4,-5,-10,0,-5,3,-3,-4,-8,-3,-11,1,-8,3,-10,1,-13,6,-10,5,-14,12,9,-2,14,-7,13,-4,5,5,3,7,10,4,7,-1,3,-5,5,-7","-585,-511,8,-4,-3,-4,-14,-3,-4,4,-9,-5,-5,5,12,5,8,-2,7,4","703,-497,-16,-1,0,6,2,4,0,2,7,-3,9,-2,-2,-6","1454,-408,10,-3,5,1,8,2,6,-1,1,-12,-4,-3,-1,-8,-3,3,-7,-7,-2,0,-7,1,-6,8,-1,7,-6,8,0,5,7,-1","1730,-409,2,-4,8,4,2,-4,0,-5,-3,-4,-7,-8,-5,-4,4,-5,-8,0,-8,-3,-3,-7,-6,-10,-8,-5,-5,-2,-9,0,-6,3,-11,1,-2,3,5,8,13,10,6,2,8,3,8,6,6,5,5,7,4,3,1,5,7,5,2,-4","1746,-362,7,-10,1,7,4,-3,2,-8,8,-3,6,-1,6,4,5,-1,-2,-9,-3,-6,-8,1,-3,-3,1,-5,-1,-2,-4,-5,-5,-7,-8,-4,-1,3,-4,1,5,8,-3,6,-11,4,1,4,7,3,1,8,0,6,-4,7,-5,6,-7,9,-5,7,4,0,6,-5,7,-3,3,-9","1671,-222,-4,-2,-5,3,-7,4,-7,6,-6,7,-2,3,5,0,5,-4,5,-3,3,-3,8,-6,5,-5","1784,-173,3,-3,-1,-6,-7,-1,-5,1,-1,5,4,3,4,-1,3,2","-1800,-166,3594,-2,-7,-2,-1,4,5,2,3,0,-3594,3,2,1,-1,-5,-1,-1","1678,-165,-3,-1,-3,4,0,3,6,-6","1671,-149,2,-8,-3,1,-2,-1,-1,3,-1,8,5,-3","501,-136,1,-12,3,-4,-1,-5,-2,-3,-3,6,-2,-3,2,-8,-1,-4,-3,-2,-1,-9,-4,-11,-5,-14,-6,-19,-4,-14,-4,-11,-8,-3,-9,-4,-6,3,-8,3,-2,5,-1,9,-4,8,0,7,1,8,5,1,0,4,5,7,1,7,-3,4,-2,7,0,9,3,5,1,7,5,0,6,2,4,2,4,0,6,6,8,6,3,5,-1,4,4,-1,5,7,1,6,3,5,3,-5,3,-4,3,-7","1436,-138,3,-7,7,3,3,-4,5,-4,-1,-4,2,-9,1,-5,3,-1,3,-9,-1,-5,3,-7,11,-5,7,-5,6,-4,-1,-2,6,-7,4,-10,4,2,4,-5,2,2,2,-11,7,-6,5,-4,8,-8,2,-8,1,-5,-1,-7,5,-8,-1,-9,-2,-5,-2,-9,0,-5,-2,-7,-5,-10,-7,-4,-4,-8,-3,-5,-3,-9,-4,-5,-2,-7,-2,-7,1,-3,-6,-4,-11,0,-9,-4,-5,-4,-6,-4,-8,4,-6,2,1,5,-5,-2,-9,-7,-9,3,-5,1,-6,1,-10,3,-6,6,-2,8,-2,5,-5,4,-10,1,3,5,-2,7,-5,-7,-9,-2,6,6,1,6,4,5,-1,7,-8,-9,-6,-3,-4,-8,-8,4,0,6,-6,7,-5,4,2,2,-13,6,-7,0,-10,5,-18,-1,-13,-3,-11,-4,-10,1,-10,-5,-9,-3,-2,-5,-3,-4,-9,0,-6,-1,-9,2,-7,-1,-7,-1,-6,-5,-3,0,-5,-2,-5,-4,-7,1,-7,0,-10,6,-6,2,0,6,5,1,2,2,0,4,1,7,-1,6,-5,10,-2,6,0,5,-4,7,0,3,-4,4,-2,8,-5,8,-2,4,5,-4,-4,9,5,-3,3,-4,0,5,-5,8,-1,3,-2,3,1,6,2,2,1,5,-1,6,4,7,1,-7,4,7,9,3,4,4,8,4,5,1,2,-1,8,3,6,1,2,3,3,0,5,0,11,3,5,5,3,5,5,5,1,4,0,5,7,9,4,-9,5,2,-4,5,3,5,5,-2,1,7,5,5,3,4,5,2,0,3,4,-1,0,2,5,1,5,2,7,-5,6,-6,6,0,6,-1,-2,6,5,8,4,2,-1,3,4,6,6,3,5,-1,9,2,0,5,-8,3,6,2,6,-3,6,-4,8,-2,3,1,6,-3,6,2,4,0,2,1,5,-5,-3,-5,-4,-4,-3,0,1,-4,-3,-5,-4,-5,1,-3,8,-6,8,-3,5,-3,7,-6,3,0,5,-3,2,-3,9,-3,7,3,2,6,2,4,1,6,3,8,-1,4,0,3,-1,6,2,8,1,2,-1,3,2,5,2,6,0,3,4,3,3,-5,1,-6,2,-1,1,-4,3,-5,1,-6,0,-4","1621,-105,3,-3,-7,0,-4,6,6,-2,2,-1","1207,-102,-4,-1,-13,7,9,2,5,-3,4,-3,-1,-2","1609,-99,-4,0,-6,1,-3,2,1,4,7,-2,3,-2,2,-3","1617,-96,-2,-2,-7,9,-2,6,3,0,4,-8,4,-5","1244,-101,-8,-3,0,5,4,6,10,4,1,2,8,3,7,0,4,1,3,-1,-3,-3,-11,-4,-8,-3,-7,-7","1179,-81,4,-3,6,1,2,-4,-11,-2,-7,-1,-6,0,4,5,5,1,3,3","1229,-81,-1,-6,-15,-2,-14,1,0,4,8,2,6,-3,7,0,9,4","1599,-83,-8,2,-5,3,-4,4,6,-2,8,-4,3,-3","1575,-73,-2,-1,-4,2,-4,4,6,-2,4,-3","1086,-68,19,-1,3,4,18,-4,4,-7,15,-2,12,-6,-11,-4,-11,5,-9,-1,-11,1,-9,2,-12,4,-7,1,-4,-2,-18,4,-2,5,-9,0,7,10,12,-1,8,-3,4,-1,1,-4","1347,-62,-5,-7,-1,8,2,3,2,4,2,-3,0,-5","1559,-68,-3,-1,-4,4,-5,6,-2,8,3,-2,3,-3,4,-6,5,-3,-1,-3","1520,-55,-5,-1,-2,-2,-5,-3,-6,-2,-5,0,-8,3,-6,3,1,3,9,-2,5,1,2,5,2,-5,6,0,3,4,5,3,-1,6,6,1,2,-2,0,-6,-3,-6","1272,-35,-3,-3,-7,2,-2,4,10,1,2,-4","1305,-31,3,-8,-8,5,-8,0,-6,0,-7,0,2,6,13,0,11,-3","1531,-45,-3,-3,-2,6,-2,4,-4,3,-6,5,-7,3,2,2,6,-3,3,-2,4,-2,4,-5,4,-3,1,-5","1341,-12,3,-16,11,-6,8,11,11,6,9,0,9,-4,7,-3,11,-2,17,-7,19,-6,7,-5,5,-5,2,-6,16,-6,3,-5,-9,-1,2,-7,9,-6,6,-11,6,0,0,-4,7,-2,-3,-2,11,-4,-1,-3,-7,-1,-2,3,-9,1,-10,2,-8,6,-5,6,-6,8,-13,5,-8,-3,-6,-3,1,-8,-8,-3,-5,1,-11,1,-9,8,-10,2,-2,-3,-13,0,4,8,7,3,-3,11,-5,8,-19,9,-8,0,-15,10,-3,-5,-4,-1,-2,4,0,4,-8,5,11,3,7,0,-1,3,-15,0,-4,6,-9,2,-4,5,14,2,5,3,16,-4,1,-4","1252,14,-8,-10,-7,-2,-10,2,-16,0,-9,-2,-2,-7,9,-9,6,4,18,4,0,-5,-5,2,-4,-6,-9,-4,10,-13,-2,-3,9,-12,0,-6,-6,-3,-4,3,5,8,-10,-4,-2,3,1,4,-7,6,1,10,-7,-3,1,-12,0,-14,-6,-2,-4,3,3,9,-2,10,-4,0,-3,7,4,7,1,7,5,16,2,4,9,7,8,-3,12,-1,12,0,10,7,1,-2","1287,11,-1,-8,-5,1,-1,-7,4,-5,-3,-1,-4,6,-3,13,2,8,3,4,1,-6,6,-1,1,-4","1058,-59,-11,0,-8,9,-13,8,-4,6,-8,8,-5,7,-8,14,-8,9,-3,8,-4,8,-9,7,-5,8,-8,6,-10,11,-1,5,6,-1,16,-2,9,-9,7,-7,6,-4,9,-11,11,0,8,-7,6,-8,7,-5,-4,-8,6,-4,4,0,1,-7,4,-5,7,-1,5,-7,-2,-12,-1,-16","1179,18,11,-9,-12,-1,-3,-7,0,-9,-9,-7,-1,-10,-4,-15,-1,3,-11,-4,-4,6,-7,1,-5,3,-12,-4,-4,5,-7,0,-8,1,-1,13,-5,3,-5,8,-1,9,1,9,6,7,7,-3,8,2,2,8,4,2,12,2,7,8,5,6,4,4,9,5,7,7,5,8,4,0,5,-5,1,-4,6,-3,9,-3,-1,-4,-7,0,2,-5,-7,-4,-6,-9,7,-9,-1,-5","1264,84,1,-6,0,-6,-3,-9,-4,10,-4,-5,3,-8,-3,-4,-12,6,-3,7,3,5,-6,4,-3,-4,-5,1,-7,-6,-2,3,4,8,6,3,6,4,3,-5,8,3,2,5,7,0,-1,8,8,-5,1,-5,1,-4","812,62,-9,-2,-4,8,-2,14,4,16,7,-5,5,-7,5,-11,-2,-10,-4,-3","-609,101,-9,-1,-2,1,3,3,0,4,6,1,2,-8","1240,103,-4,-4,-3,-6,-3,-3,-6,7,2,3,2,3,1,6,6,0,-2,-6,8,9,-1,-9","1185,93,-13,-9,5,7,7,6,6,7,5,10,2,-8,-7,-6,-5,-7","1219,119,6,-3,6,0,0,-4,-5,-5,-6,-3,0,5,0,5,-1,5","1255,122,3,-12,-8,3,0,-3,3,-6,-5,-3,0,7,-3,1,-2,6,6,-1,0,4,-6,8,9,-1,3,-3","1215,131,-2,-9,-5,5,-5,8,9,-1,3,-3","1213,185,6,-3,3,3,1,-3,-1,-4,3,-7,-2,-8,-6,-4,-2,-8,2,-8,6,-1,4,1,13,-5,-1,-6,3,-2,-1,-5,-8,5,-4,6,-2,-4,-7,6,-9,-2,-5,3,1,4,3,2,-3,3,-1,-4,-5,6,-2,4,0,10,4,-4,1,16,3,9,6,0","-656,182,-2,-2,-8,0,-6,-1,0,5,1,1,8,0,5,-1,2,-2","-769,179,-3,-2,-6,2,-5,3,1,3,4,0,2,0,7,-1,5,-2,2,-3,-7,0","-726,199,9,-2,1,2,8,0,6,-3,2,0,2,-3,6,0,-1,-3,5,0,5,-4,-4,-4,-5,2,-4,0,-4,0,-1,-2,-4,0,-2,2,-3,-1,-4,-7,-3,2,0,2,-7,2,-4,-1,-7,1,-4,-2,-6,3,1,4,10,-2,7,-1,4,3,-5,4,0,4,-6,1,2,3,6,0","1103,187,-8,-5,-8,3,-1,9,5,4,11,3,6,0,2,-4,-4,-4,-3,-6","-1555,191,-2,-2,-2,2,0,2,-2,4,2,3,0,2,5,-1,2,-1,1,-1,3,-4,-4,-3,-3,-1","-1561,206,-3,0,-2,2,-1,1,4,0,3,-1,-1,-2","-1577,213,-4,0,-2,2,3,2,3,-4","-1593,220,-5,1,2,1,2,0,1,-2","-797,228,4,-4,10,1,3,-2,9,-6,6,-5,3,0,6,-2,-1,-3,8,0,7,-4,-1,-2,-7,-2,-6,0,-7,1,-15,-1,7,5,-4,3,-6,0,-4,3,-2,6,-6,0,-9,2,-3,2,-13,2,-4,2,4,2,-10,1,-7,-5,-4,0,-2,-3,-4,-1,-5,1,6,3,2,4,4,2,5,2,8,1,2,1,9,-1,8,0,9,-3","-775,238,-3,-1,-2,6,-4,3,2,6,3,0,4,-9,0,-5","1212,228,-5,-8,-5,8,-1,8,6,9,8,8,5,-3,-2,-6,-6,-16","-778,266,-11,-2,-1,4,5,1,7,-1,0,-2","-770,266,-2,-7,-2,1,1,5,-5,4,8,-3","1346,341,2,-3,-6,-6,-4,3,-5,-2,-3,-6,-6,3,0,5,5,6,6,-2,4,5,7,-3","346,357,-7,-5,1,-1,-10,-5,-5,1,-2,4,4,0,2,3,8,0,9,3","237,357,5,-3,8,0,8,0,5,-1,-1,-3,-15,-1,-12,4,2,4","155,382,-3,-8,1,-3,-2,-5,-8,4,-5,1,-14,5,2,5,11,-1,11,1,7,1","92,412,6,-7,-1,-13,-5,0,-4,-3,-4,3,0,12,-2,6,5,-1,5,3","1410,371,-4,-8,2,-5,-5,-7,-13,-4,-18,-1,-14,-11,-7,3,0,8,-18,-2,-11,-5,-12,0,10,-8,-7,-16,-6,-5,-5,4,2,9,-6,3,-4,7,10,3,5,6,10,6,7,6,20,3,11,-2,10,18,7,-5,15,10,5,4,7,12,-2,12,4,6,11,2,5,-14,0,-8,-9,-10,0,-11","96,422,-4,-8,-4,2,-3,7,2,3,7,4,2,-8","1439,442,7,-2,7,4,2,-11,-14,-3,-9,-10,-16,7,-5,-11,-11,0,-2,10,5,7,11,1,3,14,3,8,11,-11,8,-3","-637,465,8,-1,9,0,-5,-4,-4,0,-12,4,-3,3,4,3,3,-5","-618,491,-5,0,-13,3,-9,5,3,1,13,-3,11,-4,0,-2","-1235,485,-5,-1,-17,4,-3,4,-8,3,-2,3,-11,2,-3,5,0,3,11,-2,6,-2,9,-1,4,-4,5,-4,10,-4,4,-6","-561,507,-7,-9,7,3,6,-2,-3,-3,9,-3,4,3,10,-4,-3,-7,7,2,1,-5,4,-7,-5,-8,-4,-1,-7,2,2,8,-2,2,-12,-9,-6,0,7,5,-10,2,-10,0,-20,0,-1,3,6,4,-4,2,8,6,10,16,7,6,8,3,5,0,-2,-3,-5,-6","-1327,540,10,1,-4,-11,9,-8,-4,0,-6,4,-4,5,-5,3,-1,5,0,3,5,-2","1436,507,11,-17,-15,3,-6,-14,9,-11,0,-7,-8,6,-6,-7,-2,8,1,10,-1,11,2,7,1,14,-6,9,1,14,9,5,-4,4,5,2,2,-7,4,-10,-1,-9,4,-11","-68,523,-18,-6,-14,1,8,11,-5,10,14,8,7,4,9,1,10,-6,-5,-7,2,-7,-8,-9","127,556,-6,-8,-11,6,-1,4,15,3,3,-5","-1530,571,-10,-4,-5,3,-2,5,9,3,6,2,6,-1,5,-3,-9,-5","-30,586,-11,-10,10,1,11,0,-2,-8,-9,-9,10,-1,10,-13,7,-1,6,-12,3,-4,12,-2,-1,-6,-6,-3,4,-5,-9,-5,-13,0,-17,-3,-5,2,-6,-5,-9,1,-7,-3,-6,2,15,10,9,2,-16,2,-3,4,11,3,-6,5,2,7,15,-1,2,6,-7,6,-12,2,-3,3,4,4,-3,3,-6,-5,0,10,-6,5,4,10,8,8,8,0,12,0","-1656,599,-6,-1,-6,1,-7,3,10,2,8,-1,1,-4","-793,622,-4,-6,-4,1,-3,3,5,4,4,0,2,-2","-819,627,-12,-5,-7,0,-2,3,8,4,13,0,0,-2","-1717,638,6,-2,6,1,8,-3,10,-1,-8,-3,-8,2,-4,2,-9,-1,-2,1,1,4","-852,657,2,-5,5,2,6,-3,11,-3,12,-3,0,-5,8,1,7,-4,-9,-3,-15,3,-6,4,-10,-5,-14,-5,-4,5,-13,-1,8,5,2,8,3,9,7,0","-145,665,-2,-7,11,-7,-13,-7,-29,-7,-9,-2,-13,1,-28,4,10,4,-22,5,18,2,0,3,-21,2,6,7,16,1,15,-7,15,6,13,-3,16,5,17,0","-759,671,-11,0,-2,5,4,5,9,2,8,-3,0,-4,-1,-2,-7,-3","-1800,690,25,-8,26,-10,-1,-6,7,-3,-3,8,27,-2,20,-9,-10,-5,-16,-1,-1,-9,-4,-2,-9,0,-8,3,-13,3,-2,5,-10,1,-12,-1,-5,3,2,4,-12,-2,5,-5,-6,-4,3600,0,-13,-5,-13,1,9,-5,6,-8,5,-3,1,-4,-3,-3,-18,2,-28,-7,-9,-1,-16,-8,-14,-6,-4,-4,-14,7,-26,-8,-5,4,-9,-5,-14,2,-3,-7,-12,-10,1,-4,11,-2,-1,-14,-10,-1,-4,-8,4,-4,-17,-6,-4,-11,-15,-2,-3,-11,-14,-9,-4,7,-4,15,-6,22,5,14,9,6,0,4,16,3,17,12,18,10,18,8,8,15,-12,-1,-6,-9,-26,-11,-8,13,-26,-4,-25,-16,8,-7,-22,-2,-15,-1,0,7,-15,2,-13,-5,-30,1,-33,-3,-32,-19,-39,-24,16,-1,5,-6,10,-2,6,5,11,-1,14,-11,1,-9,-8,-10,-1,-12,-4,-16,-15,-14,-4,-7,-13,-12,-14,-11,-6,-6,-14,-6,-6,0,-6,5,-14,-7,-1,-4,-4,1,-4,-4,-3,-3,0,-7,-5,-2,-2,-2,-4,-3,-6,-2,-5,-2,0,-5,3,-2,6,-5,8,-12,3,-6,0,-12,-4,-5,-9,-2,-8,-4,-9,-1,-1,5,2,8,-5,10,8,2,-7,8,-5,2,-1,-1,-3,-1,-3,2,-3,2,3,4,2,2,-1,1,3,6,-7,3,-4,2,-14,-3,-8,-4,-10,-3,5,5,-2,4,8,6,-6,5,-8,-3,-12,-7,-6,-6,-10,-1,-5,-5,6,-6,8,-2,0,-5,8,-2,11,7,9,-4,7,0,1,-6,-14,-2,-5,-6,-9,-5,-5,-7,10,-5,4,-10,6,-9,7,-8,0,-8,-6,-2,2,-6,6,-3,-2,-8,-2,-8,-6,-1,-7,-10,-8,-14,-9,-12,-14,-9,-14,-8,-11,-1,-6,-5,-4,3,-6,-4,-14,-5,-10,-2,-4,-11,-5,0,-3,7,3,4,-14,3,-5,-1,-13,-9,-8,-9,-2,-7,7,-11,10,-13,9,-6,6,-8,4,-19,-1,-17,-8,-7,-12,-6,-8,-9,-12,-9,-4,6,3,7,-8,6,-8,1,-4,6,-5,10,-9,4,-9,0,2,8,-9,0,-1,-11,-5,-15,-3,-8,0,-8,7,0,4,-9,2,-9,5,-5,6,-2,5,-5,3,-1,6,-6,4,-6,0,-7,-1,-5,1,-3,1,-6,4,-3,3,-9,0,-3,-7,-1,-9,8,-12,8,-1,5,-6,6,-1,9,-4,5,1,7,-2,5,-4,3,-2,5,-5,6,-5,5,-2,-6,-2,5,2,7,3,9,-1,8,3,7,-4,6,1,11,-4,5,-3,12,-2,13,-4,8,-7,-5,-11,-7,-6,1,-6,2,3,13,-2,9,-8,12,2,3,-6,2,-7,8,-3,5,-1,5,-2,5,-4,6,-9,0,1,-4,-3,-6,-5,2,-1,-1,-3,1,-4,1,-1,-4,-7,0,-12,-2,0,-8,-5,-5,-14,-7,-12,-12,-7,-6,-10,-7,0,-4,-5,-3,-9,-3,-5,-1,-3,-8,2,-13,1,-8,-4,-9,0,-17,-6,-1,-4,-8,3,-3,-9,-3,-4,-6,-4,-3,-9,9,-5,14,-4,10,-3,5,-5,9,-3,13,-2,6,-9,14,-4,19,-3,13,0,12,-2,10,-14,-6,-7,1,-13,12,4,4,-3,3,-11,9,-8,2,-3,8,-7,7,-19,-2,-16,0,-14,-1,-19,3,-11,2,-11,1,-4,13,-5,1,-8,-1,-10,-5,-12,3,-10,8,-10,3,-6,9,-8,13,-5,-1,-7,3,-3,-4,-6,1,2,-5,-1,-2,3,-7,4,-9,5,-2,2,-4,7,-4,0,-4,-1,-4,1,-3,3,-3,2,-3,1,-2,-1,7,3,5,3,1,3,-3,0,-6,-2,-6,2,-4,2,-2,8,2,8,0,6,-1,7,7,7,6,7,7,3,3,0,-5,-1,-2,1,-8,4,-7,6,-3,7,-2,6,-1,5,-6,2,-3,4,-2,-4,-8,-1,-3,-4,-3,-4,-7,-5,1,-2,-3,-1,-5,1,-6,-6,-2,-6,-3,-1,-5,-2,-2,-6,0,-4,-3,0,-4,-5,-3,-6,1,-6,-3,-5,0,-7,-3,-2,-5,0,-3,-10,-4,-16,-5,-9,-7,-5,-1,-3,1,-5,-4,-7,-2,-8,-1,-3,0,-2,-3,-3,0,-1,-3,-5,0,-3,-1,-7,0,-3,6,1,6,-2,3,-2,7,-3,4,2,1,-1,4,1,2,0,4,-1,5,-4,3,0,4,-5,3,-6,9,-3,8,-7,7,-4,1,-7,10,-1,7,1,6,-6,11,-5,4,-5,2,-3,6,0,2,-3,5,-3,2,-3,8,-7,8,-5,7,-5,0,2,5,0,4,2,4,-4,-3,-2,-8,-2,-5,-3,-2,-3,4,-5,4,-7,15,3,-12,6,-10,8,-16,4,-5,3,-6,9,-11,-2,-1,0,-7,12,-9,2,-2,3,-10,-2,-2,1,-10,4,-12,4,-2,5,-4,6,-12,3,-9,5,-5,14,-9,5,-6,6,-6,3,-3,5,-3,2,-3,0,-4,-6,-3,4,-2,4,-2,2,-4,4,-5,5,0,10,3,10,1,9,3,5,1,4,2,5,0,4,0,4,2,6,1,4,3,4,0,0,-3,-1,-5,0,-6,-2,-3,-2,-11,-5,-11,-6,-13,-9,-15,-9,-11,-11,-13,-10,-9,-15,-9,-10,-8,-11,-12,-2,-5,-2,-3,-7,-4,-3,-4,-3,-1,-2,-7,-3,-4,-2,-6,-4,-4,-5,-12,1,-6,6,-3,1,-3,-3,-6,1,-3,-1,-5,3,-6,5,-10,3,-2,2,-5,-1,-10,2,-8,0,-16,2,-5,-3,-7,-4,-7,-6,-6,-10,-4,-11,-5,-11,-11,-4,-1,-7,-8,-4,-2,-1,-7,5,-8,2,-5,0,-3,1,-10,-1,-4,2,-2,-1,-4,-5,-4,-8,-3,-12,-6,-4,-3,1,-4,2,-1,-1,-5,-2,-8,-1,-8,-3,-5,-7,-5,-2,-1,-4,-5,-3,-5,-5,-7,-12,-11,-7,-6,-7,-4,-11,-4,-5,-1,-1,-2,-6,1,-5,-2,-11,2,-6,-1,-4,0,-11,-4,-8,-1,-6,-4,-5,0,-4,3,-3,1,-5,4,-2,1,1,6,-4,7,3,2,0,7,-6,10,-5,8,-8,13,-7,8,-4,7,-2,10,-3,7,-3,15,0,12,-1,6,-4,4,-5,8,-6,12,-2,7,-8,9,-1,8,-1,6,2,9,3,9,1,5,3,9,2,4,6,6,3,5,1,7,0,6,-3,3,-3,6,-2,6,0,2,3,4,-3,10,-2,7,-5,6,1,2,-1,3,-3,8,-8,10,-10,10,-7,9,-6,10,0,3,2,3,3,8,2,7,-2,2,3,11,2,8,-4,6,-5,2,-2,5,-2,1,0,3,-10,-4,-4,1,-4,-3,-8,1,-5,6,-4,7,-7,7,-7,0,-9,0,-8,-2,-8,-2,-16,-6,-6,-3,-9,-3,-9,3,-4,0,-7,2,-6,0,-12,-2,-7,-3,-10,-4,-5,1,-10,4,-9,8,-9,5,-6,7,-3,1,-7,4,-5,5,-2,4,-1,7,-5,6,-4,4,-2,1,-3,2,-1,5,-1,2,-3,1,-6,5,-4,0,-2,3,-3,4,-1,2,-1,8,1,4,-4,8,-5,3,4,2,5,7,2,5,-1,6,3,5,2,9,-2,10,-1,5,1,5,-2,5,-6,4,1,4,0,5,4,3,3,5,0,3,3,7,6,7,3,1,3,6,0,5,4,7,6,3,7,10,5,4,9,1,8,7,5,3,8,8,-2,13,4,8,1,6,6,6,10,5,8,4,7,10,3,7,7,0,6,-5,10,1,10,-2,4,0,10,5,11,2,6,4,10,3,17,2,16,1,5,-2,10,4,10,0,4,-2,7,0,11,5,7,-2,0,-5,8,4,1,-2,-5,-5,0,-5,3,-2,-1,-9,-6,-5,1,-5,6,0,2,-5,4,-2,12,-3,4,1,8,-2,13,-4,5,-9,9,-2,14,-4,11,-5,5,2,5,5,-3,8,3,4,8,5,6,1,14,-2,3,-4,4,0,3,-2,10,-1,3,-3,13,0,10,-3,9,-3,5,-1,8,3,4,3,9,1,7,-2,3,-5,2,4,8,-3,8,0,5,2,3,3,2,6,2,7,1,3,4,8,5,7,-1,8,2,4,-3,5,4,4,-6,-1,-9,2,-7,-6,-15,-1,-8,5,-11,1,-2,-4,-7,-2,-10,6,-11,0,-6,10,-7,5,5,8,-6,5,11,9,15,1,4,7,19,-1,12,6,12,3,17,0,17,-7,14,-4,12,2,9,-1,12,5,1,5,-2,6,-6,4,-6,1,-3,3,-13,9,-12,4,-8,5,7,2,8,8,-5,4,14,4,-9,1,-8,-1,-6,-3,-10,-1,-8,-3,0,-6,5,-3,10,1,-2,-4,-11,-2,-13,-5,-6,2,2,4,-10,3,1,2,10,4,-3,2,-16,2,0,4,-10,-1,-3,-6,-8,-7,0,-3,-5,-2,-3,1,-2,-12,-6,-4,-3,-7,3,-6,1,-4,9,-3,-2,-2,-12,-1,-4,-3,-8,-5,-4,4,-6,3,-5,0,-12,-2,7,-6,-5,-1,-6,0,-5,5,-2,-2,3,-6,5,-5,-4,-2,5,-5,5,-3,0,-5,-9,2,3,-5,-6,-1,4,-9,-7,0,-8,4,-4,8,-2,7,-4,5,-5,5,0,3,-2,3,-6,4,-1,4,1,7,1,3,-1,2,-2,1,-3,3,-5,2,-9,3,-6,4,-9,3,-8,7,2,1,-5,4,0,4,-6,1,-3,-4,-3,3,0,4,2,1,-8,1,-8,-3,1,-5,-1,-3,3,-5,9,-5,5,-8,11,-8,8,0,3,-3,-3,-2,9,-3,7,-3,9,-5,1,-2,-2,-4,-6,5,-8,1,-4,-6,7,-4,-1,-5,-5,-1,-5,-8,-4,-1,0,3,2,6,2,2,-4,5,-3,5,-4,2,-3,4,-6,2,-5,4,-7,1,-8,4,-9,7,-7,5,-3,10,-5,1,-8,4,-5,-2,-6,-4,-4,-1,-9,-6,-19,3,-15,-3,-1,-6,0,-6,-9,-7,-13,-2,-1,-3,-6,-6,-4,-8,4,-6,-6,-4,-2,-7,-7,-2,-7,-7,-13,0,-10,0,-6,-4,-4,-4,-5,1,-3,4,-3,5,-10,2,-4,-3,-5,2,-5,-1,2,8,-1,6,-5,1,-2,3,1,7,4,4,0,4,2,6,0,4,-2,3,0,4,0,7,-4,4,14,7,12,-1,14,0,11,-2,8,1,16,-1,5,6,2,20,-10,11,-8,5,-15,4,-1,7,13,2,17,-3,-3,12,9,-5,23,8,3,8,9,2,8,2,5,3,9,15,14,4,8,0,2,2,8,0,2,-2,7,5,-2,4,-1,6,-4,5,0,10,2,3,2,3,9,1,4,2,8,3,-1,-5,-2,-3,1,-3,5,-1,-2,-4,-3,1,-8,-7,3,-5,0,-4,10,-2,0,-4,11,2,5,3,11,-4,5,-3,7,3,16,4,12,4,10,-2,1,-3,10,0,2,5,14,3,-2,8,0,8,5,6,9,4,8,-8,8,0,2,8,1,6,-3,-1,-7,3,-1,6,13,3,13,1,10,-2,11,1,11,5,-10,5,-18,-1,-18,-3,-16,-3,-6,6,-10,3,2,10,-4,9,4,6,9,6,23,11,7,2,-1,4,-14,5,-17,-3,-10,-7,2,-6,-16,-8,-20,-9,-7,-14,7,-7,10,-5,-9,-11,-11,-3,-4,-17,-5,-9,-12,1,-6,-8,-12,0,-3,9,-8,11,-8,15,-6,6,-20,-12,-13,-2,-14,5,-4,11,-3,23,9,6,27,9,19,10,19,14,24,19,16,8,28,12,22,5,16,-1,15,8,19,0,18,2,31,-7,-13,-3,11,-6,10,3,17,-6,27,-2,38,-12,8,-4,0,-7,-11,-5,-16,-3,-45,8,-7,-2,16,-7,1,-15,13,-3,8,-2,1,4,-6,5,7,3,24,-6,8,3,-6,7,23,10,9,-1,10,-3,5,7,-8,6,5,6,-7,6,28,-4,5,-5,-12,-1,0,-6,7,-3,16,2,2,6,21,5,35,9,8,-1,-10,-6,12,-1,7,3,19,1,15,4,11,-6,12,6,-11,6,6,4,29,-4,14,-3,36,-11,7,5,-10,5,-13,4,4,4,-6,8,0,3,18,9,7,9,7,2,27,-2,2,-6,-10,-8,7,-3,3,-7,-2,-14,11,-6,-5,-7,-19,-14,11,-1,4,3,11,3,3,5,9,5,-6,5,4,7,-11,1,-2,5,8,10,-13,8,18,7,-2,7,5,1,5,-6,-4,-10,11,-1,-5,7,17,4,21,0,18,-6,-9,9,-1,10,18,3,24,-1,21,1,-8,6,12,6,11,0,20,5,26,2,3,2,27,1,8,-2,22,5,19,0,2,5,10,4,24,4,17,-3,-14,-3,23,-1,2,-5,10,2,29,0,22,-5,8,-4,-2,-5,-11,-3,-26,-5,-8,-3,12,-2,15,-2,9,2,5,-7,5,3,16,2,32,-2,2,-5,42,-1,1,7,21,-1,16,0,16,-6,5,-6,-6,-4,12,-8,16,-4,10,10,16,-4,17,3,19,-4,7,3,17,-1,-8,9,14,4,90,-6,9,-6,26,-8,40,2,20,-1,8,-4,-1,-8,12,-3,14,2,18,1,18,-2,19,1,18,-9,12,3,-8,7,5,4,31,-3,21,1,29,-5,-3586,-4","491,413,5,-7,5,-1,3,-2,-8,-1,-2,-8,-2,-4,-3,-2,0,-5,3,-7,9,-2,7,-5,15,-2,15,3,1,2,-2,7,2,11,-8,3,3,7,-7,0,2,9,10,-3,8,4,-7,6,-3,5,-8,-2,-1,-8,-3,7,-1,2,3,4,-2,4,-12,3,-4,9,-6,3,0,3,10,-1,0,7,9,2,8,-1,2,9,-2,7,-10,-1,-8,2,-12,-4,-9,-2,-5,-6,-9,-2,-10,-10,9,-9,-1,-7,11,-12,5,-5","-956,691,-7,-3,-13,3,-8,-1,-14,4,9,3,7,4,10,-2,6,-2,3,-2,7,-4","-1800,715,3600,-7,-11,0,-2,3,-3587,4","-1800,715,10,1,14,-3,-11,-4,-13,-1,0,7","-905,695,0,-10,13,8,12,-7,-3,-7,10,-7,10,7,7,9,1,11,14,-1,15,-1,13,-5,1,-5,-8,-6,7,-5,-1,-5,-19,-7,-14,-1,-11,3,-3,-5,-9,-9,-3,-4,-12,-7,-14,-1,-8,-4,-1,-6,-11,-2,-13,-8,-10,-11,-4,-8,-1,-12,15,-1,4,-10,5,-7,14,2,19,-4,10,-4,7,-5,12,-3,11,-4,16,-1,11,-1,-1,-8,3,-10,7,-11,15,-10,8,3,5,11,-5,15,-7,6,16,4,11,7,6,7,-1,7,-7,9,-12,7,12,11,-5,9,-3,15,7,3,17,-3,10,-1,9,2,9,-3,12,-6,3,-4,18,0,0,-9,3,-12,9,-2,7,-6,15,6,10,11,6,4,8,-9,13,-12,11,-12,-4,-7,13,-5,9,-6,16,-3,7,-3,4,-8,7,-2,4,-3,1,-12,-7,-3,-7,-4,-17,-3,-12,-9,-17,-1,-22,2,-15,0,-10,-1,-8,-7,-13,-4,-15,-14,-11,-9,8,2,16,13,21,8,15,1,9,-5,-9,-6,3,-11,3,-8,13,-5,17,2,10,11,0,-7,7,-4,-12,-6,-23,-6,-9,-4,-12,-8,-7,1,-1,9,18,8,-16,0,-11,-2,1,-3,-10,-5,-11,-3,-10,-3,-6,-7,-1,-1,0,-6,3,-5,4,0,-1,3,3,-2,-1,-3,-6,-1,-5,0,-8,-2,-4,0,-6,-1,-8,-3,15,2,3,-2,-14,-3,-7,0,-3,-1,3,-1,-2,-7,-7,-8,-1,3,-2,0,-3,3,2,-5,2,-2,0,-4,-3,-4,-5,-8,2,7,-5,4,-2,8,-1,-4,2,-6,-7,1,7,-3,0,-9,3,-1,1,-3,2,-10,-7,-8,-10,-3,-7,-6,-5,0,-5,-4,-1,-3,-11,-7,-6,-5,-4,-6,-2,-7,2,-7,3,-8,5,-7,0,-5,4,-11,0,-7,0,-4,-3,-6,-3,-1,-5,1,-1,4,-4,3,-5,8,-5,8,-2,4,2,7,-2,5,-8,8,-4,2,-10,-5,-7,6,-6,2,-11,-1,-9,1,-8,-1,-4,-1,2,-3,0,-4,2,-2,-2,-1,-4,1,-4,-2,-7,0,-7,6,-9,-1,-7,2,-6,-1,-9,-2,-9,-8,-10,-4,-5,-5,-3,-4,0,-7,1,-5,2,-3,-4,-9,-2,-7,-1,-14,-1,-5,2,-5,3,-5,2,-8,7,-7,2,-6,4,-5,11,-2,4,-5,9,3,7,1,8,2,6,2,6,4,3,6,0,8,2,3,7,3,11,2,8,0,6,0,3,-2,0,-5,-6,-5,-2,-7,2,-1,-2,-5,-2,-7,-3,2,-2,-1,2,-3,-2,-5,0,-5,-1,-6,-2,-2,-3,-4,3,-2,4,0,3,2,3,0,2,-1,5,0,5,0,3,1,4,1,3,-1,2,0,2,1,5,-1,4,-3,3,-2,4,-1,3,-3,-2,-3,1,-4,-2,-3,-1,-4,-1,-5,1,-2,0,-5,-1,-1,-1,-4,0,-3,-2,-2,1,-3,1,-2,3,-5,4,-4,5,-4,3,-4,4,-2,4,-2,5,1,4,2,6,2,3,3,6,0,5,-2,4,-2,4,-3,3,-2,6,-1,7,7,4,1,0,4,2,8,6,5,6,0,1,2,8,-1,8,5,4,3,4,4,4,0,3,-3,-2,-3,-1,-3,-5,-1,3,-4,0,-6,-5,-5,4,-8,4,0,3,8,-4,3,0,8,12,4,-1,4,4,4,3,-7,7,-1,7,-5,0,-3,9,-1,11,1,5,-4,8,-1,6,3,0,2,12,1,12,0,-8,-3,3,-5,8,0,8,-5,1,-8,5,0,4,-2,7,-4,6,-7,0,-5,4,0,6,-5,4,-3,12,-2,1,2,8,0,10,-2,4,-2,7,-2,11,-8,1,-4,4,0,2,-6,6,-17,5,-2,1,-7,-8,-8,3,-3,18,-1,0,-10,8,6,12,-3,17,-7,5,-5,-2,-6,12,3,19,-5,15,0,15,-8,13,-11,7,-3,9,0,4,-4,3,-12,2,-6,-4,-17,-5,-6,-14,-14,-7,-12,-7,-8,-3,-1,-3,-7,1,-19,-3,-15,-1,-7,-3,-4,-2,-13,-10,-13,-1,-10,-9,-5,-2,-6,-11,0,-15,-4,-8,-4,-11,-3,-11,-8,-9,-10,-1,-7,1,-6,-2,-10,-2,-5,-7,-5,-11,-18,-9,-8,-7,-4,-4,-10,-7,-6,-4,-6,-11,-6,-8,2,-5,-1,-9,5,-7,-1,-6,6,-1,-5,13,-9,-2,-7,7,-4,-1,-5,-9,-13,-15,-5,-20,-2,-11,1,2,-6,-2,-8,2,-5,-6,-3,-11,-2,-9,4,-4,-3,1,-10,7,-3,5,4,3,-6,-9,-3,-8,-6,-1,-10,-3,-5,-9,0,-8,-6,-3,-7,10,-7,10,-2,-4,-9,-12,-6,-6,-12,-9,-4,-4,-4,3,-11,6,-6,-4,1,-9,0,-4,-2,-9,-4,-2,-9,-4,-1,-12,4,-11,7,-12,5,-4,7,3,6,-5,6,-1,17,4,10,11,8,-15,3,9,8,3,17,12,-4,5,21,-7,3,-3,-13,-6,2,3,14,3,19,5,6,-3,10,-1,11,4,1,6,16,7,16,5,15,-3,15,3,8,-1,12,6,13,2,19,3,21,3,22,-1,16,-2,15,-10,5,-1,4,-19,10,-18,11,-8,7,-4,8,1,3,-8,13,-10,18,-9,20,-4,5,-4,7,-7,7,-8,4,4,4,-5,10,3,7,8,6,5,7,-2,5,-4,-5,-6,5,2,2,-1,9,3,2,2,6,4,7,-1,4,6,2,6,4,-1,3,4,1,-1,5,3,3,5,1,4,6,4,5,-4,3,2,6,-2,9,2,2,-2,9,-4,5,-3,3,-2,6,2,2,-2,1,-2,3,-5,3,-5,-1,-2,-3,-4,-3,-2,0,-1,-2,5,-6,-3,-1,-1,-1,-5,-1,-2,6,-1,-2,-3,1,-2,4,-4,1,-3,1,-4,0,-7,1,-2,3,1,1,0,3,-3,2,-4,2,-3,1,-1,3,-3,2,1,-3,-2,-2,-2,2,-4,1,-1,2,0,3,1,4,-2,1,2,2,-4,3,-4,4,-2,3,-5,4,-5,4,1,2,2,-2,-1,4,-3,1,-1,-3,-6,1,-3,1,-5,2,-5,0,-3,2,-5,2,-6,0,-5,2,-5,4,-12,11,-5,3,-8,3,-6,-1,-8,-3,-5,-1,-7,2,-7,2,-9,5,-8,1,-11,5,-9,4,-2,3,-6,1,-10,3,-4,4,-11,6,-5,6,-2,5,3,1,-1,3,2,3,0,3,-3,5,-1,4,-3,5,-9,10,-10,7,-5,7,-9,4,-1,2,1,6,-5,3,-6,5,-2,7,-6,0,-6,6,-4,5,-1,3,-5,7,-4,8,1,4,-8,4,-3,-1,-6,3,-1,-4,1,-5,1,-7,4,-4,7,-7,2,-3,3,-4,3,-6,3,-3,3,-3,6,-5,3,-10,3,-4,3,-5,0,-5,5,0,4,-5,4,-4,-5,-6,-4,6,-7,6,-7,5,-5,2,0,8,-1,5,-5,3,-7,5,-1,-2,-2,3,-7,2,-6,6,5,0,4,4,0,5,-7,7,-6,3,-4,6,-4,6,-4,8,-4,9,-2,5,-6,6,-5,1,-1,3,-6,1,-3,2,-10,1,-2,2,-1,6,-10,10,-8,14,0,2,-5,3,-7,9,-2,8,-5,5,2,8,0,9,-3,8,4,9,2,18,-2,14,-3,8,-3,5,1,2,15,-4,5,-9,3,3,-2,8,-3,8,-21,10,-7,4,-18,4,-6,9,2,6,-13,5,-2,8,-12,7,0,5,-6,4,-9,3,-2,9,-13,8,-6,9,-9,1,-16,0,-12,3,-21,10,-9,2,-18,4,-14,-1,-19,5,-12,4,-11,-2,2,-7,-6,-1,-11,-2,-9,-3,-11,-2,-2,5,5,10,11,3,-3,3,-13,-6,-7,-6,-14,-7,7,-5,-9,-8,-11,-4,-10,-3,-3,-4,-15,-5,-3,-5,-12,-4,-7,0,-9,-2,-10,-4,-9,-3,-17,-3,-1,2,11,4,9,3,11,6,12,1,5,4,14,6,2,2,8,4,1,7,6,6,-12,-3,-3,2,-6,-4,-6,5,-3,-3,-4,5,-10,-4,-6,0,-1,6,2,3,-6,4,-13,-2,-9,5,-6,2,-1,6,-7,4,4,6,8,5,3,5,8,1,7,-1,8,4,8,0,7,3,-2,4,-5,2,7,4,-6,0,-11,-2,-3,-3,-7,3,-15,-2,-14,3,-4,4,-13,6,14,4,22,5,8,0,-1,-5,21,0,-8,6,-12,4,-7,5,-10,4,-14,4,6,5,18,0,12,5,3,5,10,4,10,1,19,5,9,-1,15,6,15,-3,8,-4,4,2,17,-1,-1,-2,16,-2,10,1,21,-3,19,-1,8,-1,13,2,15,-3,11,-2,19,-2,16,-5,10,-1,9,4,12,3,15,-1,15,4,16,3,7,-4,7,2,3,5,7,-1,16,-9,14,7,1,-8,12,2,4,3,12,-1,16,-4,23,-4,14,-2,10,1,13,-5,-14,-5,18,-2,27,1,9,2,10,-6,11,5,-10,4,6,4,12,0,9,1,8,-2,10,-6,11,1,17,-5,16,2,15,0,-2,6,9,2,16,-4,0,-9,6,8,8,0,5,10,-11,6,-12,4,1,11,12,7,13,-1,10,-5,14,-11,-9,-5,19,-2","-1142,731,-5,-4,23,3,13,-5,12,5,9,-4,8,-9,5,4,-7,10,9,1,10,-1,11,-4,6,-10,3,-7,17,-5,18,-5,-1,-4,-16,-1,6,-4,-3,-3,-18,1,-18,3,-11,-1,-19,-3,-30,-2,-13,-1,-6,5,-13,3,-9,-1,-12,8,6,1,16,1,14,0,13,2,-19,2,-22,-1,-14,0,-5,4,23,4,-16,0,-17,3,8,7,7,4,27,6,10,-2","-1045,734,-9,-6,-15,7,3,1,13,0,8,-2","-763,731,0,-3,-10,1,-11,0,-11,-2,-3,1,-11,5,1,4,4,1,23,-1,18,-6","-866,732,8,-7,9,8,26,5,17,-11,-2,-6,20,3,10,4,22,-6,14,-4,1,-5,19,3,10,-7,24,-4,9,-4,9,-9,-18,-5,23,-6,16,-3,15,-9,15,0,-3,-7,-17,-12,-12,4,-16,10,-13,-1,-1,-6,10,-6,14,-5,4,-2,6,-10,-3,-7,-13,2,-25,8,14,-8,11,-6,1,-4,-27,4,-21,6,-12,5,3,3,-15,5,-14,5,0,-3,-29,-2,-9,4,7,7,19,0,20,2,-3,3,4,5,12,10,-2,4,-4,4,-15,5,-21,3,7,2,-11,7,-9,0,-8,4,-5,-3,-18,-2,-36,3,-22,3,-16,1,-8,4,10,4,-14,0,-3,10,8,9,10,4,26,3,-8,-6","-1004,738,12,-2,18,2,3,-3,-10,-5,16,-4,-2,-9,-17,-4,-9,1,-7,3,-25,8,0,3,21,-1,-11,7,11,4","1436,732,-15,0,-21,1,8,5,13,1,14,-4,1,-3","-932,728,-11,-8,-11,1,-6,8,0,5,5,5,10,2,21,0,19,-2,-15,-9,-12,-2","-1205,714,-26,-5,-5,4,-23,6,3,3,8,8,9,7,-10,6,34,1,14,-2,25,0,10,-3,11,-4,-13,-3,-24,-7,-13,-7,0,-4","1507,751,-11,-4,-16,1,-19,4,3,3,18,-2,25,-2","-936,750,-6,-4,-14,1,-12,2,5,5,14,2,9,-3,4,-3","1451,756,-8,-8,-37,0,-16,-2,-20,7,5,6,13,2,27,0,36,-5","-985,767,8,-4,0,-6,-5,-7,-16,-1,-11,2,0,5,-16,0,-1,7,11,0,15,3,14,0,1,1","-1082,762,4,-4,9,2,10,0,2,-5,-6,-5,-34,-1,-25,-5,-15,0,-2,3,21,5,-45,-2,-14,2,14,10,9,3,28,-4,18,-6,17,0,-14,9,9,4,10,-1,4,-5","575,707,-6,-1,-32,2,-3,4,-18,3,-1,5,10,2,-1,6,20,8,-9,2,24,8,-3,5,23,5,33,7,33,1,17,4,20,1,7,-4,-7,-3,-36,-5,-30,-4,-31,-10,-15,-10,-16,-9,2,-9,19,-8","-947,771,11,-3,20,0,9,-3,-3,-4,12,-3,6,-2,14,0,14,-1,16,2,20,1,17,-1,10,-4,3,-4,-7,-2,-14,-3,-13,2,-29,-2,-20,0,-17,1,-26,3,-4,6,-1,5,-10,4,-21,1,-11,4,4,4,20,-1","-1162,776,-1,-7,-8,-4,-9,0,-19,-4,-16,-2,-14,2,17,8,21,6,15,0,14,1","-938,775,-5,0,-19,1,-2,2,20,0,7,-2,-1,-1","-1102,777,-19,-3,-14,3,8,4,14,1,14,-2,-3,-3","247,779,-22,-5,-18,3,7,2,-6,4,21,2,4,-4,14,-2","-1097,786,-12,-2,-16,0,10,5,5,-1,13,-2","-958,781,-15,-3,-8,3,-5,4,0,4,13,-1,5,0,12,-4,-2,-3","-1001,783,4,-4,-16,1,-16,3,-23,1,10,3,-12,2,-1,4,20,-1,27,-4,7,-5","1051,783,-57,-4,19,13,8,1,7,0,26,-6,-3,-4","183,797,32,-7,-25,-4,-5,-8,-9,-2,-5,-8,-12,0,-21,6,9,3,-15,3,-20,9,-8,8,28,3,5,-3,14,0,4,3,15,1,13,-4","254,804,20,-3,-15,-6,-29,-1,-29,2,-2,2,-14,1,-11,4,31,3,14,-2,10,3,25,-3","511,805,-13,-1,-9,-1,-1,-1,-12,-2,-11,2,6,4,-23,0,20,2,15,0,2,-3,6,3,9,1,15,-2,-4,-2","999,789,-21,-1,-28,2,-17,4,-8,7,-13,2,26,7,21,3,20,-6,23,-9,-3,-9","-870,797,12,-4,-14,-3,-18,-7,-18,-1,-21,1,-11,5,1,3,8,3,-19,0,-11,3,-6,5,7,4,7,3,10,1,-4,2,23,1,13,-6,17,-2,16,-2,8,-6","-685,831,27,-1,21,-1,18,-3,0,-2,-24,-5,-25,-2,-9,-2,22,0,-23,-6,-17,-3,-17,-8,-20,-2,-7,-2,-30,-1,14,-1,-7,-2,8,-5,-9,-3,-16,-3,-5,-4,-14,-3,2,-2,17,0,0,-2,-27,-6,-26,3,-29,-2,-15,1,-19,1,-1,5,18,2,-5,7,7,1,26,-5,-13,7,-17,2,8,4,18,2,3,3,-14,4,-4,6,27,-1,8,-1,16,4,-23,1,-35,-1,-18,4,-8,4,-12,3,-2,3,15,2,12,0,19,2,15,4,12,-1,11,-3,8,6,13,1,18,1,30,1,6,-1,29,1,21,0,22,-1","-271,835,63,-8,-19,-4,-38,0,-54,-1,5,-2,35,1,31,-3,19,3,8,-4,-11,-5,26,3,48,4,30,-2,6,-4,-41,-7,-5,-3,-32,-1,23,-1,-12,-7,-8,-6,0,-12,12,-6,-15,-1,-17,-3,19,-5,2,-9,-11,0,13,-9,-22,-1,12,-4,-4,-3,-14,-2,-14,0,13,-7,0,-4,-20,4,-5,-3,14,-2,13,-6,3,-8,-17,-2,-8,4,-12,5,3,-6,-12,-6,27,0,14,-1,-27,-8,-27,-8,-30,-4,-11,0,-10,-4,-14,-10,-22,-7,-6,-1,-14,-2,-14,-2,-9,-7,0,-7,-5,-6,-16,-8,4,-8,-5,-8,-5,-10,-14,-1,-15,9,-20,0,-9,5,-7,10,-17,12,-5,7,-2,9,-14,9,4,7,-7,4,10,12,15,3,4,4,2,8,-11,-3,-6,-2,-9,-1,-12,3,-1,7,4,5,10,0,20,-2,-17,6,-9,3,-10,-1,-8,3,11,9,-6,4,-8,7,-12,10,-13,4,0,4,-27,6,-21,1,-27,-1,-24,0,-12,3,-17,6,26,3,20,1,-42,2,-23,4,1,4,38,5,37,5,4,4,-27,3,9,4,34,7,15,1,-4,5,23,2,31,2,31,0,11,-3,26,5,24,-3,14,-1,21,-3,-24,5,1,4,34,6,35,0,13,3,35,1,80,-1"];
+const WORLD_BORDERS = ["339,-10,38,-21,1,-6,14,-10","403,-103,-8,-6,-11,-4,-6,0,-3,-3,-7,0,-3,-1,-12,3,-7,-1","346,-115,-3,13,-4,5,-2,3,-9,2","328,-92,-6,3,-6,1,-4,2,-5,3","307,-83,-5,12,-6,6,-2,6,1,5,-2,9","293,-45,5,0,3,4,4,5,3,2,-1,4,-2,2,0,4","305,-24,3,1,0,6,-4,6","304,-11,4,1,11,0,20,0","-87,277,0,-3","-87,274,0,-15,-33,0,1,-25,-10,-1,-2,-5,2,-15,-39,0,-3,-3","-170,214,22,1,2,4,4,4,3,14,14,11,5,12,3,1,3,8,9,1,3,-1,5,0,3,2,6,0,0,6,1,0","-1305,548,5,5,0,6,-17,7,-10,11,-7,7,-9,5,-6,4,-6,5,-10,-3,-10,-6,-8,7,-7,4,-10,3,-10,0,0,57,0,37","-671,451,-7,6,0,14,-4,3,-7,-2,-3,2,-8,-7,-3,-8,-4,-4,-4,-2,-3,0,-1,-3,-18,0,-16,0,-4,-2,-11,-7,-4,-5,-9,0,-10,0,-5,-1,2,-2,1,-3,-13,-6,-11,-2,-11,-5,-6,1,-1,3,2,3,5,6,3,6,-2,8,-3,9,-10,5,1,2,-4,1,-2,2,-2,1,-3,0,-2,2,-1,3,-8,3,-8,4,-9,3,-10,4,-9,-3,-3,0,-12,3,-8,-2,-10,4,-10,1,-7,1,-3,1,-2,6,-4,0,0,-4,-20,0,-35,0,-34,0,-29,0,-31,0,-29,0,-30,0,-10,0,-30,0,-28,0","-971,259,-4,-1,-7,3,-8,3,-3,4,-2,7,-6,6,-4,6,-5,7,-7,4,-8,0,-6,-8,-8,3,-6,3,-2,5,-3,5,-6,5,-5,3,-4,4,-17,0,0,-5,-8,0,-20,0,-23,7,-15,5,-12,1,-11,-1","874,492,-8,-7,-8,0,-1,-10,-5,-5,-20,3,-7,-18,-6,-2,-19,-4,9,-17,-7,-3,1,-5","803,424,-7,1,-5,4,-14,1,-17,0,-4,-1,-14,4,-6,-2,-1,-6,-17,3,-6,-1,-2,-4","710,423,-6,-2,-13,-7,-5,-7,-3,0,-3,4,-13,1,-2,8,-5,0,1,10,-12,7,-17,-1,-12,-1,-9,9,-9,4,-15,7,-28,-5,1,-37","560,413,-5,0,-7,7,-7,3,-12,-2,-4,-3","491,464,-5,2,1,5,-6,6,-8,0,-8,7,5,8,-2,2,8,11,10,-6,1,7,21,11,15,0,22,-7,12,-4,11,4,16,1,12,-6,3,3,14,0,3,5,-16,7,9,4,-2,3,10,3,-7,7,4,3,38,4,5,2,25,4,9,4,18,-2,3,-11,10,3,13,-4,-1,-5,10,0,25,10,-4,-3,13,-8,22,-25,6,5,13,-6,15,3,5,-2,5,-6,7,-2,4,-4,13,1,6,-6","710,423,3,-1,-9,-7,8,-4,7,3,12,-5,-13,-8,-8,1","710,402,-4,0,-1,3,2,5,-14,-3,-3,-6,-5,-6,-8,1,-3,-5,8,-2,2,-7,-6,-11","678,371,-7,3,-6,0","665,374,0,6,-13,4,-10,5,-7,5,-11,7,-5,10,-4,2,-10,-1,-4,2,-1,8,-14,6,-8,-6,-9,-4,2,-5,-11,0","1410,-91,0,32,0,33","1250,-89,1,-5","1097,20,1,-7,7,-5,7,2,6,-1,6,5,5,1,9,-3,8,2,5,14,4,4,4,11,11,0,9,-2","-670,-549,-6,0,-10,0,0,23","-576,-302,-3,-8,-2,-10,0,-10,-3,-3,0,-6","-686,-523,-9,2,-24,1,-4,6,0,7,-7,0,-3,3,-1,11,8,4,3,7,-1,5,5,8,3,13,-1,6,5,2,-1,4,-5,2,3,4,-4,4,-3,11,5,2,-2,13,2,10,3,9,6,3,-3,10,0,9,7,7,0,8,6,10,0,9,-3,2,-4,17,6,11,-1,9,3,9,7,10,7,6,-3,4,2,3,0,17,11,5,3,10,-1,3","-671,-227,8,9,13,-3,6,-7,4,8,12,0,1,-2","-627,-222,19,-17,8,-1,12,-8,10,-4,2,-4,-10,-15,10,-3,11,-1,8,1,9,8,2,9","-546,-257,5,2,5,-6,0,-8,-9,-6,-7,-4,-11,-10,-13,-13","-696,-176,5,-7,1,-7,6,-4,-4,-10,6,-11,4,-14,7,2","-704,-183,5,2,3,5","307,-83,-4,1,-13,-2,-3,-1,-3,-7,3,-4,-2,-12,-1,-10,2,-2,7,-4,3,2,1,-11,-8,1,-4,5,-3,4,-8,2,-2,5,-6,-3,-8,1,-4,5,-6,1,-5,-1,0,3,-4,1","239,-109,-4,0,-7,-1,-4,0,-2,-1,0,12,-3,4,-1,6,1,6,-2,4,0,6,-12,0,1,4,-5,0,-7,-3,-2,-5,-2,-3,-5,2,-4,-2,-6,-1,-4,6,-2,3,-3,6,-3,7,-29,0,-4,-1,-3,0,-4,-1","122,-58,2,1,1,5,1,2,4,2","130,-48,3,-1,3,4,5,0,1,-3,4,-2,6,7,6,4,2,4,0,8,4,10,5,5,6,5,1,3,1,3,1,4,0,6,1,8,2,7,3,5,1,6","185,35,0,7,4,5,6,3,8,-3,6,-4,8,-1,7,-2,3,6,6,0,11,5,4,-2,3,0,2,3,4,1,7,-1,6,-1,4,1","274,52,6,-8,4,-1,3,2,5,-1,5,2,3,-4,8,-7","308,35,0,-12,4,-1,-3,-4,-4,-2,-4,-5,-2,-5,-1,-8,-2,-4,0,-7","296,-13,-3,-3,0,-6,-3,-6","290,-28,3,-5,0,-12","416,-17,-6,8,0,37,9,11","419,39,2,3,7,1,9,7,13,0,28,30","478,80,7,8,4,7,0,5,0,10,0,4,0,0","339,-10,0,11,3,4,5,7,3,7,-4,12,-1,5,-5,7","340,43,6,5,7,7","353,55,5,-2,0,-5,4,-4,7,0,12,-8,3,0,5,-1,7,-1,3,4,9,5,4,-4,7,0","246,82,-8,5,-3,3,-1,3,2,4,0,4,-6,6,-1,4","229,111,-4,6,0,6,-2,3,-4,0,1,4,3,4,-1,4,3,3,-2,2,3,6,4,8,9,-1,-1,40","238,196,0,4,12,0,0,20","250,220,40,0,39,0,40,0","384,180,-5,-6,-7,-1,-3,-3,-1,-7,-5,-15,1,-4","364,144,-1,-8,-4,-10,-6,-5,-5,-8,-1,-4,-4,-3,-3,-10,0,-9","340,87,0,8,-2,5,-1,3,-5,4,-1,7,1,8,-5,0,-6,-2,2,-3,1,-6,-5,-6,-5,-7,-6,-1,-8,6,-4,-2,-1,-3,-5,-2,-10,-2,-2,2,-7,0,-3,-1,-3,1,-5,5,-2,3,-7,-1,-3,-5,-3,-9,-3,-2,-3,-1,7,-4","229,111,-7,-1,-5,-4,-7,-11,-9,-5,-10,1,-3,-1,1,-4,-5,-3,-4,-4,-13,-4,-2,2,-4,-2,-8,-1","153,74,1,3,-3,7,-1,4,-5,2,-5,5,2,5,4,-1,3,1,6,0,-6,9,1,7,-1,6,-4,7","145,129,1,4,-6,1,0,6,-5,4,5,13,12,9,1,13,4,21,2,4,-4,3,0,3,-4,3,-2,16","149,229,10,5,39,-19,40,-19","-717,197,1,-5,-1,-4,-2,-2,2,-3,0,-3","227,543,-18,0,-12,1","213,552,10,-2,5,-1,-2,-3,1,-3","1308,422,-2,2","1306,424,0,5,5,0,2,12,-3,9,9,3,12,-2,7,10,3,11,4,4,5,9,-16,-3,-9,-4,-15,0,-4,9,-12,7,-17,4,-4,9,-4,7,-3,4,-7,10,-8,4,-15,3,-14,-1,-12,-1,-8,-5,5,-3,0,-5,-5,-4,-9,-10,0,-5,-14,-6,-12,4","1167,499,-12,-1,-5,3,-6,1,-15,-7,-13,-1,-9,-3,-13,2,-9,0,-6,5,-10,5,-10,1,-13,-1,-9,-2,-14,4,-2,8,-12,2,-9,1,-11,4,-11,-10,4,-6,-9,-7,-15,3,-10,0,-7,5,-10,0,-9,3,-15,-5,-19,-8,-10,-2","878,493,-4,-1","486,418,-6,-4,-2,-2,-4,0,-7,6,-3,1","464,419,-6,2,-3,4,-10,2,-6,-1,-1,1,-14,5,-15,2,-8,2,-1,-2","382,471,1,4,5,3,9,1,2,3,-2,6,4,5,0,3,-15,3,-6,0,-6,5,-8,-2,-12,4,-4,6,-8,1,-1,3,3,2,-6,5,-11,-1,-3,1,-2,-2,-4,0","318,521,-3,6,-2,4,10,0,4,3,-3,2,-7,2,-3,4,-6,6,2,3,-1,5,-10,2,-5,-1,-2,2,-10,3","282,562,-3,6,-1,4,-5,3","273,575,4,3,-3,9,7,6,-1,2","281,605,21,13,9,6,4,5,-15,7,4,6,-9,7,7,9,-11,11,9,8,-16,7,2,7","286,691,8,1,17,4","334,460,3,2,7,-2,3,0,2,-2,1,-1","286,691,4,7,-13,4,-15,-4,-5,-7,-10,-5,-10,3,-13,-1,-12,6,-6,-3","206,691,-6,0,-1,-7,-19,2,-3,-6,-9,0,-7,-7,-10,-11,-15,-14,3,-4,-3,-4,-10,1,-7,-10,1,-13,6,-5,-3,-12,-8,-7,-5,-5","163,-286,5,5,4,-3,2,-4,4,-1,7,-1,5,0,9,5,0,37","199,-248,3,-1,6,-10,-1,-6,2,-3,7,1,5,4,5,3,2,5,5,2,4,-1,5,-3,8,0,7,2,1,3,1,5,6,1,3,4,3,6,9,8,14,7","294,-221,4,0,5,-2,4,1,5,-1","312,-223,5,-14,2,-7,-1,-11,0,-3","318,-258,-5,1,-3,0,0,-3,-3,-4,0,-3,6,-6,6,1,2,5","321,-267,7,0","290,-290,-5,4,-4,-3,-6,-3,-5,-7,8,-7,3,1,2,3,5,1,2,4,3,4,-3,3","-883,185,-5,-6,-2,1,-1,-2","-891,178,-10,0,-9,0,0,-5,-5,0,4,-4,4,-2,1,-2,1,-4,-12,0,-5,-8,1,-2,-1,-3,0,-3","-576,-302,6,1,10,-8,4,0,10,-6,8,-5,6,-7,-4,-5,2,-6","-546,-257,2,5,1,6,0,6,-4,2,-3,-2,-4,0,-1,4,-1,9,-2,3,-7,3,-4,-2,-10,2,0,14,-3,5","-582,-202,3,2,-1,6,3,4,2,8,-2,6,-6,3,-1,4,2,6,-20,0,-3,12,2,0,0,5,-2,2,0,6,-6,3,-6,0,-4,3,-7,2,-4,4,-11,1,-11,9,1,7,-1,4,1,7,-13,-1,-6,-4,-8,-4,-3,-3,-5,0,-7,0","-695,-110,-6,-1,-4,1,0,15,-8,-6,-9,0,-4,6,-6,0,2,5,-6,6,-4,9,3,2,0,4,6,3,-1,5,2,4,1,4,12,7,8,2,10,1","-699,-43,5,27,0,5,-2,6,-4,3,0,7,5,2,2,-1,1,4,-6,1,0,6,19,0,4,3,2,-3,2,-6,2,2","-669,13,6,-6,8,1,1,3,8,2,4,2,1,4,7,3,-9,3,-1,6,0,7,-4,3,9,-1,8,-2,3,2,7,2,11,3,4,4,-1,3","-607,52,5,0,2,-2,-1,-4,3,-2,3,-4,-3,-4,-2,-8,3,-6,1,-4,6,-5,5,0,1,2,3,0,4,2,4,2,5,0,3,0","-565,19,5,-1,-1,4,1,3,4,-1,5,1,6,-2","-545,23,4,-2,3,3,4,-3,5,0,3,4,4,7,5,10","-582,-202,0,3,-9,5,-9,1,-18,-3,-5,-9,0,-6,-4,-11","-696,-176,6,11,-4,8,2,4,-1,3,4,5,0,9,0,7,2,3,-8,16","-803,-34,1,-4,-3,-3,1,-3,4,1,4,-2,4,-5,6,5,1,6,7,9,12,4,11,10,3,7,-2,7","-754,-2,3,1,7,-4,3,-5,4,-3,6,-10,8,-1,5,2,4,-1,6,0,8,-4,-7,-10,3,-1,5,-5","-754,-2,-4,3,-5,3,-3,-1,-8,1,-3,4,-12,6","-779,72,1,5,4,-1,2,3,-3,6,1,2","-713,118,-7,-2,-2,-5,-4,-3,-3,-3,-1,-8,-3,-5,5,-1,1,-5,3,-2,0,-4,-1,-4,3,-3,2,-3,13,1,6,-1,7,-9,4,1,7,0,6,1,4,-2,-2,-5,-2,-4,-1,-7,2,-7,3,-3,-5,-7,4,-2,2,-4,3,-9","-830,82,2,4,1,3,-2,2,0,4,4,1","-857,111,8,-1,2,1,3,-1,2,-2,3,-1,2,2","-873,130,3,0,1,3,1,5,5,0,2,2,3,-2,3,3,3,3,1,2,2,2,3,-1,4,0,6,2,5,1","-878,134,1,4,-4,2,-4,-2,-3,3,-3,2,-3,1","-894,144,3,3,-1,4,5,2,5,4","-901,137,4,4,1,3,2,0","-891,178,0,-8,-1,-11,3,0","-598,84,-8,-6,0,-4,3,-4,-2,-1,-7,-2,1,-5,-3,-2,7,-8","-571,60,-2,-9,-6,-3,-1,-7,4,-8,3,0,2,-5,6,-9","-540,58,-5,-9,1,-7,4,-6,-2,-4,-1,-5,-2,-4","62,495,5,-3,14,-2,-5,-7,-1,-7","75,476,-3,-2,-5,1,-7,-8,0,-4,5,1,3,-4","68,460,0,-3,3,-4,-4,-3,3,-7,6,-2,-2,-4","30,425,-12,-2,-11,5,-4,-2,-18,4,-4,4","25,511,2,-3,4,0,5,-4,7,-5,5,1,9,-5","57,495,2,-1,3,1","294,-221,-6,5,-8,1,-3,6,0,4,-4,1,-11,11,-3,6,-3,2,-3,8","253,-177,11,-1,3,-2,3,1,6,6,9,8,3,1,1,4,6,4,8,1","303,-155,0,-4,9,0,4,-2,3,-2,4,-1,5,-3,0,-13,-1,-7,-1,-7,2,-3,-1,-6,-5,-8,-10,-12","199,-248,0,30,10,0,0,35,8,1,15,3,4,-4,6,4,3,0,6,2","251,-177,2,0","117,-173,5,2,6,2,7,-1,6,-4,42,1,7,-5,24,-1,18,4","232,-175,8,2,7,-1,4,-2,0,-1","-165,161,4,4,5,-1,5,2,5,0,5,-3,7,-3,6,-7,6,-7","-122,146,1,-6,2,-6,3,-3,1,-3,0,-4","-115,124,-7,1,-3,-2,-7,3,-5,0","-137,126,-18,0,-3,-1,-3,0,-6,-1","-168,132,9,-1,2,2,6,2,4,-2,4,0,5,2,-2,3,-4,-2,-3,0,-4,3,-3,0,-2,-3,-11,0","-122,146,4,2,1,6,4,0,6,-3,6,2,4,0,2,2,40,0,2,7,-7,44,-5,44,16,0","-49,250,34,-22,33,-22,3,-5,6,-2,4,-2,1,-6,11,1","43,192,0,-23,-6,-7,-1,-6,-9,-2,-13,-1,-4,-3,-6,-1","4,149,-7,0,-2,2,-6,-1,-9,-4,-2,-4,-8,-4,-1,-3,-4,-2,-5,2,-3,-3,-1,-7,-8,-8,0,-3,-3,-4,1,-6","-54,104,-4,-2,-2,-1,-2,4,-3,-1,-3,-3,-8,0,-3,2,-1,-1","-80,102,-3,3,0,3,-3,0,0,3,2,3,-4,4,-1,3,-2,2,-5,-1,-3,-1,-3,-3,-4,1,-3,3,-4,-1,-2,3","-87,274,38,-24","19,61,-3,7,1,23,-2,2,-1,5,-3,4,-3,3,1,5","9,110,3,1,2,4,5,1,3,3","22,119,3,3,3,0,8,-5","36,117,0,-4,2,-6,-2,-4,1,-2,-5,-7,-3,-3,-2,-6,0,-6,0,-16","145,129,-3,-1,0,-3","142,125,-9,11,-10,-6,-8,3,-5,1,-3,-2,-6,1,-6,-4,-5,-1,-12,5,-5,-2,-5,0,-4,4,-10,4,-10,-2,-3,-2,-1,-5,-3,-4,-1,-9","22,119,0,7,-12,3,0,4,-6,7,-1,4,1,5","43,192,14,4,29,20,34,19","120,235,16,-5,5,-5,8,4","142,125,4,-4,-2,-5,-8,-8,-3,-6,-1,-6,-2,-2,-2,-7,-6,-4,-1,-5,-3,-4,-1,-4,-6,-4,-6,5,-4,-1,-6,-5,-3,-1,-4,-9,-3,-7","153,74,-5,-10,-3,-2,0,-7,1,-5,-1,-3,5,-5,0,-3,4,-6,5,-3,0,-4,1,-3","160,23,-1,-6,-8,3,-8,2,-12,1","131,23,-7,-1,-6,1,-5,0","113,23,-17,0","11,59,-3,4,-2,6,-1,5,2,9,-2,4,-1,8,0,7,-4,5,0,3","0,110,9,0","-29,50,1,4,-4,9,2,11,4,8,-2,14","-28,96,-2,8,1,6,17,0,4,-1,4,2,4,-1","-54,104,4,-2,2,-4,5,-2,3,3,5,0,7,-3","-77,44,1,8,0,5,-4,4,-3,1,-3,3,2,4,-1,5,1,3","-84,77,2,4,0,4,4,1,-3,8,-2,4,1,3,2,1","-84,77,-3,0,-2,-4,-5,2,1,4,-5,6,-2,-1,-2,0","-102,84,-3,-1,0,4,-2,3,1,3,-2,4,-3,3,-8,0,-3,-1,-4,-3,-1,-3,-5,-4","-151,110,4,5,3,0,3,2,4,1,-1,3,1,5","-114,68,2,3,1,3,4,5,5,5","185,35,-7,1,-7,1,-6,-5,-5,-9","246,82,5,-4,0,-3,7,-5,4,-5,3,-6,7,-3,2,-4","130,-48,-4,4,-3,-2,-4,-4","111,-40,8,6,-4,6,3,3,7,1,1,5,5,-5,9,-1,3,5,1,7,-1,7,-5,6,5,12,-3,2,-7,-1,-3,5,1,5","95,10,3,1,15,0,0,12","328,-92,4,-5,3,-8,-2,-3,-2,-8,2,-8,-3,-4,-3,-9,5,-3","332,-140,-30,-8,1,-7","232,-175,-6,6,-7,8,0,32,21,0,-1,3,2,4,-2,5,1,5,-1,3","346,-115,-3,-8,3,-13,3,0,4,-3,4,-7,1,-13,-5,-2,-3,-7,-6,6,-1,7,2,5,0,4,-4,2,-3,-1,-6,5","321,-267,-1,4,-2,5","290,-28,6,-1,3,6,6,-1","357,327,-2,-3","355,324,-3,1,-2,-6,2,-1,-2,-2,-1,-2,5,1","354,315,0,-4,-5,-16","349,295,-1,3,-5,14","351,331,4,0,3,2","358,333,0,-4,-1,-2","360,346,4,0,2,-4,-5,-4,-3,-5","355,324,0,-6,-1,-3","95,303,-4,18,-7,4,-8,8,-1,8,6,6,3,8,-2,9,2,5","115,331,-1,-7,-5,-3,-3,-3,-7,-4,2,-4,-1,-5,-5,-2","-87,277,0,11,16,8,10,1,9,3,3,5,12,4,1,7,5,1,5,4,13,2,2,4,-3,2,-3,10,-1,6,-4,7","95,303,3,-9,1,-4,-2,-9,1,-4,-2,-6,1,-6,-4,-4,6,-7,0,-5,4,-5,5,2,8,-5,4,-6","357,327,11,-4,20,11","388,334,4,-12","392,322,-2,-2,-20,-5,10,-10,-3,-2,-2,-3,-8,-1,-2,-4,-4,-3,-11,2","561,261,2,-4","564,249,-5,0,-1,-6,2,-2,-5,-2,0,-4,-3,-4,0,-4","552,227,-2,-2,-30,5,-4,10,0,2","514,246,-3,0,-3,2","484,286,-7,-1,-2,5,-9,1","466,291,7,10,7,-1","388,334,22,10,4,12,-1,8,5,2,5,6","423,372,5,2,11,-1,4,-3,5,2","448,372,6,-12,7,-3,1,-6,-5,-4,-3,-7,7,-10,12,-5,5,-8,-1,-7,3,0,0,-5,6,-6","466,291,-19,1,-28,20,-15,7,-12,3","531,167,-3,6,-8,17","520,190,30,10,7,20,-5,7","1026,122,-3,12,7,8,13,2,9,-1","1052,143,8,-4,5,7,9,-4","1074,142,2,-7,-1,-12,-17,-7,4,-6,-10,-1,-9,-4","1021,62,-3,-4,-6,-1,-1,5,-8,4,-2,-1","986,99,4,11,6,9,-4,9,0,5,-1,5,-7,8,-2,5,3,2,4,9,-4,6,-6,8,-5,8,4,2,5,11,7,1,5,4,6,2","1001,204,4,-3,1,-6,7,0,-3,-11,1,-9,10,6,3,-2,6,1,2,3,8,-1,7,-8,1,-10,8,-8,-1,-9,-3,-4","1001,204,2,4,9,6","1012,214,1,-2,5,0,-1,11,5,2","1022,225,6,-8,4,-9,12,0,4,-9,-6,-3,-3,-3,12,-6,8,-12,7,-9,7,-7,3,-7,-2,-10","924,207,-1,8,4,-2,0,7","927,220,5,3,-1,4,2,3,0,11,8,-2,5,8,0,5,6,8,-1,6,13,7,7,-2,0,6,3,2,-1,4","973,283,6,0,3,-6,5,-2,0,-8,0,-8,-10,-8,-1,-12,11,2,2,-10,6,-2,-3,-8,8,-4,4,-1,7,2,1,-4","1022,225,5,2,8,0,10,1,8,6,5,-4,9,-2,-1,-6,4,-4,10,-2","1308,422,0,0","1284,386,-2,-2,-4,-1,-7,0,-4,-5,-5,0,0,-1","1243,399,8,7,11,5,7,7,4,-3,9,0,-1,5,15,4,4,6,6,-6","1167,499,-5,-8,-7,-10,2,-4,6,2,10,-2,8,4,8,-4,9,-7,-1,-3,-8,1,-15,-1,-7,-3,-7,-7,-15,-4,-10,-5,-11,2,-5,1,-6,-6,4,-4,1,-4,-7,-3,-7,-5,-12,-4,-15,0,-16,-4,-11,-5,-5,3,-12,0,-15,6,-10,2,-13,-2,-20,2,-12,0,-5,6,-5,9,-6,2,-12,6,-14,1,-12,2,-3,4,4,12,-7,8,-14,4,-9,5,-2,7","927,220,-6,16,-4,-6,-5,5,3,6,4,0,5,9,-6,1,-9,0,-10,2,-1,7,-4,0,-8,4,-4,-6,7,-6,-6,-3,-2,-4,6,-3,-2,-6,4,-7,1,-8","682,237,6,7,22,0,-2,8,-5,5,-1,8,-7,4,11,11,12,-1,10,11,6,10,10,10,0,7,9,6,-8,5,-4,6,-4,9,5,4,16,-2,11,2,9,8","778,355,11,-12,-1,-8,4,-5,0,-5,-7,1,2,-11,10,-6,14,-7","811,302,-6,-5,-4,-9,10,-4,9,-5,13,-5,14,-2,6,-5,7,-1,12,-2,9,0,1,4,-2,6,1,5","881,279,6,2,1,-8","888,273,9,-6,7,2,8,-1,8,0,1,7,-4,3","917,278,8,1,9,7,12,7,8,-3,7,5,5,-7,-4,-4,11,-1","888,273,7,7,5,3,7,-2,6,-1,4,-2","811,302,4,2,8,-3,10,-6,6,-2,3,-5,8,-2,8,-4,12,-2,11,-1","615,251,4,11,14,6,-1,4,-4,2,-1,9,-9,4,-4,6,-5,5","609,298,16,-5,10,2,6,-2,2,3,7,-1,13,4,1,8,5,6,8,0,1,3,8,1,3,-1,4,3,0,6,4,6,6,3,-4,6,10,0,3,3,-1,4,5,5,-1,5,-2,4,5,4,11,2,12,1,5,2,6,1","752,371,7,-4,3,-8,16,-4","678,371,3,-1,8,3,3,-1,3,4,6,0,2,1,1,4,4,4,5,-2,-1,-3,3,-1,-1,-8,4,-4,4,2,4,1,7,5,7,-1,10,0","750,374,2,-3","609,298,9,9,-1,7,-8,1,0,7,-4,8,5,5,-5,2,3,7,4,12","612,356,10,-3,8,1,2,5,8,1,5,3,2,8,9,2,1,4,5,-3,3,0","710,402,-4,-3,-10,2,-1,-6,10,1,13,-3,19,1","737,394,2,-9,4,1,6,-2,-1,-4,2,-6","803,424,-2,-3,-16,-5,-3,-4,-13,-1,-4,-7,-10,2,-7,-2,-10,-5,2,-2,-3,-3","612,356,-1,9,-7,0,-12,9,-8,1,-11,5,-7,1,-4,-2,-7,1,-7,-6,-9,-2","448,372,-6,8,2,3,-3,11,7,3","448,397,2,-4,5,-4,6,-2","461,387,4,1","465,388,12,7,4,1,3,-3,-4,-5,6,-5,3,0","361,358,3,2,3,3,0,5,4,-2,11,3,5,-2,8,0,12,4,5,0,11,1","461,387,-4,6,-4,2,-3,2,-2,0","448,397,-4,3,-7,3,1,4,-2,4","436,411,14,1","450,412,2,-2,4,-2,-2,-2,5,-4,-3,-3,4,-3,5,-1,0,-7","206,691,14,-5,15,-7,1,-15,3,-4","318,521,-9,-1,-3,-2,0,-5,-4,1,-9,0,-3,2,-4,-2,-4,2,-7,0,-12,2,-10,1,-7,0,-6,-3,-5,0","235,516,0,4,-3,5,6,2,0,4,-3,4,0,4","235,539,9,0,11,4,3,5,8,4,-1,4","265,556,6,2,11,4","296,453,-4,2,-5,-2,-5,2","282,455,3,1,2,3,2,4,2,2,7,-2,2,1,-1,3,-3,2,-2,4,-3,2,0,3,-4,3,-4,1,-8,3,-6,-1,-3,-2","266,482,-4,0,-3,-2,-7,-1,-3,-2,-5,3,-6,0,-7,1,-4,-2","227,479,-1,3,-5,2","221,484,2,4,3,3","226,491,-1,4,9,8,5,1,1,3,-5,9","226,491,-10,4,-7,-2,-5,1,-6,-2,-5,4,-4,-2,0,1","189,495,-5,5,-8,0,0,4,-7,1,-2,-3,-5,2,0,3,-7,1,-5,3","150,511,-4,6,1,4,-3,5,-3,4,3,2,-3,6","227,543,5,-1,3,-3","170,481,-1,-4,-6,0,2,-2,-3,-6","162,469,-2,-2,-9,0,-5,-3,-8,1","138,465,-14,3,-2,3,-10,-2,-1,-1,-7,1","104,469,-5,0,-4,2,1,2,0,2","96,475,3,1,5,-3,1,3,9,-1,7,2,5,0,3,-2,0,8,3,1,4,5","136,489,7,-3,6,4,4,0,7,-3,5,1,5,-2","170,486,0,-5","227,479,-6,-2,-5,-7,-6,-7,-8,-2","202,461,-6,1,-8,-3","188,459,-3,-1,-9,2,-7,4,-3,1","166,465,-2,3,-2,1","170,481,5,-2,4,-1,8,1,5,2,5,2,5,0,3,3,3,0,11,-3,2,1","282,455,-1,4,1,5,-1,4,-5,6,-4,4,-3,3,-3,1","286,437,-6,1,-8,4,-11,-3,-5,-2,-15,0,-8,2,-4,-1,-2,4","227,442,-2,2,2,2,-2,1,-4,-2,-5,3,-1,4,-6,2,-1,3,-6,4","211,560,11,3,17,0,10,1,1,-2,5,-1,10,-5","243,578,9,2,4,-2,9,-3,8,0","150,511,-4,-1,-3,1,-2,-2,-8,-2,-3,-2,-8,-2,2,-3,1,-5,5,-2,6,-4","96,475,-11,3,-2,-2,-8,0","62,495,0,4,-2,2","60,501,2,7","62,508,-2,11,6,0,2,3,3,9,-2,4","85,550,8,-2,6,2","280,420,-9,1,-10,-3","261,418,0,-5,-9,-1,-7,4,-8,-3,-7,0","230,413,-1,7,-5,3","224,423,1,2,1,4,4,3,-5,4,-1,4,3,2","261,418,5,-2,-3,-7,-2,-1","202,396,4,5,1,3,3,2,0,2","210,408,7,1,4,3,5,-1,2,2,2,0","416,415,10,1,10,-5","194,419,-1,3,4,5,4,-1","201,426,2,-3,2,-1,1,-3","206,419,-1,-4,1,-4,4,-3","188,459,3,-4,3,-3,-4,-3","190,449,-4,2,-7,0,-9,1,-5,0,-2,-2,-3,2,-3,-4,5,-4,3,-4,4,-3,4,-3,4,-4,9,-4","186,426,-2,-1","137,455,7,0,2,1,3,-1,4,0,4,3,1,4,8,3","104,469,0,-4,-5,-2,-7,1,-2,-4,-5,0,-2,2,-5,-4,-5,0,-5,2","57,495,1,6,2,0","33,513,7,0,10,2,6,-5,6,-2","-90,419,3,2,4,2,3,-5,6,0,7,1,3,-5,-5,-3,0,-8,-1,-1,-1,-5,-4,-1,4,-6,-3,-6,4,-3,-2,-3,-3,-4,0,-3","-76,551,2,-5,-2,-5,6,0,8,-2","138,465,-1,-5,2,-4","450,412,2,2,8,-3,5,0,-4,6,3,2","1142,45,5,-5,2,3,4,0,1,7,1,4","170,486,1,2,4,0,4,1,2,1,3,3,2,2,3,0","431,127,-3,-2,-4,0","424,125,-4,4,-4,6,-4,3,-3,3,-9,4,-7,0,-2,2,-6,-2,-6,5,-3,-8,-12,2","428,163,4,4,-1,4,3,5,4,-3,3,1,11,0,12,-2,3,1,3,-4,5,2,7,11,9,4,29,4","340,351,-3,-1,-2,1,-3,1,-3,-1,-2,0","250,220,0,37,0,35,-3,8,3,7,-2,4,4,5","353,55,-6,11,-5,2,-1,4,-5,5,-6,1,3,6,5,0,2,3","424,125,-4,-4,-3,-5,0,-2,1,-3,5,-1,3,1,2,-2","428,109,-2,-3,3,-6,4,-5,4,-3,32,-12,9,0","431,115,-3,-6","304,-11,-6,-3,-2,1","308,35,4,3,7,-2,8,2,7,0,6,5","190,449,4,0,-3,-5,5,-4,-1,-4,-3,-1","192,435,-5,-3,-1,-6","206,419,2,2,6,1,2,0","216,422,3,1,5,0","216,422,2,5,-4,2,-3,2,-3,2,-3,-4,-2,-1","203,428,-3,3,-4,1,-4,3","203,428,-2,-2"];
+
+function decodePath(s) {
+  const v = s.split(',');
+  const pts = [];
+  let x = 0, y = 0;
+  for (let i = 0; i < v.length; i += 2) { x += +v[i]; y += +v[i + 1]; pts.push([x / 10, y / 10]); }
+  return pts;
+}
+
+
+/* ══════ js/eclipselab.js ══════ */
+/* ── Cosmoscope · eclipselab.js ─────────────────────────────────────
+   The Eclipses panel and the Eclipse Lab map. Everything shown is
+   computed in the browser by eclipses.js: the live shadow over a
+   world map with a day/night terminator, the central path and its
+   limits, a maximum-eclipse field, the Sun and Moon disks seen from
+   the greatest-eclipse point, and the Moon inside Earth's shadow.  */
+
+
+const GRID = 2;                       /* field resolution, degrees */
+const GW = 360 / GRID, GH = 180 / GRID;
+
+function initEclipseLab(app, { toast }) {
+  const byId = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let all = null;
+  let showPast = false;
+
+  /* ── formatting ── */
+  const fmtUT = (ms, withTime = true) => new Intl.DateTimeFormat(getLang(), withTime
+    ? { dateStyle: 'long', timeStyle: 'short', timeZone: 'UTC' }
+    : { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(ms)) + (withTime ? ' UT' : '');
+  const fmtClock = (ms) => new Date(ms).toISOString().slice(11, 19) + ' UT';
+  const fmtDur = (s) => {
+    if (!s) return '—';
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = Math.round(s % 60);
+    return h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m ${String(r).padStart(2, '0')}s`;
+  };
+  const fmtLatLon = (p) => `${Math.abs(p.lat).toFixed(1)}°${p.lat >= 0 ? 'N' : 'S'} ${Math.abs(p.lon).toFixed(1)}°${p.lon >= 0 ? 'E' : 'W'}`;
+  const num = (v, d) => new Intl.NumberFormat(getLang(), { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
+  const rel = (ms) => {
+    /* whole local calendar days, so "today"/"tomorrow" mean what they say */
+    const a = new Date(ms), b = new Date();
+    const days = Math.round((Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())
+      - Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())) / 86400000);
+    const rtf = new Intl.RelativeTimeFormat(getLang(), { numeric: 'auto' });
+    if (Math.abs(days) < 60) return rtf.format(days, 'day');
+    if (Math.abs(days) < 730) return rtf.format(Math.round(days / 30.44), 'month');
+    return rtf.format(Math.round(days / 365.25), 'year');
+  };
+  const nameOf = (e) => t(`ecl.n.${e.kind}.${e.type}`);
+  const typeClass = (e) => ({ total: 'tot', annular: 'ann', hybrid: 'hyb', partial: 'par', penumbral: 'pen' }[e.type]);
+
+  /* ── the list ── */
+  function compute() {
+    if (all) return all;
+    const now = Date.now(), year = 365.25 * 86400000;
+    all = findEclipses(now - 4 * year, now + 12 * year);
+    return all;
+  }
+
+  function factsOf(e) {
+    if (e.kind === 'solar') {
+      const rows = [[t('ecl.magnitude'), num(e.magnitude, 3)]];
+      if (e.durationS) rows.push([t(e.type === 'annular' ? 'ecl.annularity' : 'ecl.totality'), fmtDur(e.durationS)]);
+      if (e.widthKm) rows.push([t('ecl.width'), `${num(e.widthKm, 0)} ${t('unit.km')}`]);
+      rows.push([t('ecl.where'), fmtLatLon(e.ge)]);
+      if (e.sunAltDeg !== undefined) rows.push([t('ecl.sunAlt'), `${num(e.sunAltDeg, 0)}°`]);
+      rows.push([t('ecl.gamma'), num(e.gamma, 4)]);
+      return rows;
+    }
+    const rows = [[t('ecl.umbral'), num(e.umbral, 3)], [t('ecl.penumbral'), num(e.penumbral, 3)]];
+    if (e.durTotS) rows.push([t('ecl.totalPhase'), fmtDur(e.durTotS)]);
+    if (e.durParS) rows.push([t('ecl.partialPhase'), fmtDur(e.durParS)]);
+    rows.push([t('ecl.gamma'), num(e.gamma, 4)]);
+    return rows;
+  }
+
+  function renderList() {
+    const box = byId('ecl-list');
+    if (!box) return;
+    const list = compute();
+    const now = Date.now();
+    const shown = showPast ? list.filter((e) => e.utMs < now).reverse() : list.filter((e) => e.utMs >= now);
+    box.innerHTML = shown.slice(0, 24).map((e) => `
+      <article class="ecl-card ${typeClass(e)}" data-k="${list.indexOf(e)}">
+        <div class="ecl-top"><span class="ecl-ico" aria-hidden="true">${e.kind === 'solar' ? '🌑' : '🌕'}</span>
+          <b>${esc(nameOf(e))}</b><span class="badge info">${esc(rel(e.utMs))}</span></div>
+        <div class="meta">${esc(t('ecl.greatest'))}: ${esc(fmtUT(e.utMs))}</div>
+        <dl class="ecl-facts">${factsOf(e).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+        <div class="row gap"><button class="btn primary" data-act="map">${esc(t('ecl.map'))}</button>
+          <button class="btn" data-act="watch">${esc(t('ecl.watch'))}</button></div>
+      </article>`).join('') + `<p class="hint">✔ ${esc(t('ecl.verified'))}</p>`;
+    box.querySelectorAll('.ecl-card').forEach((card) => {
+      const e = list[+card.dataset.k];
+      card.querySelector('[data-act="map"]').addEventListener('click', () => openLab(e));
+      card.querySelector('[data-act="watch"]').addEventListener('click', () => watch(e));
+    });
+  }
+
+  function openPanel() {
+    const box = byId('ecl-list');
+    if (all) { renderList(); return; }
+    box.innerHTML = `<div class="spinner" role="status"></div><p class="hint" style="text-align:center">${esc(t('ecl.computing'))}</p>`;
+    setTimeout(renderList, 30);
+  }
+
+  byId('ecl-seg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    showPast = b.dataset.v === 'past';
+    byId('ecl-seg').querySelectorAll('button').forEach((x) => {
+      x.classList.toggle('active', x === b);
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+    renderList();
+    app.audio.ui('click');
+  }));
+  document.querySelector('.rail-btn[data-tab="eclipses"]').addEventListener('click', openPanel);
+
+  /* ── jump into the 3D scene ── */
+  function watch(e) {
+    /* on phones the side panel covers the scene: get it out of the way */
+    if (window.innerWidth < 900) {
+      const panel = byId('panel');
+      if (panel && !panel.classList.contains('hidden')) byId('panel-close')?.click();
+    }
+    const lead = e.kind === 'solar' ? 40 * 60000 : Math.max(30 * 60000, (e.durParS || e.durPenS) * 500);
+    app.actions.jumpTo({ ms: e.utMs - lead, bodyKey: e.kind === 'solar' ? 'earth' : 'moon', speedIdx: 1, scale: 'true', closeUp: e.kind === 'solar' ? 3.2 : 4.5 });
+    toast(t(e.kind === 'solar' ? 'ecl.jumped' : 'ecl.jumpedLunar', { date: fmtUT(e.utMs) }), '', 6500);
+    app.audio.ui('select');
+  }
+
+  /* ── Eclipse Lab: map ── */
+  const lab = byId('ecl-lab');
+  const map = byId('ecl-map'), mctx = map.getContext('2d');
+  const disk = byId('ecl-disk'), dctx = disk.getContext('2d');
+  const slider = byId('ecl-time');
+  const field = document.createElement('canvas');
+  field.width = GW; field.height = GH;
+  const fctx = field.getContext('2d');
+  const fimg = fctx.createImageData(GW, GH);
+  const grid = [];
+  for (let j = 0; j < GH; j++) {
+    for (let i = 0; i < GW; i++) grid.push(geodeticToEcef(90 - (j + 0.5) * GRID, -180 + (i + 0.5) * GRID));
+  }
+  let cur = null, path = [], maxField = null, view = 'live', playing = false, raf = 0, range = [0, 0];
+  let pos = 0;                 /* minutes from greatest eclipse; float, the slider only mirrors it */
+  let opener = null;           /* element to refocus when the Lab closes */
+  let maxToken = 0;            /* invalidates an in-flight Maximum-view build */
+  const maxCache = new Map();  /* eclipse jdTT → Float32Array */
+
+  const X = (lon) => (lon + 180) / 360 * map.width;
+  const Y = (lat) => (90 - lat) / 180 * map.height;
+
+  /* land rings unwrapped across the antimeridian and drawn three times */
+  const landPaths = WORLD_LAND.map(decodePath).map((pts) => {
+    const out = [];
+    let off = 0, prev = null;
+    for (const [lon, lat] of pts) {
+      if (prev !== null && lon + off - prev > 180) off -= 360;
+      else if (prev !== null && lon + off - prev < -180) off += 360;
+      out.push([lon + off, lat]);
+      prev = lon + off;
+    }
+    return out;
+  });
+  const borderPaths = WORLD_BORDERS.map(decodePath);
+
+  function drawBase() {
+    const W = map.width, H = map.height;
+    mctx.fillStyle = '#0a1426';
+    mctx.fillRect(0, 0, W, H);
+    mctx.strokeStyle = 'rgba(127,212,255,0.08)';
+    mctx.lineWidth = 1;
+    for (let lon = -150; lon <= 150; lon += 30) { mctx.beginPath(); mctx.moveTo(X(lon), 0); mctx.lineTo(X(lon), H); mctx.stroke(); }
+    for (let lat = -60; lat <= 60; lat += 30) { mctx.beginPath(); mctx.moveTo(0, Y(lat)); mctx.lineTo(W, Y(lat)); mctx.stroke(); }
+    mctx.fillStyle = '#20314f';
+    for (const shift of [-360, 0, 360]) {
+      mctx.beginPath();
+      for (const ring of landPaths) {
+        ring.forEach(([lon, lat], k) => (k ? mctx.lineTo : mctx.moveTo).call(mctx, X(lon + shift), Y(lat)));
+        mctx.closePath();
+      }
+      mctx.fill('evenodd');
+    }
+  }
+
+  function strokeLines(lines, style, width) {
+    mctx.strokeStyle = style;
+    mctx.lineWidth = width;
+    for (const pts of lines) {
+      mctx.beginPath();
+      let prev = null;
+      for (const [lon, lat] of pts) {
+        if (prev === null || Math.abs(lon - prev) > 180) mctx.moveTo(X(lon), Y(lat));
+        else mctx.lineTo(X(lon), Y(lat));
+        prev = lon;
+      }
+      mctx.stroke();
+    }
+  }
+
+  function computeField(jd) {
+    const d = fimg.data;
+    const sm = sunMoon(jd);
+    const useMax = view === 'max' && maxField !== null;   /* live until the max field is ready */
+    for (let k = 0; k < grid.length; k++) {
+      let r = 0, g = 0, b = 0, a = 0;
+      if (cur.kind === 'solar') {
+        const v = useMax ? maxField[k] : localSolar(jd, grid[k], sm);
+        const mag = useMax ? v : v.mag;
+        if (!useMax && v.alt < 0) { r = 2; g = 4; b = 14; a = 150; }
+        if (mag > 0) {
+          const central = !useMax ? (v.total || v.annular) : mag >= 0.999;
+          if (central) { r = 255; g = 250; b = 230; a = 250; }
+          else { r = 255; g = 120 - 60 * mag; b = 40; a = 40 + 175 * mag; }
+        }
+      } else {
+        const alt = moonAltitude(jd, grid[k], sm);
+        if (alt < 0) { r = 2; g = 4; b = 14; a = 165; }
+        else { r = 127; g = 212; b = 255; a = 26; }
+      }
+      d[k * 4] = r; d[k * 4 + 1] = g; d[k * 4 + 2] = b; d[k * 4 + 3] = a;
+    }
+    fctx.putImageData(fimg, 0, 0);
+  }
+
+  /* maximum obscuration over the whole event, built in ~30 ms slices so
+     the page stays responsive; cached per eclipse */
+  function buildMaxField(done) {
+    const e = cur, token = ++maxToken;
+    if (maxCache.has(e.jdTT)) { maxField = maxCache.get(e.jdTT); done(); return; }
+    const out = new Float32Array(grid.length);
+    let m = range[0];
+    byId('ecl-clock').textContent = t('ecl.computing');
+    const step = () => {
+      if (token !== maxToken || cur !== e) return;
+      const t0 = performance.now();
+      while (m <= range[1] && performance.now() - t0 < 30) {
+        const jd = e.jdTT + m / 1440;
+        const sm = sunMoon(jd);
+        for (let k = 0; k < grid.length; k++) {
+          const v = localSolar(jd, grid[k], sm);
+          if (v.mag > out[k]) out[k] = v.total || v.annular ? 1 : Math.min(0.998, v.mag);
+        }
+        m += 4;
+      }
+      if (m <= range[1]) { setTimeout(step, 0); return; }
+      maxCache.set(e.jdTT, out);
+      maxField = out;
+      done();
+    };
+    setTimeout(step, 0);
+  }
+
+  function drawMap(jd) {
+    drawBase();
+    computeField(jd);
+    mctx.imageSmoothingEnabled = true;
+    mctx.imageSmoothingQuality = 'high';
+    mctx.drawImage(field, 0, 0, map.width, map.height);
+    strokeLines(landPaths.map((r) => r.map(([lon, lat]) => [((lon + 540) % 360) - 180, lat])), 'rgba(170,200,240,0.35)', 1);
+    strokeLines(borderPaths, 'rgba(170,200,240,0.18)', 0.8);
+    if (cur.kind === 'solar' && path.length) {
+      strokeLines([path.map((p) => [p.north.lon, p.north.lat]), path.map((p) => [p.south.lon, p.south.lat])], 'rgba(255,196,107,0.9)', 1.6);
+      strokeLines([path.map((p) => [p.center.lon, p.center.lat])], 'rgba(255,240,200,0.95)', 2.4);
+    }
+    const ge = cur.kind === 'solar' ? cur.ge : cur.zenith;
+    star(X(ge.lon), Y(ge.lat));
+    if (cur.kind === 'solar') {
+      const g = axisGround(jd);
+      if (g) {
+        mctx.fillStyle = '#ff6b81';
+        mctx.beginPath(); mctx.arc(X(g.lon), Y(g.lat), 7, 0, Math.PI * 2); mctx.fill();
+      }
+    }
+    drawLegend();
+  }
+
+  function star(x, y) {
+    mctx.save();
+    mctx.translate(x, y);
+    mctx.fillStyle = '#ffc46b';
+    mctx.strokeStyle = '#05070f';
+    mctx.lineWidth = 2;
+    mctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 ? 6 : 15, a = -Math.PI / 2 + i * Math.PI / 5;
+      mctx[i ? 'lineTo' : 'moveTo'](r * Math.cos(a), r * Math.sin(a));
+    }
+    mctx.closePath(); mctx.stroke(); mctx.fill();
+    mctx.restore();
+  }
+
+  function drawLegend() {
+    const items = cur.kind === 'solar'
+      ? [['rgba(255,240,200,0.95)', t('ecl.legendCentral')], ['rgba(255,110,40,0.75)', t('ecl.legendPartial')],
+         ['rgba(2,4,14,0.9)', t('ecl.legendNight')], ['#ffc46b', `★ ${t('ecl.greatest')}`]]
+      : [['rgba(127,212,255,0.35)', t('ecl.legendMoonUp')], ['rgba(2,4,14,0.9)', t('ecl.legendNight')], ['#ffc46b', `★ ${t('ecl.greatest')}`]];
+    const W = map.width, H = map.height;
+    /* keep the legend readable (≥ ~10 CSS px) however small the map is shown */
+    const k = Math.max(1, (10 * W / Math.max(1, map.clientWidth || W)) / 22);
+    mctx.font = `${Math.round(22 * k)}px system-ui, sans-serif`;
+    let x = 24 * k;
+    const y = H - 26 * k;
+    mctx.fillStyle = 'rgba(5,7,15,0.72)';
+    const total = items.reduce((s, [, l]) => s + mctx.measureText(l).width + 60 * k, 0);
+    mctx.fillRect(12, y - 26 * k, Math.min(W - 24, total + 8 * k), 40 * k);
+    for (const [c, label] of items) {
+      mctx.fillStyle = c;
+      mctx.fillRect(x, y - 14 * k, 26 * k, 16 * k);
+      mctx.fillStyle = '#e8eefc';
+      mctx.fillText(label, x + 34 * k, y);
+      x += mctx.measureText(label).width + 60 * k;
+    }
+  }
+
+  /* ── side diagram ── */
+  function drawDisk(jd) {
+    const W = disk.width, H = disk.height;
+    dctx.fillStyle = '#05070f';
+    dctx.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2;
+    if (cur.kind === 'solar') {
+      const v = solarDiskView(jd, geodeticToEcef(cur.ge.lat, cur.ge.lon));
+      const k = (W * 0.27) / v.rs;
+      const grad = dctx.createRadialGradient(cx, cy, 0, cx, cy, v.rs * k);
+      grad.addColorStop(0, '#fff6d8'); grad.addColorStop(0.8, '#ffd27a'); grad.addColorStop(1, '#f39a3a');
+      const covered = localSolar(jd, geodeticToEcef(cur.ge.lat, cur.ge.lon), null, true);
+      if (covered.total) {
+        dctx.strokeStyle = 'rgba(220,235,255,0.55)';
+        for (let i = 0; i < 40; i++) {
+          const a = i / 40 * Math.PI * 2, r0 = v.rs * k, r1 = r0 * (1.4 + 0.5 * Math.sin(i * 7.3));
+          dctx.beginPath(); dctx.moveTo(cx + r0 * Math.cos(a), cy + r0 * Math.sin(a));
+          dctx.lineTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a)); dctx.stroke();
+        }
+      }
+      dctx.fillStyle = grad;
+      dctx.beginPath(); dctx.arc(cx, cy, v.rs * k, 0, Math.PI * 2); dctx.fill();
+      dctx.fillStyle = '#0b0d16';
+      dctx.beginPath(); dctx.arc(cx - v.dx * k, cy - v.dy * k, v.rm * k, 0, Math.PI * 2); dctx.fill();
+      label(`${t('ecl.fromHere')} · ${num(Math.max(0, covered.mag), 3)}`);
+      if (v.alt < 0) { dctx.fillStyle = 'rgba(5,7,15,0.7)'; dctx.fillRect(0, 0, W, H); }
+    } else {
+      const v = lunarShadowView(jd);
+      const k = (W * 0.42) / v.rhoP;
+      dctx.fillStyle = 'rgba(127,140,170,0.16)';
+      dctx.beginPath(); dctx.arc(cx, cy, v.rhoP * k, 0, Math.PI * 2); dctx.fill();
+      dctx.fillStyle = 'rgba(40,24,30,0.9)';
+      dctx.beginPath(); dctx.arc(cx, cy, v.rhoU * k, 0, Math.PI * 2); dctx.fill();
+      const mx = cx - v.dx * k, my = cy - v.dy * k;
+      const dist = Math.hypot(v.dx, v.dy);
+      const inUmbra = Math.max(0, Math.min(1, (v.rhoU + v.sm - dist) / (2 * v.sm)));
+      const inPen = Math.max(0, Math.min(1, (v.rhoP + v.sm - dist) / (2 * v.sm)));
+      const lit = 1 - 0.35 * inPen;
+      const r = Math.round(230 * lit - 60 * inUmbra), g = Math.round(225 * lit - 175 * inUmbra), b = Math.round(215 * lit - 190 * inUmbra);
+      dctx.fillStyle = `rgb(${Math.max(r, 90)},${Math.max(g, 22)},${Math.max(b, 14)})`;
+      dctx.beginPath(); dctx.arc(mx, my, v.sm * k, 0, Math.PI * 2); dctx.fill();
+      label(t('ecl.shadowView'));
+    }
+    function label(s) {
+      dctx.fillStyle = '#93a0bd';
+      dctx.font = '20px system-ui, sans-serif';
+      dctx.textAlign = 'center';
+      dctx.fillText(s, cx, H - 18);
+      dctx.textAlign = 'left';
+    }
+  }
+
+  function setTimeFromSlider() {
+    const jd = cur.jdTT + pos / 1440;
+    byId('ecl-clock').textContent = fmtClock(jdToMs(jd - dtSeconds(jd) / 86400));
+    drawMap(jd);
+    drawDisk(jd);
+  }
+
+  function relabel() {
+    const e = cur;
+    byId('ecl-lab-title').textContent = `${nameOf(e)} · ${fmtUT(e.utMs, false)}`;
+    byId('ecl-lab-facts').innerHTML = [[t('ecl.greatest'), fmtUT(e.utMs)], ...factsOf(e)]
+      .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+    byId('ecl-play').textContent = playing ? `⏸ ${t('ecl.pause')}` : `▶ ${t('ecl.play')}`;
+  }
+
+  function openLab(e) {
+    if (lab.hidden) opener = document.activeElement;
+    cur = e;
+    stop();
+    maxToken++;
+    relabel();
+    const half = e.kind === 'solar' ? 200 : Math.ceil(e.durPenS / 120 + 25);
+    range = [-half, half];
+    slider.min = -half; slider.max = half; slider.value = 0; pos = 0;
+    path = e.kind === 'solar' ? solarPath(e.jdTT, 2, 4) : [];
+    maxField = null;
+    view = 'live';
+    syncViewSeg();
+    byId('ecl-view').hidden = e.kind !== 'solar';
+    lab.hidden = false;
+    byId('ecl-lab-close').focus();
+    setTimeFromSlider();
+    app.audio.ui('open');
+  }
+
+  function syncViewSeg() {
+    byId('ecl-view').querySelectorAll('button').forEach((b) => {
+      b.classList.toggle('active', b.dataset.v === view);
+      b.setAttribute('aria-pressed', String(b.dataset.v === view));
+    });
+  }
+  byId('ecl-view').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    view = b.dataset.v;
+    syncViewSeg();
+    if (view === 'max' && !maxField) buildMaxField(() => { if (view === 'max') setTimeFromSlider(); });
+    else setTimeFromSlider();
+  }));
+
+  function stop() {
+    playing = false;
+    cancelAnimationFrame(raf);
+    byId('ecl-play').textContent = `▶ ${t('ecl.play')}`;
+  }
+  function tick() {
+    if (!playing) return;
+    pos += (range[1] - range[0]) / 600;
+    if (pos > range[1]) pos = range[0];
+    slider.value = pos;
+    setTimeFromSlider();
+    raf = requestAnimationFrame(tick);
+  }
+  byId('ecl-play').addEventListener('click', () => {
+    if (playing) { stop(); return; }
+    playing = true;
+    byId('ecl-play').textContent = `⏸ ${t('ecl.pause')}`;
+    raf = requestAnimationFrame(tick);
+  });
+  slider.addEventListener('input', () => { stop(); pos = +slider.value; setTimeFromSlider(); });
+
+  function closeLab() {
+    stop();
+    maxToken++;
+    lab.hidden = true;
+    app.audio.ui('close');
+    if (opener && opener.isConnected && opener.offsetParent !== null) opener.focus();
+    opener = null;
+  }
+  byId('ecl-lab-close').addEventListener('click', closeLab);
+  lab.addEventListener('click', (ev) => { if (ev.target === lab) closeLab(); });
+  /* while the Lab is open it owns the keyboard: Escape closes only the Lab,
+     and the 3D app's global shortcuts (Space, digits, H, S, R…) stay out.
+     Default actions (Space/Enter on buttons, Tab, slider arrows) still work. */
+  window.addEventListener('keydown', (ev) => {
+    if (lab.hidden) return;
+    ev.stopImmediatePropagation();
+    if (ev.key === 'Escape') { ev.preventDefault(); closeLab(); return; }
+    if (ev.key === 'Tab') {
+      /* keep focus inside the dialog */
+      const f = [...lab.querySelectorAll('button:not([hidden]), input, [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => el.offsetParent !== null && !el.disabled);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    }
+  }, true);
+  byId('ecl-watch').addEventListener('click', () => { const e = cur; closeLab(); watch(e); });
+
+  byId('ecl-save').addEventListener('click', () => {
+    const out = document.createElement('canvas');
+    out.width = map.width; out.height = map.height + 70;
+    const o = out.getContext('2d');
+    o.fillStyle = '#05070f'; o.fillRect(0, 0, out.width, out.height);
+    o.drawImage(map, 0, 70);
+    o.fillStyle = '#e8eefc'; o.font = 'bold 30px system-ui, sans-serif';
+    o.fillText(`${byId('ecl-lab-title').textContent} — ${byId('ecl-clock').textContent}`, 24, 46);
+    o.fillStyle = '#93a0bd'; o.font = '20px system-ui, sans-serif';
+    o.textAlign = 'right'; o.fillText('Cosmoscope', out.width - 24, 46);
+    out.toBlob((blob) => {
+      const d = new Date(cur.utMs).toISOString().slice(0, 10);
+      download(blob, `cosmoscope-eclipse-${d}.png`);
+    }, 'image/png');
+    app.audio.ui('shutter');
+  });
+
+  return {
+    refresh() {
+      if (all && !byId('ecl-list').closest('section').hidden) renderList();
+      if (cur && !lab.hidden) { relabel(); setTimeFromSlider(); }
+    },
+    list: () => compute(),
+    openLab,
+  };
+}
+
+
 /* ══════ js/main.js ══════ */
 /* ── Cosmoscope · main.js ───────────────────────────────────────────
    Boot + simulation clock + camera + input + render loop.          */
@@ -4291,6 +5900,7 @@ function initUI(app) {
 
 const SPEEDS = [1, 60, 600, 3600, 21600, 86400, 259200, 604800, 2629800, 15778800, 31557600];
 const TAU = Math.PI * 2;
+const AXES = BODIES.map(poleAxisScene);
 
 const PATH_COLORS = {
   mercury: [0.62, 0.58, 0.55], venus: [0.9, 0.78, 0.5], earth: [0.35, 0.62, 1.0],
@@ -4425,9 +6035,54 @@ function boot() {
         state.scene = computeScene(state.simMs, m);
         const st = state.scene[state.selected];
         cam.dist = Math.max(st.radius * 5.5, st.radius + 0.02);
+        /* the new scale may put another world (an inflated Earth behind the
+           Moon, say) around or in front of the camera: swing around it */
+        for (let k = 0; k < 10; k++) {
+          const sp = Math.sin(cam.phi);
+          const p = [st.pos[0] + cam.dist * sp * Math.cos(cam.theta), st.pos[1] + cam.dist * Math.cos(cam.phi),
+            st.pos[2] + cam.dist * sp * Math.sin(cam.theta)];
+          const seg = v3.sub(st.pos, p), segLen = v3.len(seg), dir = v3.scale(seg, 1 / segLen);
+          const blocked = state.scene.some((o, j) => {
+            if (j === state.selected) return false;
+            const w = v3.sub(o.pos, p);
+            const along = Math.max(0, Math.min(segLen, w[0] * dir[0] + w[1] * dir[1] + w[2] * dir[2]));
+            return v3.len(v3.sub(w, v3.scale(dir, along))) < o.radius * 1.3;
+          });
+          if (!blocked) break;
+          cam.theta += 0.6;
+        }
         refreshPaths(true);
       },
       setActivity(x) { state.activityTarget = x; },
+      /* move time, scale and camera to a moment (used by the eclipse list) */
+      jumpTo({ ms, bodyKey, speedIdx = 1, scale = 'true', closeUp = 0 }) {
+        state.simMs = ms;
+        state.paused = false;
+        ui.updatePlayButton();
+        app.actions.setSpeedIdx(speedIdx);
+        if (state.scaleMode !== scale) {
+          state.scaleMode = scale;
+          document.querySelectorAll('#scale-seg button').forEach((b) => {
+            const on = b.dataset.s === scale;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-pressed', String(on));
+          });
+        }
+        state.scene = computeScene(ms, state.scaleMode);
+        refreshPaths(true);
+        if (state.mode !== 'orbit') { state.mode = 'orbit'; ui.syncCamSeg(); }
+        app.actions.select(BODY_INDEX[bodyKey], true);
+        if (closeUp > 0) {
+          /* hover on the Sun's side a few radii out: a solar eclipse shows
+             the Moon's shadow on Earth's day side, a lunar one the Moon's
+             Earth-facing hemisphere inside Earth's shadow */
+          const st = state.scene[state.selected];
+          const sunDir = v3.norm(v3.scale(st.pos, -1));
+          cam.dist = st.radius * closeUp;
+          cam.theta = Math.atan2(sunDir[2], sunDir[0]) + 0.18;
+          cam.phi = Math.max(0.05, Math.min(Math.PI - 0.05, Math.acos(sunDir[1]) - 0.12));
+        }
+      },
       refreshNeoPoints() {
         state.neoRel = [];
         if (!state.neoVisualize || !state.neoData.length) return;
@@ -4446,6 +6101,8 @@ function boot() {
 
   const ui = initUI(app);
   ui.setSelChip();
+  const lab = initEclipseLab(app, { toast });
+  app.onLangChange = () => lab.refresh();
 
   /* ── orbit paths ── */
   let pathsAtMs = 0;
@@ -4710,10 +6367,9 @@ function boot() {
     /* bodies → engine frame */
     const bodies = state.scene.map((st, i) => {
       const b = BODIES[i];
-      const tilt = b.tiltDeg * Math.PI / 180;
       return {
         pos: st.pos, radius: st.radius,
-        axis: [Math.sin(tilt), Math.cos(tilt), 0],
+        axis: AXES[i],
         spin: st.spin, shaderId: b.shaderId,
         ringInner: st.ringInner || 0, ringOuter: st.ringOuter || 0,
       };
@@ -4741,6 +6397,7 @@ function boot() {
       sunActivity: state.activity,
       bodies,
       beltInner: dist(2.2), beltOuter: dist(3.25),
+      showcase: state.scaleMode === 'showcase',
       showOrbits: state.showOrbits,
       showPoints: state.neoVisualize,
     };

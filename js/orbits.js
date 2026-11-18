@@ -5,6 +5,8 @@
    Scene frame: X = ecliptic x, Y = ecliptic north (z), Z = -ecliptic y
    (right-handed, Y-up for rendering).                                */
 
+import { moonJ2000Km } from './lunar.js';
+
 export const J2000_JD = 2451545.0;
 export const AU_KM = 149597870.7;
 export const DAY_MS = 86400000;
@@ -98,38 +100,27 @@ export function heliocentric(planetKey, T) {
   return [xEcl, yEcl, zEcl];
 }
 
-/* Moon: simplified Keplerian orbit around Earth (good to ~a degree —
-   plenty for visualization). a in au. */
-const MOON = {
-  a: 384400 / AU_KM,
-  e: 0.0549,
-  i: 5.145 * DEG,
-  periodDays: 27.321661,
-  nodePeriodYears: -18.6,   /* nodal regression */
-  perigeePeriodYears: 8.85, /* apsidal precession */
-  L0: 218.316 * DEG,        /* mean longitude at J2000 */
-  P0: 83.353 * DEG,         /* mean longitude of perigee at J2000 */
-  N0: 125.045 * DEG,        /* mean longitude of node at J2000 */
-};
+/* Moon: truncated ELP-2000/82 lunar theory (Meeus ch. 47, see
+   lunar.js) — ~10" accuracy, enough for real eclipse geometry.
+   T counts Julian centuries of UT from J2000; ΔT is applied inside. */
+const MOON = { periodDays: 27.321661 };
+const EMB_MOON_FRACTION = 1 / (1 + 81.30056); /* Moon mass / (Earth + Moon) */
+
+function centuriesToMs(T) {
+  return (T * 36525 + 2451545.0 - 2440587.5) * DAY_MS;
+}
 
 export function moonGeocentric(T) {
-  const d = T * 36525; /* days since J2000 */
-  const L = MOON.L0 + (2 * Math.PI / MOON.periodDays) * d;
-  const P = MOON.P0 + (2 * Math.PI / (MOON.perigeePeriodYears * 365.25)) * d;
-  const N = MOON.N0 + (2 * Math.PI / (MOON.nodePeriodYears * 365.25)) * d;
-  const M = wrapAngle(L - P);
-  const w = P - N;
-  const E = solveKepler(M, MOON.e);
-  const xp = MOON.a * (Math.cos(E) - MOON.e);
-  const yp = MOON.a * Math.sqrt(1 - MOON.e * MOON.e) * Math.sin(E);
-  const cw = Math.cos(w), sw = Math.sin(w);
-  const cI = Math.cos(MOON.i), sI = Math.sin(MOON.i);
-  const cn = Math.cos(N), sn = Math.sin(N);
-  return [
-    (cw * cn - sw * sn * cI) * xp + (-sw * cn - cw * sn * cI) * yp,
-    (cw * sn + sw * cn * cI) * xp + (-sw * sn + cw * cn * cI) * yp,
-    (sw * sI) * xp + (cw * sI) * yp,
-  ];
+  const v = moonJ2000Km(centuriesToMs(T));
+  return [v[0] / AU_KM, v[1] / AU_KM, v[2] / AU_KM];
+}
+
+/* Earth's centre: Standish gives the Earth–Moon barycentre, which sits
+   ~4,670 km from Earth's centre toward the Moon. */
+export function earthHeliocentric(T) {
+  const b = heliocentric('earth', T);
+  const m = moonGeocentric(T);
+  return [b[0] - EMB_MOON_FRACTION * m[0], b[1] - EMB_MOON_FRACTION * m[1], b[2] - EMB_MOON_FRACTION * m[2]];
 }
 
 /* ── Physical data ──────────────────────────────────────────────────
@@ -137,19 +128,33 @@ export function moonGeocentric(T) {
    planetary fact sheets (nssdc.gsfc.nasa.gov/planetary/factsheet).
    Negative rotation = retrograde.                                   */
 export const BODIES = [
-  { key: 'sun',     glyph: '☉', radiusKm: 695700,   tiltDeg: 7.25,   rotHours: 609.12,  shaderId: 0 },
-  { key: 'mercury', glyph: '☿', radiusKm: 2440.5,   tiltDeg: 0.034,  rotHours: 1407.6,  shaderId: 1 },
-  { key: 'venus',   glyph: '♀', radiusKm: 6051.8,   tiltDeg: 177.36, rotHours: -5832.6, shaderId: 2 },
-  { key: 'earth',   glyph: '⊕', radiusKm: 6378.137, tiltDeg: 23.44,  rotHours: 23.9345, shaderId: 3 },
-  { key: 'moon',    glyph: '☾', radiusKm: 1738.1,   tiltDeg: 6.68,   rotHours: 655.72,  shaderId: 4, parent: 'earth' },
-  { key: 'mars',    glyph: '♂', radiusKm: 3396.2,   tiltDeg: 25.19,  rotHours: 24.6229, shaderId: 5 },
-  { key: 'jupiter', glyph: '♃', radiusKm: 71492,    tiltDeg: 3.13,   rotHours: 9.925,   shaderId: 6 },
-  { key: 'saturn',  glyph: '♄', radiusKm: 60268,    tiltDeg: 26.73,  rotHours: 10.656,  shaderId: 7,
+  { key: 'sun',     glyph: '☉', radiusKm: 695700,   tiltDeg: 7.25,   rotHours: 609.12,  poleRA: 286.13, poleDec: 63.87, shaderId: 0 },
+  { key: 'mercury', glyph: '☿', radiusKm: 2440.5,   tiltDeg: 0.034,  rotHours: 1407.6,  poleRA: 281.0103, poleDec: 61.4155, shaderId: 1 },
+  { key: 'venus',   glyph: '♀', radiusKm: 6051.8,   tiltDeg: 177.36, rotHours: -5832.6, poleRA: 272.76, poleDec: 67.16, shaderId: 2 },
+  { key: 'earth',   glyph: '⊕', radiusKm: 6378.137, tiltDeg: 23.44,  rotHours: 23.9345, poleRA: 0.0, poleDec: 90.0, shaderId: 3 },
+  /* Moon pole: the IAU mean pole only — the ±1.5° physical-libration terms (E1…) are omitted */
+  { key: 'moon',    glyph: '☾', radiusKm: 1738.1,   tiltDeg: 6.68,   rotHours: 655.72,  poleRA: 269.9949, poleDec: 66.5392, shaderId: 4, parent: 'earth' },
+  { key: 'mars',    glyph: '♂', radiusKm: 3396.2,   tiltDeg: 25.19,  rotHours: 24.6229, poleRA: 317.68143, poleDec: 52.8865, shaderId: 5 },
+  { key: 'jupiter', glyph: '♃', radiusKm: 71492,    tiltDeg: 3.13,   rotHours: 9.925,   poleRA: 268.056595, poleDec: 64.495303, shaderId: 6 },
+  { key: 'saturn',  glyph: '♄', radiusKm: 60268,    tiltDeg: 26.73,  rotHours: 10.656,  poleRA: 40.589, poleDec: 83.537, shaderId: 7,
     /* NSSDC Saturnian Rings Fact Sheet: C-ring inner → A-ring outer */
     ringInnerKm: 74658, ringOuterKm: 136780 },
-  { key: 'uranus',  glyph: '♅', radiusKm: 25559,    tiltDeg: 97.77,  rotHours: -17.24,  shaderId: 8 },
-  { key: 'neptune', glyph: '♆', radiusKm: 24764,    tiltDeg: 28.32,  rotHours: 16.11,   shaderId: 9 },
+  { key: 'uranus',  glyph: '♅', radiusKm: 25559,    tiltDeg: 97.77,  rotHours: -17.24,  poleRA: 257.311, poleDec: -15.175, shaderId: 8 },
+  { key: 'neptune', glyph: '♆', radiusKm: 24764,    tiltDeg: 28.32,  rotHours: 16.11,   poleRA: 299.36, poleDec: 43.46, shaderId: 9 },
 ];
+
+/* North-pole direction of each body in the scene frame, from the IAU
+   WGCCRE pole right ascension/declination (J2000 equator), rotated
+   into the J2000 ecliptic and then into the Y-up scene frame. This
+   gives Earth its real seasons and Saturn its real ring tilt. */
+const OBLIQUITY_J2000 = 23.4392911 * DEG;
+export function poleAxisScene(body) {
+  const ra = body.poleRA * DEG, de = body.poleDec * DEG;
+  const xq = Math.cos(de) * Math.cos(ra), yq = Math.cos(de) * Math.sin(ra), zq = Math.sin(de);
+  const ce = Math.cos(OBLIQUITY_J2000), se = Math.sin(OBLIQUITY_J2000);
+  const ecl = [xq, ce * yq + se * zq, -se * yq + ce * zq];
+  return [ecl[0], ecl[2], -ecl[1]];
+}
 
 export const BODY_INDEX = Object.fromEntries(BODIES.map((b, i) => [b.key, i]));
 
@@ -219,7 +224,7 @@ export function computeScene(dateMs, mode) {
       out.push({ pos: moonScene, radius: radius(b.radiusKm), spin, distAu: dSun });
       continue;
     }
-    const ecl = heliocentric(b.key, T);
+    const ecl = b.key === 'earth' ? earthHeliocentric(T) : heliocentric(b.key, T);
     const dAu = Math.hypot(ecl[0], ecl[1], ecl[2]);
     const s = toScene(scaleVec(ecl, dist(dAu) / dAu));
     const st = { pos: s, radius: radius(b.radiusKm), spin, distAu: dAu };
@@ -280,7 +285,7 @@ export function orbitPath(key, dateMs, mode, n = 180) {
 export function distanceFromEarthAu(key, dateMs) {
   const T = jdToCenturies(dateToJD(dateMs));
   if (key === 'earth') return 0;
-  const e = heliocentric('earth', T);
+  const e = earthHeliocentric(T);
   if (key === 'sun') return Math.hypot(e[0], e[1], e[2]);
   if (key === 'moon') {
     const g = moonGeocentric(T);

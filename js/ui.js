@@ -5,7 +5,7 @@
 
 import { t, setLang, getLang, LANGS } from './i18n.js';
 import { BODIES, orbitalPeriodYears, distanceFromEarthAu, KEPLER_ELEMENTS, AU_KM } from './orbits.js';
-import { captureStill, Recorder, supportedMimes, bestMime } from './capture.js';
+import { captureStill, Recorder, supportedMimes, bestMime, saveFile } from './capture.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -63,6 +63,7 @@ export function initUI(app) {
       el.setAttribute('aria-label', t(el.dataset.i18nTitle));
     });
     document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
     renderBodyList();
     renderBodyCard();
     renderHelp();
@@ -76,6 +77,7 @@ export function initUI(app) {
     updateTourButton();
     $('btn-rec').textContent = recorder.recording ? t('cap.stop') : t('cap.record');
     $('lang').value = getLang();
+    if (app.onLangChange) app.onLangChange();
   }
 
   /* segmented controls: keep visual + ARIA state in sync */
@@ -550,16 +552,13 @@ export function initUI(app) {
 
   function addDownload(blob, name) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    saveFile(blob, name, url);
     const item = document.createElement('div');
     item.className = 'dl-item';
     const size = blob.size > 1048576 ? (blob.size / 1048576).toFixed(1) + ' MB' : Math.round(blob.size / 1024) + ' KB';
     item.innerHTML = `<span>💾</span><a href="${url}" download="${escapeHtml(name)}">${escapeHtml(name)}</a><span class="hint">${size}</span>`;
     item.dataset.url = url;
+    item.querySelector('a').addEventListener('click', (ev) => { ev.preventDefault(); saveFile(blob, name, url); });
     const list = $('downloads');
     list.prepend(item);
     /* bound the list; release object URLs of evicted entries */

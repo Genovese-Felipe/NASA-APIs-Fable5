@@ -2,14 +2,16 @@
    Boot + simulation clock + camera + input + render loop.          */
 
 import { Engine, mat4Perspective, mat4View, mat4Mul } from './engine.js';
-import { BODIES, BODY_INDEX, computeScene, orbitPath, SCENE } from './orbits.js';
+import { BODIES, BODY_INDEX, computeScene, orbitPath, SCENE, poleAxisScene } from './orbits.js';
 import { t, setLang, detectLang } from './i18n.js';
 import { AudioEngine } from './audio.js';
 import { NasaClient } from './nasa.js';
 import { initUI, toast } from './ui.js';
+import { initEclipseLab } from './eclipselab.js';
 
 const SPEEDS = [1, 60, 600, 3600, 21600, 86400, 259200, 604800, 2629800, 15778800, 31557600];
 const TAU = Math.PI * 2;
+const AXES = BODIES.map(poleAxisScene);
 
 const PATH_COLORS = {
   mercury: [0.62, 0.58, 0.55], venus: [0.9, 0.78, 0.5], earth: [0.35, 0.62, 1.0],
@@ -144,9 +146,54 @@ function boot() {
         state.scene = computeScene(state.simMs, m);
         const st = state.scene[state.selected];
         cam.dist = Math.max(st.radius * 5.5, st.radius + 0.02);
+        /* the new scale may put another world (an inflated Earth behind the
+           Moon, say) around or in front of the camera: swing around it */
+        for (let k = 0; k < 10; k++) {
+          const sp = Math.sin(cam.phi);
+          const p = [st.pos[0] + cam.dist * sp * Math.cos(cam.theta), st.pos[1] + cam.dist * Math.cos(cam.phi),
+            st.pos[2] + cam.dist * sp * Math.sin(cam.theta)];
+          const seg = v3.sub(st.pos, p), segLen = v3.len(seg), dir = v3.scale(seg, 1 / segLen);
+          const blocked = state.scene.some((o, j) => {
+            if (j === state.selected) return false;
+            const w = v3.sub(o.pos, p);
+            const along = Math.max(0, Math.min(segLen, w[0] * dir[0] + w[1] * dir[1] + w[2] * dir[2]));
+            return v3.len(v3.sub(w, v3.scale(dir, along))) < o.radius * 1.3;
+          });
+          if (!blocked) break;
+          cam.theta += 0.6;
+        }
         refreshPaths(true);
       },
       setActivity(x) { state.activityTarget = x; },
+      /* move time, scale and camera to a moment (used by the eclipse list) */
+      jumpTo({ ms, bodyKey, speedIdx = 1, scale = 'true', closeUp = 0 }) {
+        state.simMs = ms;
+        state.paused = false;
+        ui.updatePlayButton();
+        app.actions.setSpeedIdx(speedIdx);
+        if (state.scaleMode !== scale) {
+          state.scaleMode = scale;
+          document.querySelectorAll('#scale-seg button').forEach((b) => {
+            const on = b.dataset.s === scale;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-pressed', String(on));
+          });
+        }
+        state.scene = computeScene(ms, state.scaleMode);
+        refreshPaths(true);
+        if (state.mode !== 'orbit') { state.mode = 'orbit'; ui.syncCamSeg(); }
+        app.actions.select(BODY_INDEX[bodyKey], true);
+        if (closeUp > 0) {
+          /* hover on the Sun's side a few radii out: a solar eclipse shows
+             the Moon's shadow on Earth's day side, a lunar one the Moon's
+             Earth-facing hemisphere inside Earth's shadow */
+          const st = state.scene[state.selected];
+          const sunDir = v3.norm(v3.scale(st.pos, -1));
+          cam.dist = st.radius * closeUp;
+          cam.theta = Math.atan2(sunDir[2], sunDir[0]) + 0.18;
+          cam.phi = Math.max(0.05, Math.min(Math.PI - 0.05, Math.acos(sunDir[1]) - 0.12));
+        }
+      },
       refreshNeoPoints() {
         state.neoRel = [];
         if (!state.neoVisualize || !state.neoData.length) return;
@@ -165,6 +212,8 @@ function boot() {
 
   const ui = initUI(app);
   ui.setSelChip();
+  const lab = initEclipseLab(app, { toast });
+  app.onLangChange = () => lab.refresh();
 
   /* ── orbit paths ── */
   let pathsAtMs = 0;
@@ -429,10 +478,9 @@ function boot() {
     /* bodies → engine frame */
     const bodies = state.scene.map((st, i) => {
       const b = BODIES[i];
-      const tilt = b.tiltDeg * Math.PI / 180;
       return {
         pos: st.pos, radius: st.radius,
-        axis: [Math.sin(tilt), Math.cos(tilt), 0],
+        axis: AXES[i],
         spin: st.spin, shaderId: b.shaderId,
         ringInner: st.ringInner || 0, ringOuter: st.ringOuter || 0,
       };
@@ -460,6 +508,7 @@ function boot() {
       sunActivity: state.activity,
       bodies,
       beltInner: dist(2.2), beltOuter: dist(3.25),
+      showcase: state.scaleMode === 'showcase',
       showOrbits: state.showOrbits,
       showPoints: state.neoVisualize,
     };

@@ -1,0 +1,31 @@
+{
+  "source": "NASA Eclipse Web Site (F. Espenak): SEdecade2021.html, LEdecade2021.html, SEcat5/SE2001-2100.html, LEcat5/LE2001-2100.html, SEpath2001/SE2026Aug12Tpath.html — retrieved 2026-11-17. Times are TD (Terrestrial Dynamical Time) of greatest eclipse.",
+  "solar": [
+    {"date":"2026-02-17","td":"12:13:05","type":"A","magnitude":0.963,"duration":"02m20s","gamma":-0.9743,"lat":-65,"lon":87},
+    {"date":"2026-08-12","td":"17:47:05","type":"T","magnitude":1.039,"duration":"02m18s","gamma":0.8977,"lat":65.225,"lon":-25.228,"widthKm":294.0},
+    {"date":"2027-02-06","td":"16:00:47","type":"A","magnitude":0.928,"duration":"07m51s","gamma":-0.2952,"lat":-31,"lon":-48},
+    {"date":"2027-08-02","td":"10:07:49","type":"T","magnitude":1.079,"duration":"06m23s","gamma":0.1421,"lat":26,"lon":33},
+    {"date":"2028-01-26","td":"15:08:58","type":"A","magnitude":0.921,"duration":"10m27s","gamma":0.3901,"lat":3,"lon":-52},
+    {"date":"2028-07-22","td":"02:56:39","type":"T","magnitude":1.056,"duration":"05m10s","gamma":-0.6056,"lat":-16,"lon":127},
+    {"date":"2029-01-14","td":"17:13:47","type":"P","magnitude":0.871,"gamma":1.0553,"lat":64,"lon":-114},
+    {"date":"2029-06-12","td":"04:06:13","type":"P","magnitude":0.458,"gamma":1.2943,"lat":67,"lon":-66},
+    {"date":"2029-07-11","td":"15:37:18","type":"P","magnitude":0.230,"gamma":-1.4191,"lat":-64,"lon":-86},
+    {"date":"2029-12-05","td":"15:03:57","type":"P","magnitude":0.891,"gamma":-1.0609,"lat":-68,"lon":136},
+    {"date":"2030-06-01","td":"06:29:13","type":"A","magnitude":0.944,"duration":"05m21s","gamma":0.5626,"lat":57,"lon":80},
+    {"date":"2030-11-25","td":"06:51:37","type":"T","magnitude":1.047,"duration":"03m44s","gamma":-0.3867,"lat":-44,"lon":71}
+  ],
+  "lunar": [
+    {"date":"2026-03-03","td":"11:34:52","type":"T","umbral":1.151,"penumbral":2.1838,"gamma":-0.3765,"parMin":207.2,"totMin":58.3,"penMin":338.6},
+    {"date":"2026-08-28","td":"04:14:04","type":"P","umbral":0.930,"penumbral":1.9645,"gamma":0.4964,"parMin":198.1,"penMin":337.8},
+    {"date":"2027-02-20","td":"23:14:06","type":"N","umbral":-0.057,"penumbral":0.9266,"gamma":-1.0480,"penMin":241.0},
+    {"date":"2027-07-18","td":"16:04:09","type":"N","umbral":-1.068,"penumbral":0.0014,"gamma":-1.5758,"penMin":11.8},
+    {"date":"2027-08-17","td":"07:14:59","type":"N","umbral":-0.525,"penumbral":0.5456,"gamma":1.2797,"penMin":218.6},
+    {"date":"2028-01-12","td":"04:14:13","type":"P","umbral":0.066,"penumbral":1.0468,"gamma":0.9817,"parMin":56.0,"penMin":250.7},
+    {"date":"2028-07-06","td":"18:20:57","type":"P","umbral":0.389,"penumbral":1.4266,"gamma":-0.7903,"parMin":141.5,"penMin":310.6},
+    {"date":"2028-12-31","td":"16:53:15","type":"T","umbral":1.246,"penumbral":2.2742,"gamma":0.3258,"parMin":208.8,"totMin":71.3,"penMin":336.2},
+    {"date":"2029-06-26","td":"03:23:22","type":"T","umbral":1.844,"penumbral":2.8266,"gamma":0.0124,"parMin":219.5,"totMin":101.9,"penMin":335.1},
+    {"date":"2029-12-20","td":"22:43:12","type":"T","umbral":1.117,"penumbral":2.2008,"gamma":-0.3811,"parMin":213.3,"totMin":53.7,"penMin":358.0},
+    {"date":"2030-06-15","td":"18:34:34","type":"P","umbral":0.502,"penumbral":1.4480,"gamma":0.7534,"parMin":144.4,"penMin":278.2},
+    {"date":"2030-12-09","td":"22:28:51","type":"N","umbral":-0.163,"penumbral":0.9416,"gamma":-1.0731,"penMin":279.2}
+  ]
+}
